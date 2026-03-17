@@ -5,7 +5,8 @@ import { getFirestore, doc, setDoc, getDoc, onSnapshot }
                                     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
                                     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-import { getAuth, signInAnonymously, onAuthStateChanged }
+import { getAuth, signInAnonymously, onAuthStateChanged,
+         GoogleAuthProvider, signInWithPopup, signOut }
                                     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // ── 你的 Firebase 設定 ──────────────────────────────────
@@ -19,18 +20,39 @@ const firebaseConfig = {
 };
 // ────────────────────────────────────────────────────────
 
-const app     = initializeApp(firebaseConfig);
-const db      = getFirestore(app);
-const storage = getStorage(app);
-const auth    = getAuth(app);
+const app      = initializeApp(firebaseConfig);
+const db       = getFirestore(app);
+const storage  = getStorage(app);
+const auth     = getAuth(app);
+const provider = new GoogleAuthProvider();
 
-// ── 等待匿名登入完成後回傳 uid ──
-export const waitForAuth = () => new Promise(resolve => {
-  onAuthStateChanged(auth, user => {
-    if (user) { resolve(user.uid); return; }
-    signInAnonymously(auth);
+// ── Google 登入 ──
+export async function signInWithGoogle() {
+  const result = await signInWithPopup(auth, provider);
+  return result.user;
+}
+
+// ── 登出 ──
+export async function logOut() {
+  await signOut(auth);
+}
+
+// ── 匿名登入（離線備用）──
+export async function signInAsGuest() {
+  const result = await signInAnonymously(auth);
+  return result.user;
+}
+
+// ── 等待登入狀態，回傳 user（null = 未登入）──
+export const getCurrentUser = () => new Promise(resolve => {
+  const unsubscribe = onAuthStateChanged(auth, user => {
+    unsubscribe();
+    resolve(user);
   });
 });
+
+// ── 監聽登入狀態變化 ──
+export const onAuthChange = (cb) => onAuthStateChanged(auth, cb);
 
 // ── Firestore helpers ──
 export const fsSet  = (path, data) => setDoc(doc(db, ...path.split('/')), data);
@@ -44,17 +66,17 @@ export async function uploadImage(file, storagePath) {
   return await getDownloadURL(storageRef);
 }
 
-// ── Storage: 刪除圖片（用 URL 或 path）──
+// ── Storage: 刪除圖片 ──
 export async function deleteImage(urlOrPath) {
   try {
     const storageRef = urlOrPath.startsWith('http')
       ? ref(storage, decodeURIComponent(urlOrPath.split('/o/')[1].split('?')[0]))
       : ref(storage, urlOrPath);
     await deleteObject(storageRef);
-  } catch(e) { /* 圖片不存在或已刪，忽略 */ }
+  } catch(e) {}
 }
 
-// ── 把 base64 DataURL 轉成 File 物件（舊資料相容用）──
+// ── base64 → File（舊資料相容）──
 export function dataURLtoFile(dataUrl, filename) {
   const [header, data] = dataUrl.split(',');
   const mime = header.match(/:(.*?);/)[1];
