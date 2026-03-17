@@ -1,1 +1,0 @@
-# Kinia-s-Trip
