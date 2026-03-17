@@ -1,33 +1,22 @@
 // firebase-config.js — 共用 Firebase 初始化 + 工具函式
-// ✏️  把下方的 firebaseConfig 換成你自己的設定
 
 import { initializeApp }            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection }
+import { getFirestore, doc, setDoc, getDoc, onSnapshot }
                                     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
                                     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 import { getAuth, signInAnonymously, onAuthStateChanged }
                                     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// ── ✏️  換成你的 Firebase 設定 ──────────────────────────
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
+// ── 你的 Firebase 設定 ──────────────────────────────────
 const firebaseConfig = {
-  apiKey: "AIzaSyBtyJygjNYtDVV5wybC14subUh0teleH7k",
-  authDomain: "kinia-s-trip.firebaseapp.com",
-  databaseURL: "https://kinia-s-trip-default-rtdb.firebaseio.com",
-  projectId: "kinia-s-trip",
-  storageBucket: "kinia-s-trip.firebasestorage.app",
+  apiKey:            "AIzaSyBtyJygjNYtDVV5wybC14subUh0teleH7k",
+  authDomain:        "kinia-s-trip.firebaseapp.com",
+  projectId:         "kinia-s-trip",
+  storageBucket:     "kinia-s-trip.firebasestorage.app",
   messagingSenderId: "881218070648",
-  appId: "1:881218070648:web:3520bbd30df7557ccb658d"
+  appId:             "1:881218070648:web:3520bbd30df7557ccb658d"
 };
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
 // ────────────────────────────────────────────────────────
 
 const app     = initializeApp(firebaseConfig);
