@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#8B5E3C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="旅遊手帳">
+<title>旅遊手帳</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; height: 100%; background: #F7F3EE; overflow: hidden; }
+
+  #app-shell {
+    display: flex; flex-direction: column;
+    height: 100dvh; max-width: 430px; margin: 0 auto;
+    background: #F7F3EE;
+    box-shadow: 0 0 40px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+
+  #iframe-wrap { flex: 1; position: relative; overflow: hidden; }
+
+  .page-iframe {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    border: none; display: none; background: #F7F3EE;
+  }
+  .page-iframe.active { display: block; }
+
+  #bottom-nav {
+    flex-shrink: 0; display: flex; align-items: stretch;
+    background: #FDFAF6; border-top: 1.5px solid #DDD4C6;
+    padding-bottom: env(safe-area-inset-bottom, 0px); z-index: 100;
+  }
+
+  .nav-btn {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 3px;
+    padding: 10px 4px 11px;
+    background: none; border: none; cursor: pointer;
+    color: #A8917A;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: color 0.18s; position: relative; outline: none;
+  }
+  .nav-btn::before {
+    content: ''; position: absolute; top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 2.5px; background: #8B5E3C;
+    border-radius: 0 0 3px 3px;
+    transition: width 0.22s cubic-bezier(.4,0,.2,1);
+  }
+  .nav-btn.active { color: #6B4428; }
+  .nav-btn.active::before { width: 40px; }
+  .nav-icon { font-size: 20px; line-height: 1; transition: transform 0.18s; }
+  .nav-btn.active .nav-icon { transform: translateY(-1px) scale(1.1); }
+  .nav-label { font-size: 10px; font-weight: 700; letter-spacing: 0.3px; }
+
+  /* Loading spinner */
+  .iframe-loading {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: #F7F3EE; gap: 12px; pointer-events: none;
+    opacity: 0; transition: opacity 0.2s; z-index: 10;
+  }
+  .iframe-loading.show { opacity: 1; }
+  .loading-spinner {
+    width: 28px; height: 28px;
+    border: 2.5px solid #DDD4C6; border-top-color: #8B5E3C;
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 12px; color: #A8917A; font-weight: 600; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div id="app-shell">
+  <div id="iframe-wrap">
+    <div class="iframe-loading" id="loading">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">載入中…</div>
+    </div>
+    <iframe class="page-iframe active" id="frame-itinerary" src="itinerary.html" title="行程"></iframe>
+    <iframe class="page-iframe" id="frame-timeline"  src="" title="時間軸"></iframe>
+    <iframe class="page-iframe" id="frame-budget"    src="" title="記帳"></iframe>
+    <iframe class="page-iframe" id="frame-wishlist"  src="" title="清單"></iframe>
+    <iframe class="page-iframe" id="frame-packing"   src="" title="行李"></iframe>
+  </div>
+  <nav id="bottom-nav">
+    <button class="nav-btn active" onclick="switchPage('itinerary')" id="nav-itinerary">
+      <span class="nav-icon">🗺</span><span class="nav-label">行程</span>
+    </button>
+    <button class="nav-btn" onclick="switchPage('timeline')" id="nav-timeline">
+      <span class="nav-icon">📖</span><span class="nav-label">時間軸</span>
+    </button>
+    <button class="nav-btn" onclick="switchPage('budget')" id="nav-budget">
+      <span class="nav-icon">💰</span><span class="nav-label">記帳</span>
+    </button>
+    <button class="nav-btn" onclick="switchPage('wishlist')" id="nav-wishlist">
+      <span class="nav-icon">✨</span><span class="nav-label">清單</span>
+    </button>
+    <button class="nav-btn" onclick="switchPage('packing')" id="nav-packing">
+      <span class="nav-icon">🧳</span><span class="nav-label">行李</span>
+    </button>
+  </nav>
+</div>
+
+<script>
+const PAGE_SRCS = {
+  itinerary: 'itinerary.html',
+  timeline:  'timeline.html',
+  budget:    'budget.html',
+  wishlist:  'wishlist.html',
+  packing:   'packing.html',
+};
+let currentPage = 'itinerary';
+const loaded = new Set(['itinerary']);
+
+function switchPage(pageId) {
+  if (pageId === currentPage) return;
+  document.getElementById('nav-' + currentPage).classList.remove('active');
+  document.getElementById('nav-' + pageId).classList.add('active');
+  document.getElementById('frame-' + currentPage).classList.remove('active');
+  const nextFrame = document.getElementById('frame-' + pageId);
+  nextFrame.classList.add('active');
+  if (!loaded.has(pageId)) {
+    loaded.add(pageId);
+    document.getElementById('loading').classList.add('show');
+    nextFrame.onload = () => document.getElementById('loading').classList.remove('show');
+    setTimeout(() => document.getElementById('loading').classList.remove('show'), 3000);
+    nextFrame.src = PAGE_SRCS[pageId];
+  }
+  currentPage = pageId;
+  try { localStorage.setItem('tripApp_lastPage', pageId); } catch(e) {}
+}
+
+(function() {
+  try {
+    const last = localStorage.getItem('tripApp_lastPage');
+    if (last && PAGE_SRCS[last] && last !== 'itinerary') switchPage(last);
+  } catch(e) {}
+})();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>

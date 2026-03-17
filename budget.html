@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>旅遊記帳</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+  padding-bottom:80px; background: #F0EBE3; font-family: 'Noto Sans TC', sans-serif; display: flex; justify-content: center; min-height: 100vh; }
+  #app { width: 100%; max-width: 430px; min-height: 100vh; background: #F7F3EE; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 40px #00000014; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #F0EBE3; }
+  ::-webkit-scrollbar-thumb { background: #A8917A; border-radius: 4px; }
+
+  /* HEADER */
+  .header { background: linear-gradient(160deg,#6B4428 0%,#8B5E3C 100%); padding: 48px 20px 20px; }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .header-sub { font-size: 11px; color: rgba(255,255,255,0.85); letter-spacing: 3px; font-weight: 700; margin-bottom: 4px; }
+  .header-title { font-size: 26px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.5px; }
+  .currency-toggle { text-align: right; }
+  .currency-toggle span { font-size: 10px; color: rgba(255,255,255,0.80); letter-spacing: 1px; display: block; margin-bottom: 6px; }
+  .currency-btns { display: flex; gap: 4px; }
+  .cur-btn { padding: 5px 10px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.35); background: transparent; color: rgba(255,255,255,0.75); font-size: 12px; cursor: pointer; font-family: 'Noto Sans TC', sans-serif; transition: all 0.2s; }
+  .cur-btn.active { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.6); color: #FFFFFF; }
+  .total-box { margin-top: 18px; background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3); border-radius: 16px; padding: 16px 20px; }
+  .total-label { font-size: 11px; color: rgba(255,255,255,0.90); letter-spacing: 2px; font-weight: 700; }
+  .total-amount { font-size: 34px; font-weight: 700; color: #F7F3EE; font-family: 'Noto Sans TC', sans-serif; margin-top: 4px; }
+  .total-rate { font-size: 11px; color: rgba(255,255,255,0.82); margin-top: 4px; }
+
+  /* NAV */
+  .nav { display: flex; background: #FFFFFF; border-bottom: 1px solid #e4e5e7; }
+  .nav-btn { flex: 1; padding: 12px 0; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; color: #6B5744; font-size: 13px; font-weight: 500; font-family: 'Noto Sans TC', sans-serif; transition: all 0.2s; }
+  .nav-btn.active { color: #1B3A1F; border-bottom-color: #2E7D32; }
+
+  /* CONTENT */
+  .content { flex: 1; overflow-y: auto; padding-bottom: 16px; background: #F7F3EE; }
+
+  /* SEARCH */
+  .search-area { padding: 14px 16px 0; }
+  .search-wrap { position: relative; margin-bottom: 10px; }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; }
+  .search-input { width: 100%; background: #FFFFFF; border: 1px solid #DDD4C6; border-radius: 10px; padding: 9px 12px 9px 34px; color: #1B3A1F; font-size: 13px; font-family: 'Noto Sans TC', sans-serif; outline: none; box-shadow: 0 1px 3px #0000000a; }
+  .cat-filter { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: none; }
+  .cat-filter::-webkit-scrollbar { display: none; }
+  .cat-chip { flex-shrink: 0; padding: 5px 12px; border-radius: 20px; background: #FFFFFF; border: 1px solid #DDD4C6; color: #6B5744; font-size: 11px; cursor: pointer; font-family: 'Noto Sans TC', sans-serif; transition: all 0.15s; }
+  .sort-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .sort-label { font-size: 11px; color: #6A9A70; }
+  .sort-btn { padding: 4px 10px; border-radius: 8px; background: #FFFFFF; border: 1px solid #DDD4C6; color: #8B5E3C; font-size: 11px; cursor: pointer; font-family: 'Noto Sans TC', sans-serif; transition: all 0.15s; }
+  .sort-btn.active { background: #8B5E3C; border-color: #6B4428; color: #FFFFFF; }
+
+  /* EXPENSE LIST */
+  .expense-row { display: flex; align-items: center; padding: 13px 16px; border-bottom: 1px solid #ebebec; cursor: pointer; transition: background 0.15s; background: #FFFFFF; }
+  .expense-row:hover { background: #F0EBE3; }
+  .exp-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .exp-info { flex: 1; margin-left: 12px; min-width: 0; }
+  .exp-title { font-size: 14px; font-weight: 500; color: #1B3A1F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .exp-meta { font-size: 11px; color: #6A9A70; margin-top: 2px; }
+  .exp-amount { text-align: right; flex-shrink: 0; margin-left: 8px; }
+  .exp-main-amt { font-size: 15px; font-weight: 600; font-family: 'Noto Sans TC', sans-serif; }
+  .exp-sub-amt { font-size: 10px; color: #A8917A; font-family: 'Noto Sans TC', sans-serif; }
+
+  /* DETAIL */
+  .detail-header { border-radius: 16px; padding: 20px; margin-bottom: 14px; }
+  .detail-cat-label { font-size: 11px; letter-spacing: 2px; margin-bottom: 4px; }
+  .detail-title { font-size: 18px; font-weight: 700; color: #1B3A1F; line-height: 1.3; }
+  .detail-amount { font-size: 26px; font-weight: 700; font-family: 'Noto Sans TC', sans-serif; }
+  .detail-row { display: flex; align-items: flex-start; padding: 11px 0; border-bottom: 1px solid #ebebec; }
+  .detail-row-icon { font-size: 16px; width: 28px; flex-shrink: 0; }
+  .detail-row-label { font-size: 11px; color: #6A9A70; width: 68px; flex-shrink: 0; padding-top: 2px; }
+  .detail-row-val { font-size: 13px; color: #1B3A1F; flex: 1; }
+
+  /* FORM */
+  .form-section { padding: 16px; }
+  .field { margin-bottom: 14px; }
+  .field label { font-size: 11px; color: #8B5E3C; letter-spacing: 1px; font-weight: 500; display: block; margin-bottom: 6px; }
+  .field input, .field select, .field textarea { width: 100%; background: #FFFFFF; border: 1px solid #DDD4C6; border-radius: 10px; padding: 10px 12px; color: #1B3A1F; font-size: 13px; font-family: 'Noto Sans TC', sans-serif; outline: none; box-shadow: 0 1px 3px #0000000a; }
+  .field input[type=date] { color-scheme: light; }
+  .amount-row { display: flex; gap: 8px; }
+  .amount-row input { flex: 1; font-family: 'Noto Sans TC', sans-serif; }
+  .amount-row select { width: 80px; }
+  .convert-hint { font-size: 11px; color: #A8917A; margin-top: 4px; font-family: 'Noto Sans TC', sans-serif; }
+  .cat-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .cat-pick { padding: 7px 12px; border-radius: 10px; background: #FFFFFF; border: 1.5px solid #e0e1e3; color: #A8917A; font-size: 12px; cursor: pointer; font-family: 'Noto Sans TC', sans-serif; transition: all 0.15s; }
+
+  /* BUTTONS */
+  .back-btn { background: none; border: none; color: #A8917A; cursor: pointer; font-size: 13px; margin-bottom: 14px; display: flex; align-items: center; gap: 4px; font-family: 'Noto Sans TC', sans-serif; }
+  .primary-btn { width: 100%; padding: 14px; border-radius: 14px; background: #8B5E3C; border: none; color: #FFFFFF; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 8px; font-family: 'Noto Sans TC', sans-serif; transition: all 0.15s; box-shadow: 0 3px 12px #00000020; }
+  .primary-btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-1px); }
+  .edit-btn { flex: 1; padding: 12px; border-radius: 12px; background: #F7F3EE; border: 1px solid #d0d1d4; color: #1B3A1F; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'Noto Sans TC', sans-serif; }
+  .del-btn { flex: 1; padding: 12px; border-radius: 12px; background: #fff1f1; border: 1px solid #fca5a5; color: #dc2626; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'Noto Sans TC', sans-serif; }
+  .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+
+  /* FAB */
+  .fab { position: fixed; bottom: 84px; right: calc(50% - 215px + 20px); width: 56px; height: 56px; border-radius: 50%; background: #8B5E3C; border: none; color: #FFFFFF; font-size: 28px; cursor: pointer; box-shadow: 0 4px 20px #00000030; display: flex; align-items: center; justify-content: center; transition: all 0.15s; z-index: 50; }
+  .fab:hover { background: rgba(255,255,255,0.25); transform: scale(1.05); }
+  @media (max-width: 430px) { .fab { right: 20px; } }
+
+  /* OVERLAY */
+  .overlay { position: fixed; inset: 0; background: #00000045; display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .dialog { background: #FFFFFF; border-radius: 16px; padding: 24px; width: 100%; max-width: 320px; border: 1px solid #DDD4C6; box-shadow: 0 8px 32px #00000018; }
+  .dialog h3 { font-size: 16px; font-weight: 600; color: #1B3A1F; margin-bottom: 8px; }
+  .dialog p { font-size: 13px; color: #6A9A70; margin-bottom: 20px; }
+  .dialog-btns { display: flex; gap: 10px; }
+  .cancel-btn { flex: 1; padding: 11px; border-radius: 10px; background: #F7F3EE; border: none; color: #A8917A; cursor: pointer; font-family: 'Noto Sans TC', sans-serif; }
+  .confirm-del-btn { flex: 1; padding: 11px; border-radius: 10px; background: #dc2626; border: none; color: #fff; font-weight: 600; cursor: pointer; font-family: 'Noto Sans TC', sans-serif; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 20px; font-size: 13px; white-space: nowrap; z-index: 200; animation: toastIn 0.3s ease; box-shadow: 0 4px 16px #00000018; }
+  @keyframes toastIn { from { opacity:0; transform: translateX(-50%) translateY(10px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+
+  /* SUMMARY */
+  .summary-section { padding: 16px; }
+  .summary-title { font-size: 13px; color: #6A9A70; margin-bottom: 12px; letter-spacing: 1px; }
+  .summary-row { margin-bottom: 10px; background: #FFFFFF; border-radius: 12px; padding: 12px 14px; box-shadow: 0 1px 4px #0000000a; }
+  .summary-row-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .summary-cat-name { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #1B3A1F; }
+  .summary-amt { font-size: 14px; font-weight: 600; font-family: 'Noto Sans TC', sans-serif; }
+  .summary-pct { font-size: 10px; color: #6A9A70; }
+  .progress-bar { height: 4px; background: #ebebec; border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+  .stat-card { background: #FFFFFF; border-radius: 12px; padding: 14px; box-shadow: 0 1px 4px #0000000a; }
+  .stat-card .lbl { font-size: 10px; color: #6A9A70; letter-spacing: 1px; margin-bottom: 6px; }
+  .stat-card .val { font-size: 24px; font-weight: 700; font-family: 'Noto Sans TC', sans-serif; }
+  .cur-breakdown { background: #FFFFFF; border-radius: 12px; padding: 14px; margin-top: 10px; box-shadow: 0 1px 4px #0000000a; }
+  .cur-breakdown .lbl { font-size: 11px; color: #6A9A70; letter-spacing: 1px; margin-bottom: 10px; }
+  .cur-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .cur-row span:first-child { font-size: 12px; color: #8B5E3C; }
+  .cur-row span:last-child { font-size: 13px; font-weight: 600; color: #1B3A1F; font-family: 'Noto Sans TC', sans-serif; }
+
+  .slide-in { animation: slideIn 0.25s ease; }
+  @keyframes slideIn { from { opacity:0; transform: translateX(16px); } to { opacity:1; transform: translateX(0); } }
+  .empty-state { text-align: center; padding: 40px 0; color: #6A9A70; font-size: 13px; }
+  .empty-state .icon { font-size: 32px; margin-bottom: 8px; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* OTHER CUSTOM INPUT */
+  .other-input { margin-top: 6px; display: none; }
+  .other-input.show { display: block; }
+  .other-input input { width: 100%; background: #FFFFFF; border: 1px solid #DDD4C6; border-radius: 10px; padding: 9px 12px; color: #1B3A1F; font-size: 13px; font-family: 'Noto Sans TC', sans-serif; outline: none; }
+
+  /* RECEIPT PHOTOS */
+  .receipt-section { margin-top: 16px; border-top: 1px solid #ebebec; padding-top: 16px; }
+  .receipt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .receipt-label { font-size: 11px; color: #8B5E3C; letter-spacing: 1px; font-weight: 500; }
+  .receipt-upload-btn { position: relative; padding: 5px 12px; border-radius: 8px; background: #F7F3EE; border: 1px solid #d0d1d4; color: #1B3A1F; font-size: 11px; cursor: pointer; font-family: 'Noto Sans TC', sans-serif; overflow: hidden; }
+  .receipt-upload-btn input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0; }
+  .receipt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .receipt-thumb { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: #ebebec; border: 1px solid #DDD4C6; cursor: pointer; }
+  .receipt-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .receipt-thumb-del { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 50%; background: #00000055; border: none; color: #fff; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+  .receipt-empty { border: 1.5px dashed #d0d1d4; border-radius: 10px; padding: 16px 8px; text-align: center; color: #b4b6ba; font-size: 11px; cursor: pointer; position: relative; }
+  .receipt-empty input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+  /* LIGHTBOX */
+  .lightbox { position: fixed; inset: 0; background: #000000cc; display: flex; align-items: center; justify-content: center; z-index: 300; padding: 20px; }
+  .lightbox img { max-width: 100%; max-height: 90vh; border-radius: 12px; object-fit: contain; }
+  .lightbox-close { position: absolute; top: 20px; right: 20px; background: #ffffff25; border: none; color: #fff; font-size: 22px; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+  /* Detail receipt */
+  .det-receipt-box { background: #FFFFFF; border-radius: 12px; padding: 12px 14px; margin-top: 10px; box-shadow: 0 1px 4px #0000000a; }
+  .det-receipt-title { font-size: 11px; color: #6A9A70; letter-spacing: 1px; margin-bottom: 10px; }
+  .det-receipt-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+  .det-receipt-thumb { aspect-ratio: 1; border-radius: 10px; overflow: hidden; cursor: pointer; }
+  .det-receipt-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity 0.15s; }
+  .det-receipt-thumb img:hover { opacity: 0.85; }
+  .items-section { margin-top: 16px; }
+  .items-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .items-label { font-size: 11px; color: #8B5E3C; letter-spacing: 1px; font-weight: 500; }
+  .add-item-btn { padding: 5px 12px; border-radius: 8px; background: #F7F3EE; border: 1px solid #d0d1d4; color: #1B3A1F; font-size: 11px; cursor: pointer; font-family: 'Noto Sans TC', sans-serif; }
+  .item-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; background: #FFFFFF; border-radius: 10px; padding: 8px 10px; border: 1px solid #DDD4C6; }
+  .item-row input { background: #F0EBE3; border: 1px solid #DDD4C6; border-radius: 8px; padding: 7px 10px; color: #1B3A1F; font-size: 12px; font-family: 'Noto Sans TC', sans-serif; outline: none; }
+  .item-name-input { flex: 2; }
+  .item-qty-input { width: 52px; text-align: center; font-family: 'Noto Sans TC', sans-serif; }
+  .item-price-input { flex: 1; font-family: 'Noto Sans TC', sans-serif; }
+  .item-total { font-size: 12px; color: #1B3A1F; font-family: 'Noto Sans TC', sans-serif; white-space: nowrap; min-width: 72px; text-align: right; line-height: 1.4; font-weight: 600; }
+  .item-total-sub { font-size: 10px; color: #b4b6ba; display: block; font-family: 'Noto Sans TC', sans-serif; font-weight: normal; }
+  .item-del-btn { background: none; border: none; color: #A8917A; cursor: pointer; font-size: 14px; padding: 2px 4px; flex-shrink: 0; }
+  .item-del-btn:hover { color: #dc2626; }
+  .items-total-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-top: 1px solid #ebebec; margin-top: 4px; }
+  .items-total-label { font-size: 11px; color: #6A9A70; }
+  .items-total-val { font-size: 13px; font-weight: 600; color: #1B3A1F; font-family: 'Noto Sans TC', sans-serif; }
+  .items-sync-hint { font-size: 10px; color: #6A9A70; margin-top: 4px; }
+
+  /* Detail items table */
+  .det-items-box { background: #FFFFFF; border-radius: 12px; padding: 12px 14px; margin-top: 10px; box-shadow: 0 1px 4px #0000000a; }
+  .det-items-title { font-size: 11px; color: #6A9A70; letter-spacing: 1px; margin-bottom: 10px; }
+  .det-item-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #ebebec; }
+  .det-item-row:last-child { border-bottom: none; }
+  .det-item-name { font-size: 13px; color: #1B3A1F; flex: 1; }
+  .det-item-qty { font-size: 12px; color: #6A9A70; width: 36px; text-align: center; }
+  .det-item-price { font-size: 12px; color: #b4b6ba; font-family: 'Noto Sans TC', sans-serif; width: 70px; text-align: right; }
+  .det-item-total { font-size: 13px; font-weight: 600; color: #1B3A1F; font-family: 'Noto Sans TC', sans-serif; width: 80px; text-align: right; }
+  .exp-items-badge { font-size: 10px; color: #6B5744; background: #ebebec; border-radius: 6px; padding: 1px 6px; margin-left: 4px; }
+</style>
+
+</head>
+<body>
+<div id="app">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="header-sub">TRAVEL WALLET</div>
+        <div class="header-title">旅遊記帳</div>
+      </div>
+      <div class="currency-toggle">
+        <span>顯示幣別</span>
+        <div class="currency-btns">
+          <button class="cur-btn active" id="btn-twd" onclick="setDisplayCurrency('TWD')">TWD</button>
+          <button class="cur-btn" id="btn-jpy" onclick="setDisplayCurrency('JPY')">JPY</button>
+        </div>
+      </div>
+    </div>
+    <div class="total-box">
+      <div class="total-label">TOTAL SPENT</div>
+      <div class="total-amount" id="total-display">NT$ 0</div>
+      <div class="total-rate">匯率參考：1 JPY ≈ 0.213 TWD</div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <div class="nav">
+    <button class="nav-btn active" id="nav-list" onclick="showView('list')">📋 明細</button>
+    <button class="nav-btn" id="nav-summary" onclick="showView('summary')">📊 統計</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- LIST PAGE -->
+    <div class="page active slide-in" id="page-list">
+      <div class="search-area">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input class="search-input" id="search-input" placeholder="搜尋項目或店家..." oninput="renderList()">
+        </div>
+        <div class="cat-filter" id="cat-filter"></div>
+        <div class="sort-row">
+          <span class="sort-label">排序：</span>
+          <button class="sort-btn active" id="sort-date" onclick="setSort('date')">日期</button>
+          <button class="sort-btn" id="sort-amount" onclick="setSort('amount')">金額</button>
+          <button class="sort-btn" id="sort-category" onclick="setSort('category')">分類</button>
+        </div>
+      </div>
+      <div id="expense-list" style="margin-top:10px;"></div>
+    </div>
+
+    <!-- SUMMARY PAGE -->
+    <div class="page slide-in" id="page-summary">
+      <div class="summary-section">
+        <div class="summary-title">消費分析</div>
+        <div id="summary-cats"></div>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="lbl">總筆數</div>
+            <div class="val" id="stat-count" style="color:#60a5fa;">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="lbl">平均每筆</div>
+            <div class="val" id="stat-avg" style="color:#a78bfa;font-size:18px;">—</div>
+          </div>
+        </div>
+        <div class="cur-breakdown">
+          <div class="lbl">幣別統計</div>
+          <div id="cur-stats"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DETAIL PAGE -->
+    <div class="page slide-in" id="page-detail">
+      <div style="padding:16px;">
+        <button class="back-btn" onclick="showView('list')">← 返回列表</button>
+        <div id="detail-content"></div>
+      </div>
+    </div>
+
+    <!-- ADD/EDIT PAGE -->
+    <div class="page slide-in" id="page-add">
+      <div class="form-section">
+        <button class="back-btn" onclick="showView('list')">← 返回</button>
+        <div style="font-size:16px;font-weight:700;color:#e2e8f0;margin-bottom:18px;" id="form-title">➕ 新增消費</div>
+
+        <div class="field">
+          <label>分類</label>
+          <div class="cat-grid" id="cat-picker"></div>
+        </div>
+        <div class="field">
+          <label>名稱 *</label>
+          <input type="text" id="f-title" placeholder="例：東京羽田機票">
+        </div>
+        <div class="field">
+          <label>金額 *</label>
+          <div class="amount-row">
+            <input type="number" id="f-amount" placeholder="0" oninput="updateConvertHint()">
+            <select id="f-currency" onchange="updateConvertHint()">
+              <option value="TWD">TWD</option>
+              <option value="JPY">JPY</option>
+            </select>
+          </div>
+          <div class="convert-hint" id="convert-hint"></div>
+        </div>
+        <div class="field">
+          <label>日期</label>
+          <input type="date" id="f-date">
+        </div>
+        <div class="field">
+          <label>付款方式</label>
+          <select id="f-payment" onchange="toggleOther('payment')">
+            <option>信用卡</option>
+            <option>現金(台幣)</option>
+            <option>現金(日幣)</option>
+            <option>Apple Pay</option>
+            <option>Line Pay</option>
+            <option value="其他">其他</option>
+          </select>
+          <div class="other-input" id="other-payment">
+            <input type="text" id="f-payment-other" placeholder="請輸入付款方式...">
+          </div>
+        </div>
+        <div class="field">
+          <label>預訂平台</label>
+          <select id="f-platform" onchange="toggleOther('platform')">
+            <option value="">— 無 —</option>
+            <option>Booking.com</option>
+            <option>Agoda</option>
+            <option>Airbnb</option>
+            <option>KKday</option>
+            <option>Klook</option>
+            <option>Expedia</option>
+            <option>直接付款</option>
+            <option value="其他">其他</option>
+          </select>
+          <div class="other-input" id="other-platform">
+            <input type="text" id="f-platform-other" placeholder="請輸入平台名稱...">
+          </div>
+        </div>
+        <div class="field">
+          <label>店家／品牌</label>
+          <input type="text" id="f-store" placeholder="例：一蘭拉麵">
+        </div>
+        <div class="field">
+          <label>店家地址</label>
+          <input type="text" id="f-address" placeholder="選填">
+        </div>
+        <div class="field">
+          <label>備註</label>
+          <input type="text" id="f-note" placeholder="選填">
+        </div>
+
+        <!-- ITEM DETAILS -->
+        <div class="items-section">
+          <div class="items-header">
+            <span class="items-label">🧾 商品明細（選填）</span>
+            <button class="add-item-btn" onclick="addItemRow()">＋ 新增商品</button>
+          </div>
+          <div id="items-list"></div>
+          <div id="items-total-row" style="display:none;" class="items-total-row">
+            <span class="items-total-label">明細合計</span>
+            <span class="items-total-val" id="items-total-val">0</span>
+          </div>
+          <div class="items-sync-hint" id="items-sync-hint"></div>
+        </div>
+
+        <!-- RECEIPT PHOTOS -->
+        <div class="receipt-section">
+          <div class="receipt-header">
+            <span class="receipt-label">📷 收據照片（選填）</span>
+            <label class="receipt-upload-btn">
+              ＋ 上傳照片
+              <input type="file" accept="image/*" multiple onchange="handleReceiptUpload(event)">
+            </label>
+          </div>
+          <div id="receipt-grid" class="receipt-grid"></div>
+          <div id="receipt-empty" class="receipt-empty">
+            點此或拖曳上傳收據 / 發票照片
+            <input type="file" accept="image/*" multiple onchange="handleReceiptUpload(event)">
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button class="primary-btn" id="cancel-btn" onclick="showView('list')" style="background:#1e2538;border:1px solid #2a3550;color:#8892a4;flex:1;margin-top:0;">取消</button>
+          <button class="primary-btn" id="save-btn" onclick="saveExpense()" style="flex:2;margin-top:0;">新增記錄 ✓</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end content -->
+
+  <!-- FAB -->
+  <button class="fab" id="fab" onclick="openAdd()">+</button>
+
+  <!-- Delete Confirm -->
+  <div class="overlay" id="delete-overlay" style="display:none;">
+    <div class="dialog">
+      <h3>確定刪除？</h3>
+      <p>此操作無法復原</p>
+      <div class="dialog-btns">
+        <button class="cancel-btn" onclick="closeDeleteDialog()">取消</button>
+        <button class="confirm-del-btn" onclick="confirmDelete()">刪除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" style="display:none;"></div>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox" style="display:none;" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+    <img id="lightbox-img" src="" alt="收據">
+  </div>
+</div>
+
+<script>
+const CATEGORIES = [
+  { id:"flight",  label:"機票", icon:"✈️", color:"#6C9BD2" },
+  { id:"hotel",   label:"飯店", icon:"🏨", color:"#7BC8A4" },
+  { id:"car",     label:"租車", icon:"🚗", color:"#F4A460" },
+  { id:"ticket",  label:"票券", icon:"🎟️", color:"#C8A2C8" },
+  { id:"food",    label:"餐飲", icon:"🍜", color:"#F08080" },
+  { id:"shopping",label:"購物", icon:"🛍️", color:"#87CEEB" },
+  { id:"transport",label:"交通",icon:"🚃", color:"#DDA0DD" },
+  { id:"other",   label:"其他", icon:"📌", color:"#B0C4DE" },
+];
+const JPY_TO_TWD = 0.213;
+const TWD_TO_JPY = 4.69;
+
+let expenses = [
+  { id:1, category:"flight",  title:"台北→東京 來回機票", amount:12800, currency:"TWD", date:"2025-04-01", platform:"Expedia",     paymentMethod:"信用卡", store:"長榮航空",        storeAddress:"", note:"早鳥優惠" },
+  { id:2, category:"hotel",   title:"新宿格蘭貝爾酒店 3晚", amount:28000, currency:"JPY", date:"2025-04-02", platform:"Booking.com", paymentMethod:"信用卡", store:"新宿格蘭貝爾酒店",  storeAddress:"東京都新宿区歌舞伎町1-19-1", note:"含早餐" },
+  { id:3, category:"ticket",  title:"環球影城一日票",    amount:10400, currency:"JPY", date:"2025-04-03", platform:"KKday",       paymentMethod:"信用卡", store:"環球影城",        storeAddress:"大阪府大阪市此花区桜島2-1-33", note:"" },
+  { id:4, category:"food",    title:"一蘭拉麵",          amount:1500,  currency:"JPY", date:"2025-04-03", platform:"",            paymentMethod:"現金(日幣)", store:"一蘭拉麵 道頓堀店", storeAddress:"大阪市中央区道頓堀1-7-26", note:"超好吃！",
+    items:[ {name:"一蘭拉麵（原味）", qty:1, price:980}, {name:"替玉（加麵）", qty:1, price:180}, {name:"溏心蛋", qty:1, price:130}, {name:"罐裝啤酒", qty:1, price:210} ] },
+  { id:5, category:"shopping", title:"藥妝店購物",         amount:8200,  currency:"JPY", date:"2025-04-04", platform:"",            paymentMethod:"現金(日幣)", store:"松本清 心齋橋店", storeAddress:"大阪市中央区心斎橋筋1", note:"",
+    items:[ {name:"碳酸洗顏粉", qty:2, price:890}, {name:"眼藥水", qty:3, price:680}, {name:"OK繃", qty:1, price:320}, {name:"面膜", qty:2, price:1200}, {name:"防曬乳", qty:1, price:1540}, {name:"感冒藥", qty:1, price:800} ] },
+];
+let nextId = 100;
+let displayCurrency = "TWD";
+let filterCategory = "all";
+let sortBy = "date";
+let sortDir = "desc";
+let currentView = "list";
+let editingId = null;
+let deleteTargetId = null;
+let formCategory = "flight";
+let formItems = []; // [{name, qty, price}]
+let formReceipts = []; // base64 strings
+
+// ── OTHER CUSTOM INPUT ─────────────────────────────────────
+function toggleOther(field) {
+  const sel = document.getElementById(`f-${field}`);
+  const box = document.getElementById(`other-${field}`);
+  if (sel.value === '其他') { box.classList.add('show'); document.getElementById(`f-${field}-other`).focus(); }
+  else { box.classList.remove('show'); document.getElementById(`f-${field}-other`).value = ''; }
+}
+
+// ── RECEIPT PHOTOS ─────────────────────────────────────────
+function handleReceiptUpload(event) {
+  const files = Array.from(event.target.files);
+  event.target.value = '';
+  files.forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = e => { formReceipts.push(e.target.result); renderReceiptGrid(); };
+    reader.readAsDataURL(file);
+  });
+}
+
+function removeReceipt(idx) {
+  formReceipts.splice(idx, 1);
+  renderReceiptGrid();
+}
+
+function renderReceiptGrid() {
+  const grid = document.getElementById('receipt-grid');
+  const empty = document.getElementById('receipt-empty');
+  if (formReceipts.length === 0) {
+    grid.innerHTML = '';
+    grid.style.display = 'none';
+    empty.style.display = 'block';
+  } else {
+    empty.style.display = 'none';
+    grid.style.display = 'grid';
+    grid.innerHTML = formReceipts.map((src, i) => `
+      <div class="receipt-thumb" onclick="openLightbox('${src}')">
+        <img src="${src}" alt="收據${i+1}">
+        <button class="receipt-thumb-del" onclick="event.stopPropagation();removeReceipt(${i})">✕</button>
+      </div>`).join('');
+  }
+}
+
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').style.display = 'flex';
+}
+function closeLightbox() {
+  document.getElementById('lightbox').style.display = 'none';
+}
+
+// ── ITEM ROWS ──────────────────────────────────────────────
+function addItemRow(item) {
+  const id = Date.now() + Math.random();
+  formItems.push({ _id: id, name: item ? item.name : '', qty: item ? item.qty : 1, price: item ? item.price : '' });
+  renderItemRows();
+}
+
+function removeItemRow(rowId) {
+  formItems = formItems.filter(i => i._id !== rowId);
+  renderItemRows();
+}
+
+function updateItem(rowId, field, value) {
+  const item = formItems.find(i => i._id === rowId);
+  if (!item) return;
+  item[field] = field === 'qty' || field === 'price' ? (parseFloat(value) || 0) : value;
+  renderItemTotals();
+}
+
+function renderItemRows() {
+  const container = document.getElementById('items-list');
+  if (formItems.length === 0) {
+    container.innerHTML = '';
+    document.getElementById('items-total-row').style.display = 'none';
+    document.getElementById('items-sync-hint').textContent = '';
+    return;
+  }
+  container.innerHTML = formItems.map(item => `
+    <div class="item-row" id="irow-${item._id}">
+      <input class="item-name-input" type="text" placeholder="商品名稱" value="${escHtml(item.name)}"
+        oninput="updateItem(${item._id},'name',this.value)">
+      <input class="item-qty-input" type="number" min="1" placeholder="數量" value="${item.qty}"
+        oninput="updateItem(${item._id},'qty',this.value)">
+      <input class="item-price-input" type="number" placeholder="單價" value="${item.price || ''}"
+        oninput="updateItem(${item._id},'price',this.value)">
+      <span class="item-total" id="itotal-${item._id}">${calcItemTotal(item)}</span>
+      <button class="item-del-btn" onclick="removeItemRow(${item._id})">✕</button>
+    </div>`).join('');
+  renderItemTotals();
+}
+
+function calcItemTotal(item) {
+  const cur = document.getElementById('f-currency') ? document.getElementById('f-currency').value : 'TWD';
+  const t = (item.qty || 0) * (item.price || 0);
+  if (t <= 0) return '—';
+  const otherCur = cur === 'TWD' ? 'JPY' : 'TWD';
+  const converted = convert(t, cur, otherCur);
+  return `${fmtAmt(t, cur)}<span class="item-total-sub">≈ ${fmtAmt(converted, otherCur)}</span>`;
+}
+
+function renderItemTotals() {
+  const cur = document.getElementById('f-currency') ? document.getElementById('f-currency').value : 'TWD';
+  const otherCur = cur === 'TWD' ? 'JPY' : 'TWD';
+  let sum = 0;
+  formItems.forEach(item => {
+    const t = (item.qty || 0) * (item.price || 0);
+    sum += t;
+    const el = document.getElementById(`itotal-${item._id}`);
+    if (el) {
+      if (t > 0) {
+        const converted = convert(t, cur, otherCur);
+        el.innerHTML = `${fmtAmt(t, cur)}<span class="item-total-sub">≈ ${fmtAmt(converted, otherCur)}</span>`;
+      } else {
+        el.innerHTML = '—';
+      }
+    }
+  });
+  const totalRow = document.getElementById('items-total-row');
+  const totalVal = document.getElementById('items-total-val');
+  const hint = document.getElementById('items-sync-hint');
+  if (formItems.length > 0) {
+    totalRow.style.display = 'flex';
+    if (sum > 0) {
+      const convertedSum = convert(sum, cur, otherCur);
+      totalVal.innerHTML = `${fmtAmt(sum, cur)} <span style="font-size:11px;color:#b4b6ba;font-family: 'Noto Sans TC', sans-serif;">≈ ${fmtAmt(convertedSum, otherCur)}</span>`;
+    } else {
+      totalVal.textContent = '—';
+    }
+    // Check if matches main amount
+    const mainAmt = parseFloat(document.getElementById('f-amount').value) || 0;
+    if (sum > 0 && mainAmt > 0) {
+      if (Math.abs(sum - mainAmt) < 0.5) {
+        hint.textContent = '✓ 明細合計與總金額相符';
+        hint.style.color = '#4ade80';
+      } else {
+        hint.textContent = `⚠ 明細合計 ${fmtAmt(sum,cur)} 與總金額 ${fmtAmt(mainAmt,cur)} 不符`;
+        hint.style.color = '#fbbf24';
+      }
+    } else { hint.textContent = ''; }
+  } else {
+    totalRow.style.display = 'none';
+    hint.textContent = '';
+  }
+}
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function convert(amount, from, to) {
+  if (from === to) return amount;
+  if (from === "JPY" && to === "TWD") return +(amount * JPY_TO_TWD).toFixed(1);
+  return Math.round(amount * TWD_TO_JPY);
+}
+function fmtAmt(amount, currency) {
+  if (currency === "JPY") return `¥${Number(amount).toLocaleString()}`;
+  return `NT$${Number(amount).toLocaleString()}`;
+}
+function getCat(id) { return CATEGORIES.find(c => c.id === id) || CATEGORIES[7]; }
+function totalInDisplay(list) {
+  return list.reduce((s, e) => s + convert(e.amount, e.currency, displayCurrency), 0);
+}
+
+function setDisplayCurrency(cur) {
+  displayCurrency = cur;
+  document.getElementById('btn-twd').classList.toggle('active', cur === 'TWD');
+  document.getElementById('btn-jpy').classList.toggle('active', cur === 'JPY');
+  updateHeader();
+  renderList();
+  renderSummary();
+}
+
+function updateHeader() {
+  const total = totalInDisplay(expenses);
+  document.getElementById('total-display').textContent =
+    displayCurrency === "TWD"
+      ? `NT$ ${Math.round(total).toLocaleString()}`
+      : `¥ ${Math.round(convert(totalInDisplay(expenses.map(e => ({...e, currency:"TWD", amount: convert(e.amount, e.currency, "TWD")}))), "TWD", "JPY")).toLocaleString()}`;
+  // simpler:
+  const twdTotal = expenses.reduce((s,e) => s + convert(e.amount, e.currency, "TWD"), 0);
+  document.getElementById('total-display').textContent =
+    displayCurrency === "TWD"
+      ? `NT$ ${Math.round(twdTotal).toLocaleString()}`
+      : `¥ ${Math.round(twdTotal * TWD_TO_JPY).toLocaleString()}`;
+}
+
+function showView(view) {
+  currentView = view;
+  ['list','summary','detail','add'].forEach(v => {
+    document.getElementById(`page-${v}`).classList.toggle('active', v === view);
+  });
+  // FAB
+  document.getElementById('fab').style.display = (view === 'list' || view === 'summary') ? 'flex' : 'none';
+  // nav highlight
+  document.getElementById('nav-list').classList.toggle('active', view === 'list' || view === 'detail' || view === 'add');
+  document.getElementById('nav-summary').classList.toggle('active', view === 'summary');
+
+  if (view === 'summary') renderSummary();
+}
+
+// Category filter chips
+function renderCatFilter() {
+  const container = document.getElementById('cat-filter');
+  container.innerHTML = '';
+  const all = document.createElement('button');
+  all.className = 'cat-chip' + (filterCategory === 'all' ? ' ' : '');
+  all.textContent = '全部';
+  all.style.background = filterCategory === 'all' ? '#8B5E3C' : '#F0EBE3';
+  all.style.borderColor = filterCategory === 'all' ? '#6B4428' : '#DDD4C6';
+  all.style.color = filterCategory === 'all' ? '#fff' : '#6B5744';
+  all.onclick = () => { filterCategory = 'all'; renderCatFilter(); renderList(); };
+  container.appendChild(all);
+
+  CATEGORIES.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-chip';
+    btn.textContent = `${c.icon} ${c.label}`;
+    const sel = filterCategory === c.id;
+    btn.style.background = sel ? c.color + '22' : '#F0EBE3';
+    btn.style.borderColor = sel ? c.color : '#DDD4C6';
+    btn.style.color = sel ? c.color : '#6B5744';
+    btn.onclick = () => { filterCategory = sel ? 'all' : c.id; renderCatFilter(); renderList(); };
+    container.appendChild(btn);
+  });
+}
+
+function setSort(key) {
+  if (sortBy === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  else { sortBy = key; sortDir = 'desc'; }
+  ['date','amount','category'].forEach(k => {
+    const btn = document.getElementById(`sort-${k}`);
+    btn.classList.toggle('active', k === sortBy);
+    btn.textContent = k === 'date' ? '日期' : k === 'amount' ? '金額' : '分類';
+    if (k === sortBy) btn.textContent += sortDir === 'asc' ? ' ↑' : ' ↓';
+  });
+  renderList();
+}
+
+function getFiltered() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  return expenses
+    .filter(e => filterCategory === 'all' || e.category === filterCategory)
+    .filter(e => !search || e.title.toLowerCase().includes(search) || e.store.toLowerCase().includes(search))
+    .sort((a, b) => {
+      let va = a[sortBy], vb = b[sortBy];
+      if (sortBy === 'amount') {
+        va = convert(a.amount, a.currency, 'TWD');
+        vb = convert(b.amount, b.currency, 'TWD');
+      }
+      if (va < vb) return sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+}
+
+function renderList() {
+  const list = getFiltered();
+  const container = document.getElementById('expense-list');
+  if (list.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">✈️</div>尚無記錄，點擊下方「+」新增</div>`;
+    return;
+  }
+  container.innerHTML = list.map((exp, i) => {
+    const cat = getCat(exp.category);
+    const dispAmt = convert(exp.amount, exp.currency, displayCurrency);
+    const subAmt = exp.currency !== displayCurrency ? `<div class="exp-sub-amt">${fmtAmt(exp.amount, exp.currency)}</div>` : '';
+    const meta = [exp.date, exp.store, exp.platform].filter(Boolean).join(' · ');
+    const itemBadge = (exp.items && exp.items.length > 0) ? `<span class="exp-items-badge">🧾 ${exp.items.length}項</span>` : '';
+    const receiptBadge = (exp.receipts && exp.receipts.length > 0) ? `<span class="exp-items-badge">📷 ${exp.receipts.length}</span>` : '';
+    return `<div class="expense-row" onclick="openDetail(${exp.id})" style="background:${i%2===0?'#ffffff':'#f8f9fa'}">
+      <div class="exp-icon" style="background:${cat.color}20;">${cat.icon}</div>
+      <div class="exp-info">
+        <div class="exp-title">${exp.title}${itemBadge}${receiptBadge}</div>
+        <div class="exp-meta">${meta}</div>
+      </div>
+      <div class="exp-amount">
+        <div class="exp-main-amt" style="color:${cat.color}">${fmtAmt(dispAmt, displayCurrency)}</div>
+        ${subAmt}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openDetail(id) {
+  const exp = expenses.find(e => e.id === id);
+  if (!exp) return;
+  const cat = getCat(exp.category);
+  const rows = [
+    { icon:'📅', label:'日期', value:exp.date },
+    { icon:'💳', label:'付款方式', value:exp.paymentMethod },
+    exp.platform && { icon:'🌐', label:'平台', value:exp.platform },
+    exp.store && { icon:'🏪', label:'店家', value:exp.store },
+    exp.storeAddress && { icon:'📍', label:'地址', value:exp.storeAddress },
+    exp.note && { icon:'📝', label:'備註', value:exp.note },
+  ].filter(Boolean);
+
+  const itemsHTML = (exp.items && exp.items.length > 0) ? (() => {
+    const otherCur = exp.currency === 'TWD' ? 'JPY' : 'TWD';
+    return `
+    <div class="det-items-box">
+      <div class="det-items-title">🧾 商品明細（${exp.items.length} 項）</div>
+      <div style="display:flex;justify-content:space-between;padding-bottom:6px;border-bottom:1px solid #2a2e40;margin-bottom:4px;">
+        <span style="font-size:10px;color:#4a5568;flex:1;">商品</span>
+        <span style="font-size:10px;color:#4a5568;width:36px;text-align:center;">數量</span>
+        <span style="font-size:10px;color:#4a5568;width:70px;text-align:right;">單價</span>
+        <span style="font-size:10px;color:#4a5568;width:90px;text-align:right;">小計</span>
+      </div>
+      ${exp.items.map(i => {
+        const subtotal = i.qty * i.price;
+        const converted = convert(subtotal, exp.currency, otherCur);
+        return `<div class="det-item-row">
+          <span class="det-item-name">${escHtml(i.name)}</span>
+          <span class="det-item-qty">×${i.qty}</span>
+          <span class="det-item-price">${i.price > 0 ? fmtAmt(i.price, exp.currency) : '—'}</span>
+          <span style="text-align:right;width:90px;">
+            <span style="font-size:13px;font-weight:600;color:#60a5fa;font-family: 'Noto Sans TC', sans-serif;display:block;">${subtotal > 0 ? fmtAmt(subtotal, exp.currency) : '—'}</span>
+            ${subtotal > 0 ? `<span style="font-size:10px;color:#b4b6ba;font-family: 'Noto Sans TC', sans-serif;">≈ ${fmtAmt(converted, otherCur)}</span>` : ''}
+          </span>
+        </div>`;
+      }).join('')}
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;padding-top:8px;margin-top:4px;border-top:1px solid #2a2e40;">
+        <span style="font-size:11px;color:#4a5568;">合計</span>
+        <span style="text-align:right;">
+          <span style="font-size:13px;font-weight:600;color:#60a5fa;font-family: 'Noto Sans TC', sans-serif;display:block;">
+            ${fmtAmt(exp.items.reduce((s,i)=>s+i.qty*i.price,0), exp.currency)}
+          </span>
+          <span style="font-size:11px;color:#b4b6ba;font-family: 'Noto Sans TC', sans-serif;">
+            ≈ ${fmtAmt(convert(exp.items.reduce((s,i)=>s+i.qty*i.price,0), exp.currency, otherCur), otherCur)}
+          </span>
+        </span>
+      </div>
+    </div>`;
+  })() : '';
+
+  const receiptsHTML = (exp.receipts && exp.receipts.length > 0) ? `
+    <div class="det-receipt-box">
+      <div class="det-receipt-title">📷 收據照片（${exp.receipts.length} 張）</div>
+      <div class="det-receipt-grid">
+        ${exp.receipts.map(src => `
+          <div class="det-receipt-thumb" onclick="openLightbox('${src}')">
+            <img src="${src}" alt="收據">
+          </div>`).join('')}
+      </div>
+    </div>` : '';
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-header" style="background:linear-gradient(135deg,${cat.color}15,${cat.color}05);border:1px solid ${cat.color}30;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div style="font-size:28px;margin-bottom:8px;">${cat.icon}</div>
+          <div class="detail-cat-label" style="color:${cat.color}">${cat.label}</div>
+          <div class="detail-title">${exp.title}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="detail-amount" style="color:${cat.color}">${fmtAmt(exp.amount, exp.currency)}</div>
+          <div style="font-size:12px;color:#4a6085;font-family: 'Noto Sans TC', sans-serif;">≈ ${exp.currency==='TWD'?fmtAmt(Math.round(convert(exp.amount,'TWD','JPY')),'JPY'):fmtAmt(Math.round(convert(exp.amount,'JPY','TWD')),'TWD')}</div>
+        </div>
+      </div>
+    </div>
+    ${rows.map(r=>`<div class="detail-row"><span class="detail-row-icon">${r.icon}</span><span class="detail-row-label">${r.label}</span><span class="detail-row-val">${r.value}</span></div>`).join('')}
+    ${itemsHTML}
+    ${receiptsHTML}
+    <div class="btn-row">
+      <button class="edit-btn" onclick="openEdit(${exp.id})">✏️ 編輯</button>
+      <button class="del-btn" onclick="openDeleteDialog(${exp.id})">🗑️ 刪除</button>
+    </div>
+  `;
+  showView('detail');
+}
+
+function openAdd() {
+  editingId = null;
+  formCategory = 'flight';
+  formItems = [];
+  formReceipts = [];
+  document.getElementById('form-title').textContent = '➕ 新增消費';
+  document.getElementById('save-btn').textContent = '新增記錄 ✓';
+  document.getElementById('cancel-btn').textContent = '取消';
+  document.getElementById('f-amount').value = '';
+  document.getElementById('f-currency').value = 'TWD';
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('f-payment').value = '信用卡';
+  document.getElementById('f-platform').value = '';
+  document.getElementById('f-store').value = '';
+  document.getElementById('f-address').value = '';
+  document.getElementById('f-note').value = '';
+  document.getElementById('convert-hint').textContent = '';
+  document.getElementById('other-payment').classList.remove('show');
+  document.getElementById('other-platform').classList.remove('show');
+  document.getElementById('f-payment-other').value = '';
+  document.getElementById('f-platform-other').value = '';
+  renderItemRows();
+  renderReceiptGrid();
+  renderCatPicker();
+  showView('add');
+}
+
+function openEdit(id) {
+  const exp = expenses.find(e => e.id === id);
+  if (!exp) return;
+  editingId = id;
+  formCategory = exp.category;
+  formItems = (exp.items || []).map(i => ({ ...i, _id: Date.now() + Math.random() }));
+  formReceipts = [...(exp.receipts || [])];
+  document.getElementById('form-title').textContent = '✏️ 編輯記錄';
+  document.getElementById('save-btn').textContent = '儲存變更 ✓';
+  document.getElementById('cancel-btn').textContent = '取消';
+  document.getElementById('f-amount').value = exp.amount;
+  document.getElementById('f-currency').value = exp.currency;
+  document.getElementById('f-date').value = exp.date;
+
+  // Payment method — check if custom
+  const paymentSel = document.getElementById('f-payment');
+  const paymentOpts = Array.from(paymentSel.options).map(o => o.value);
+  if (paymentOpts.includes(exp.paymentMethod)) {
+    paymentSel.value = exp.paymentMethod;
+    document.getElementById('other-payment').classList.remove('show');
+    document.getElementById('f-payment-other').value = '';
+  } else {
+    paymentSel.value = '其他';
+    document.getElementById('other-payment').classList.add('show');
+    document.getElementById('f-payment-other').value = exp.paymentMethod;
+  }
+
+  // Platform — check if custom
+  const platSel = document.getElementById('f-platform');
+  const platOpts = Array.from(platSel.options).map(o => o.value);
+  if (platOpts.includes(exp.platform || '')) {
+    platSel.value = exp.platform || '';
+    document.getElementById('other-platform').classList.remove('show');
+    document.getElementById('f-platform-other').value = '';
+  } else {
+    platSel.value = '其他';
+    document.getElementById('other-platform').classList.add('show');
+    document.getElementById('f-platform-other').value = exp.platform || '';
+  }
+
+  document.getElementById('f-store').value = exp.store || '';
+  document.getElementById('f-address').value = exp.storeAddress || '';
+  document.getElementById('f-note').value = exp.note || '';
+  updateConvertHint();
+  renderItemRows();
+  renderReceiptGrid();
+  renderCatPicker();
+  showView('add');
+}
+
+function renderCatPicker() {
+  const container = document.getElementById('cat-picker');
+  container.innerHTML = CATEGORIES.map(c => `
+    <button class="cat-pick" id="cp-${c.id}" onclick="selectCat('${c.id}')"
+      style="background:${formCategory===c.id?c.color+'22':'#F0EBE3'};border-color:${formCategory===c.id?c.color:'#DDD4C6'};color:${formCategory===c.id?c.color:'#6B5744'}">
+      ${c.icon} ${c.label}
+    </button>`).join('');
+}
+
+function selectCat(id) {
+  formCategory = id;
+  renderCatPicker();
+}
+
+function updateConvertHint() {
+  const amt = parseFloat(document.getElementById('f-amount').value);
+  const cur = document.getElementById('f-currency').value;
+  const hint = document.getElementById('convert-hint');
+  if (!amt || !cur) { hint.textContent = ''; } else {
+    if (cur === 'TWD') hint.textContent = `≈ ¥${Math.round(amt * TWD_TO_JPY).toLocaleString()} JPY`;
+    else hint.textContent = `≈ NT$${Math.round(amt * JPY_TO_TWD).toLocaleString()} TWD`;
+  }
+  renderItemTotals();
+}
+
+function saveExpense() {
+  const title = document.getElementById('f-title').value.trim();
+  const amount = parseFloat(document.getElementById('f-amount').value);
+  if (!title || !amount) { showToast('請填寫名稱和金額', 'error'); return; }
+
+  const paymentSel = document.getElementById('f-payment').value;
+  const paymentMethod = paymentSel === '其他'
+    ? (document.getElementById('f-payment-other').value.trim() || '其他')
+    : paymentSel;
+
+  const platformSel = document.getElementById('f-platform').value;
+  const platform = platformSel === '其他'
+    ? (document.getElementById('f-platform-other').value.trim() || '其他')
+    : platformSel;
+
+  const cleanItems = formItems
+    .filter(i => i.name.trim())
+    .map(({ name, qty, price }) => ({ name: name.trim(), qty: qty || 1, price: price || 0 }));
+
+  const data = {
+    category: formCategory,
+    title,
+    amount,
+    currency: document.getElementById('f-currency').value,
+    date: document.getElementById('f-date').value,
+    paymentMethod,
+    platform,
+    store: document.getElementById('f-store').value,
+    storeAddress: document.getElementById('f-address').value,
+    note: document.getElementById('f-note').value,
+    items: cleanItems,
+    receipts: [...formReceipts],
+  };
+  if (editingId) {
+    expenses = expenses.map(e => e.id === editingId ? { ...data, id: editingId } : e);
+    showToast('已更新！');
+  } else {
+    expenses.push({ ...data, id: nextId++ });
+    showToast('已新增！');
+  }
+  updateHeader();
+  renderList();
+  showView('list');
+}
+
+function openDeleteDialog(id) {
+  deleteTargetId = id;
+  document.getElementById('delete-overlay').style.display = 'flex';
+}
+function closeDeleteDialog() {
+  deleteTargetId = null;
+  document.getElementById('delete-overlay').style.display = 'none';
+}
+function confirmDelete() {
+  if (!deleteTargetId) return;
+  expenses = expenses.filter(e => e.id !== deleteTargetId);
+  closeDeleteDialog();
+  updateHeader();
+  renderList();
+  showToast('已刪除', 'info');
+  showView('list');
+}
+
+function renderSummary() {
+  const twdTotal = expenses.reduce((s,e) => s + convert(e.amount, e.currency, 'TWD'), 0);
+  const catTotals = CATEGORIES.map(c => {
+    const total = expenses.filter(e => e.category === c.id).reduce((s,e) => s + convert(e.amount, e.currency, displayCurrency), 0);
+    return { ...c, total };
+  }).filter(c => c.total > 0);
+
+  const dispTotal = expenses.reduce((s,e) => s + convert(e.amount, e.currency, displayCurrency), 0);
+
+  document.getElementById('summary-cats').innerHTML = catTotals.map(c => {
+    const pct = dispTotal > 0 ? (c.total / dispTotal * 100) : 0;
+    return `<div class="summary-row">
+      <div class="summary-row-top">
+        <div class="summary-cat-name"><span>${c.icon}</span><span>${c.label}</span></div>
+        <div style="text-align:right;">
+          <div class="summary-amt" style="color:${c.color}">${displayCurrency==='TWD'?`NT$${Math.round(c.total).toLocaleString()}`:`¥${Math.round(c.total).toLocaleString()}`}</div>
+          <div class="summary-pct">${pct.toFixed(1)}%</div>
+        </div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${c.color}"></div></div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('stat-count').style.color = '#1a1b1e';
+  document.getElementById('stat-avg').style.color = '#3d3f44';
+  document.getElementById('stat-count').textContent = expenses.length;
+  const avg = expenses.length ? Math.round(dispTotal / expenses.length) : 0;
+  document.getElementById('stat-avg').textContent = expenses.length
+    ? (displayCurrency === 'TWD' ? `NT$${avg.toLocaleString()}` : `¥${avg.toLocaleString()}`)
+    : '—';
+
+  const twdSum = expenses.filter(e=>e.currency==='TWD').reduce((s,e)=>s+e.amount,0);
+  const jpySum = expenses.filter(e=>e.currency==='JPY').reduce((s,e)=>s+e.amount,0);
+  let curHTML = '';
+  if (twdSum) curHTML += `<div class="cur-row"><span>台幣 TWD</span><span>NT$${twdSum.toLocaleString()} <span style="font-size:10px;color:#b4b6ba;">≈ ¥${Math.round(twdSum*TWD_TO_JPY).toLocaleString()}</span></span></div>`;
+  if (jpySum) curHTML += `<div class="cur-row"><span>日幣 JPY</span><span>¥${jpySum.toLocaleString()} <span style="font-size:10px;color:#b4b6ba;">≈ NT$${Math.round(jpySum*JPY_TO_TWD).toLocaleString()}</span></span></div>`;
+  document.getElementById('cur-stats').innerHTML = curHTML || '<div style="font-size:12px;color:#4a5568;">尚無資料</div>';
+}
+
+let toastTimer;
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  t.style.background = type==='error'?'#fef2f2':type==='info'?'#F7F3EE':'#f0fdf4';
+  t.style.border = `1px solid ${type==='error'?'#fca5a5':type==='info'?'#3d3f44':'#86efac'}`;
+  t.style.color = type==='error'?'#dc2626':type==='info'?'#2a2c30':'#16a34a';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.style.display = 'none'; }, 2200);
+}
+
+// INIT
+renderCatFilter();
+renderList();
+updateHeader();
+</script>
+
+</body>
+</html>

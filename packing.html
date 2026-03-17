@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>行李清單 — Cream</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F3EE;
+    --surface: #FDFAF6;
+    --surface2: #F0EBE3;
+    --border: #DDD4C6;
+    --text: #2C2016;
+    --text2: #6B5744;
+    --text3: #A8917A;
+    --accent: #8B5E3C;
+    --accent2: #C4956A;
+    --check: #388E3C;
+    --done-text: #A5C8A7;
+    --tag-bg: #E8F5E9;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+  padding-bottom:80px; font-family: 'Noto Sans TC', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; max-width: 430px; margin: 0 auto; overflow-x: hidden; }
+
+  /* Header */
+  .header {
+    background: var(--surface);
+    padding: 54px 22px 18px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+  .header-title-area {}
+  .header-eyebrow { font-family: 'Noto Sans TC', sans-serif; font-size: 10px; letter-spacing: 4px; color: var(--accent); text-transform: uppercase; margin-bottom: 4px; }
+  .header-title { font-family: 'Noto Sans TC', sans-serif; font-size: 28px; font-weight: 700; color: var(--text); line-height: 1.1; }
+  .edit-btn {
+    background: var(--tag-bg); border: 1.5px solid var(--border); color: var(--text2);
+    padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500;
+    cursor: pointer; font-family: 'Noto Sans TC', sans-serif; transition: all 0.2s;
+  }
+  .edit-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* Trip Toggle */
+  .trip-toggle { display: flex; gap: 0; background: var(--surface2); border-radius: 12px; padding: 3px; border: 1px solid var(--border); margin-bottom: 16px; }
+  .trip-btn {
+    flex: 1; padding: 9px; border-radius: 10px; border: none; font-size: 14px;
+    font-weight: 500; cursor: pointer; transition: all 0.25s; background: transparent;
+    color: var(--text3); font-family: 'Noto Sans TC', sans-serif;
+  }
+  .trip-btn.active { background: var(--surface); color: var(--text); box-shadow: 0 2px 8px rgba(44,36,22,0.1); font-weight: 700; }
+
+  /* Progress */
+  .progress-bar { height: 3px; background: var(--border); border-radius: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 10px; transition: width 0.5s ease; }
+  .progress-text { font-size: 11px; color: var(--text3); text-align: right; margin-top: 5px; }
+
+  /* Category Tabs */
+  .cat-tabs {
+    display: flex; overflow-x: auto; gap: 8px; padding: 14px 20px;
+    scrollbar-width: none; background: var(--surface);
+    position: sticky; top: 175px; z-index: 90;
+    border-bottom: 1px solid var(--border);
+  }
+  .cat-tabs::-webkit-scrollbar { display: none; }
+  .cat-tab {
+    flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 10px 14px; border-radius: 14px; border: 1.5px solid var(--border);
+    background: var(--surface2); cursor: pointer; transition: all 0.2s; min-width: 60px;
+  }
+  .cat-tab.active { background: var(--accent); border-color: var(--accent); }
+  .cat-tab .icon { font-size: 18px; }
+  .cat-tab .name { font-size: 11px; font-weight: 600; color: var(--text2); }
+  .cat-tab.active .name { color: #fff; }
+  .cat-tab .prog { font-size: 10px; color: var(--text3); }
+  .cat-tab.active .prog { color: rgba(255,255,255,0.75); }
+  .cat-tab.done .name { color: var(--check); }
+
+  /* Content */
+  .content { padding: 18px 18px 110px; }
+
+  .cat-hero {
+    display: flex; align-items: center; gap: 14px;
+    padding: 18px 20px; background: var(--surface);
+    border-radius: 18px; border: 1px solid var(--border);
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(196,149,106,0.08);
+  }
+  .cat-hero-icon { font-size: 32px; }
+  .cat-hero-name { font-family: 'Noto Sans TC', sans-serif; font-size: 20px; font-weight: 700; color: var(--text); }
+  .cat-hero-sub { font-size: 12px; color: var(--accent); margin-top: 2px; }
+  .cat-hero-ring {
+    margin-left: auto; width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: var(--accent);
+    border: 2.5px solid var(--accent2); background: var(--surface);
+  }
+
+  .section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 3px; color: var(--text3);
+    text-transform: uppercase; margin-bottom: 8px; padding-left: 2px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .section-drag-handle {
+    display: none; cursor: grab; color: var(--text3); font-size: 14px;
+    padding: 2px 4px; border-radius: 4px; line-height: 1;
+    transition: color 0.15s;
+  }
+  .section-drag-handle:hover { color: var(--accent); }
+  .edit-mode .section-drag-handle { display: inline-block; }
+  .section-wrapper { transition: opacity 0.15s; }
+  .section-wrapper.sec-dragging { opacity: 0.35; }
+  .section-wrapper.sec-drag-over .section-block { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent2); }
+  .section-block {
+    background: var(--surface); border-radius: 16px;
+    border: 1px solid var(--border); overflow: hidden; margin-bottom: 16px;
+    box-shadow: 0 1px 6px rgba(44,36,22,0.04);
+  }
+  .item-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 16px; border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .item-row:last-child { border-bottom: none; }
+  .item-row.checked { background: #F1F8F1; }
+  .check-box {
+    width: 22px; height: 22px; border-radius: 6px;
+    border: 2px solid var(--border); background: transparent;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.2s;
+  }
+  .check-box.checked { background: var(--check); border-color: var(--check); }
+  .check-icon { color: #fff; font-size: 12px; font-weight: 700; display: none; }
+  .check-box.checked .check-icon { display: block; }
+  .item-name { font-size: 14.5px; color: var(--text); flex: 1; transition: all 0.2s; line-height: 1.4; }
+  .item-name.checked { color: var(--done-text); text-decoration: line-through; }
+  .del-btn {
+    background: #FFEBEE; border: none; color: #E53935; width: 24px; height: 24px;
+    border-radius: 6px; cursor: pointer; font-size: 15px; display: none;
+    align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .edit-mode .del-btn { display: flex; }
+
+  .add-item-row { padding: 10px 12px; display: flex; gap: 8px; border-top: 1px solid var(--border); }
+  .add-item-row input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px; color: var(--text);
+    font-size: 14px; outline: none; font-family: 'Noto Sans TC', sans-serif;
+  }
+  .add-item-row button {
+    background: var(--accent); border: none; color: #fff; padding: 8px 14px;
+    border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+
+  .add-section-btn {
+    width: 100%; padding: 12px; background: transparent;
+    border: 1.5px dashed var(--border); border-radius: 12px; color: var(--text3);
+    font-size: 13px; cursor: pointer; margin-bottom: 12px;
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+  .add-section-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .add-section-row input {
+    flex: 1; background: var(--surface); border: 1.5px solid var(--accent2);
+    border-radius: 10px; padding: 10px 14px; color: var(--text);
+    font-size: 14px; outline: none; font-family: 'Noto Sans TC', sans-serif;
+  }
+  .add-section-row button {
+    background: var(--accent); border: none; color: #fff; padding: 10px 14px;
+    border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px;
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+  .add-section-row .cancel-btn { background: var(--surface2); color: var(--text2); }
+
+  /* Bottom Bar */
+  .bottom-bar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 430px;
+    background: rgba(250,247,242,0.95); backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border); padding: 12px 18px 30px;
+    display: flex; gap: 10px;
+  }
+  .bottom-btn {
+    flex: 1; padding: 13px; border-radius: 14px; font-size: 14px;
+    font-weight: 700; cursor: pointer; font-family: 'Noto Sans TC', sans-serif; transition: all 0.2s;
+  }
+  .bottom-btn.reset { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); }
+  .bottom-btn.check-all { background: var(--accent); border: none; color: #fff; box-shadow: 0 4px 16px rgba(196,149,106,0.35); }
+
+  .cat-tab.dragging { opacity: 0.4; transform: scale(0.96); }
+  .cat-tab.drag-over { border-color: var(--accent) !important; background: var(--accent2) !important; }
+  .cat-tab .drag-handle { font-size: 10px; color: var(--text3); cursor: grab; display: none; margin-bottom: 1px; }
+  .edit-mode .cat-tab .drag-handle { display: block; }
+  .cat-tab[draggable="true"] { cursor: grab; }
+
+  /* Add category tab button */
+  .cat-tab-add {
+    flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; padding: 10px 14px; border-radius: 14px;
+    border: 1.5px dashed var(--border); background: transparent;
+    cursor: pointer; transition: all 0.2s; min-width: 60px;
+    color: var(--text3); font-size: 20px;
+  }
+  .cat-tab-add:hover { border-color: var(--accent); color: var(--accent); background: var(--tag-bg); }
+  .cat-tab-add .add-label { font-size: 10px; font-weight: 600; }
+
+  /* Delete category button on hero */
+  .cat-hero-del {
+    display: none; background: #FDE8E8; border: none; color: #E06060;
+    padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: 'Noto Sans TC', sans-serif; margin-left: 8px;
+  }
+  .edit-mode .cat-hero-del { display: inline-flex; align-items: center; gap: 4px; }
+
+  /* Modal overlay */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(27,58,31,0.4);
+    backdrop-filter: blur(4px); z-index: 500; align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-sheet {
+    background: var(--surface); border-radius: 24px 24px 0 0;
+    padding: 24px 22px 40px; width: 100%; max-width: 430px;
+    border-top: 1px solid var(--border);
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-title { font-family: 'Noto Sans TC', sans-serif; font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .modal-sub { font-size: 12px; color: var(--text3); margin-bottom: 20px; }
+  .modal-field { margin-bottom: 14px; }
+  .modal-label { font-size: 11px; font-weight: 700; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+  .modal-input {
+    width: 100%; background: var(--surface2); border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 11px 14px; color: var(--text);
+    font-size: 15px; outline: none; font-family: 'Noto Sans TC', sans-serif;
+    transition: border-color 0.2s;
+  }
+  .modal-input:focus { border-color: var(--accent); }
+  .emoji-grid {
+    display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-top: 6px;
+  }
+  .emoji-opt {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; border-radius: 10px; border: 1.5px solid var(--border);
+    background: var(--surface2); cursor: pointer; transition: all 0.15s;
+  }
+  .emoji-opt.selected { border-color: var(--accent); background: var(--tag-bg); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .modal-btn { flex: 1; padding: 13px; border-radius: 14px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans TC', sans-serif; transition: all 0.2s; border: none; }
+  .modal-btn.cancel { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); }
+  .modal-btn.confirm { background: var(--accent); color: #fff; box-shadow: 0 4px 16px rgba(196,149,106,0.3); }
+
+  .hidden { display: none !important; }
+</style>
+
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="header-top">
+      <div class="header-title-area">
+        <div class="header-eyebrow">Travel Packing</div>
+        <div class="header-title">行李清單</div>
+      </div>
+      <button class="edit-btn" id="editBtn" onclick="toggleEdit()">編輯</button>
+    </div>
+    <div class="trip-toggle">
+      <button class="trip-btn active" id="btnOut" onclick="setTrip('out')">✈️ 去程</button>
+      <button class="trip-btn" id="btnIn" onclick="setTrip('in')">🏠 回程</button>
+      <button class="trip-btn" id="btnDaily" onclick="setTrip('daily')">☀️ 每日</button>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="totalFill" style="width:0%"></div></div>
+    <div class="progress-text" id="totalText">0 / 0</div>
+  </div>
+
+  <div class="cat-tabs" id="catTabs"></div>
+  <div class="content" id="content"></div>
+
+  <div class="bottom-bar">
+    <button class="bottom-btn reset" onclick="resetTrip()" id="resetBtn">重置清單</button>
+    <button class="bottom-btn check-all" onclick="checkAll()">全部勾選 ✓</button>
+  </div>
+</div>
+
+<!-- Add Category Modal -->
+<div class="modal-overlay" id="addCatModal" onclick="closeModalOutside(event)">
+  <div class="modal-sheet">
+    <div class="modal-title">新增分類</div>
+    <div class="modal-sub">為這個行程新增一個自訂分類</div>
+    <div class="modal-field">
+      <div class="modal-label">分類名稱</div>
+      <input class="modal-input" id="newCatName" placeholder="例如：食品、文件…" maxlength="10">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">選擇圖示</div>
+      <div class="emoji-grid" id="emojiGrid"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal()">取消</button>
+      <button class="modal-btn confirm" onclick="confirmAddCat()">新增分類</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATEGORIES = [
+  {id:"essentials",name:"隨身物品",icon:"👜",sections:[
+    {name:"重要",items:["錢包","駕照","鑰匙 - 家裡、車子","假牙","眼鏡","護照","明細/錢幣夾鏈袋"]},
+    {name:"飾品",items:["手錶手鍊","護身符","關聖帝君王璋"]},
+    {name:"其他",items:["糖果、喉糖、無好冰心話梅","小電風扇","粉餅","口紅"]}
+  ]},
+  {id:"skincare",name:"保養品",icon:"🧴",sections:[
+    {name:"臉用",items:["護唇膏","化妝水","精華液","乳霜","維他命C精華","面膜","眼霜"]},
+    {name:"身體用",items:["身體乳","髮油、髮乳"]},
+    {name:"藥品",items:["眼藥水","皮膚藥膏","疤痘藥","B群","鎂鈣","雞精","面速力達母"]}
+  ]},
+  {id:"makeup",name:"化妝品",icon:"💄",sections:[
+    {name:"彩妝",items:["防曬乳","粉底液","化妝包"]}
+  ]},
+  {id:"supplies",name:"用品",icon:"🪥",sections:[
+    {name:"盥洗",items:["牙刷牙膏","洗面乳","假牙泡錠","洗臉海綿","化妝棉","棉花棒","洗髮水","洗髮精","潤髮乳","棉條、衛生棉"]},
+    {name:"其他",items:["梳子","口罩","雨傘","飲料袋","髮圈","暖暖包","超涼口香糖","牙籤","濕紙巾","夾鏈袋","雨鞋","兔兔","枕頭"]}
+  ]},
+  {id:"clothes",name:"衣物",icon:"👕",sections:[
+    {name:"衣物",items:["內衣褲","上衣","褲子","外套","襪子","帽子","浴巾","替衣袋","頭圍","圍巾"]}
+  ]},
+  {id:"tech",name:"3C",icon:"📱",sections:[
+    {name:"設備",items:["手機","電腦","iPad","耳機","Apple Watch","相機(GR4、G7X3)","鏡頭","記憶卡","USB","Mac記憶卡轉接頭","CF記憶卡轉接"]},
+    {name:"充電",items:["手機充電器","手機充電線-Lightning、Type-C","電腦充電器","電腦充電線","相機充電器","相機電池","行動電源","Apple Watch充電線"]}
+  ]}
+];
+
+const DAILY_CAT_IDS = ['essentials', 'tech'];
+const DAILY_TECH_REMOVE = ['電腦','iPad','Mac記憶卡轉接頭','CF記憶卡轉接','手機充電器','電腦充電器','相機充電器','Apple Watch充電線'];
+
+let trip = 'out';
+let activeCat = 'essentials';
+let editMode = false;
+let addingSec = null;
+let dragSrcIdx = null;
+
+const buildState = (catIds) => {
+  const s = {};
+  CATEGORIES.filter(cat => !catIds || catIds.includes(cat.id)).forEach(cat => {
+    s[cat.id] = {};
+    cat.sections.forEach(sec => sec.items.forEach(item => s[cat.id][item] = false));
+  });
+  return s;
+};
+const buildCats = (catIds, removals) => {
+  let cats = JSON.parse(JSON.stringify(catIds ? CATEGORIES.filter(c => catIds.includes(c.id)) : CATEGORIES));
+  if(removals) {
+    cats = cats.map(cat => {
+      if(cat.id === 'tech') {
+        return {...cat, sections: cat.sections.map(sec => ({...sec, items: sec.items.filter(i => !removals.includes(i))}))};
+      }
+      return cat;
+    });
+  }
+  return cats;
+};
+
+let stateOut = buildState(), stateIn = buildState(), stateDaily = buildState(DAILY_CAT_IDS);
+let catsOut = buildCats(), catsIn = buildCats(), catsDaily = buildCats(DAILY_CAT_IDS, DAILY_TECH_REMOVE);
+
+const getState = () => trip === 'out' ? stateOut : trip === 'in' ? stateIn : stateDaily;
+const setState = (s) => { if(trip==='out') stateOut=s; else if(trip==='in') stateIn=s; else stateDaily=s; };
+const getCats = () => trip === 'out' ? catsOut : trip === 'in' ? catsIn : catsDaily;
+const setCats = (c) => { if(trip==='out') catsOut=c; else if(trip==='in') catsIn=c; else catsDaily=c; };
+let catsData = getCats();
+
+function getProgress(catId) {
+  const cat = getCats().find(c=>c.id===catId); if(!cat) return {done:0,total:0};
+  const st = getState()[catId]||{};
+  let total=0,done=0;
+  cat.sections.forEach(sec=>sec.items.forEach(item=>{total++;if(st[item])done++;}));
+  return {done,total};
+}
+function getTotalProgress() {
+  let total=0,done=0;
+  getCats().forEach(c=>{const p=getProgress(c.id);total+=p.total;done+=p.done;});
+  return {done,total};
+}
+
+function setTrip(t) {
+  trip=t;
+  document.getElementById('btnOut').classList.toggle('active',t==='out');
+  document.getElementById('btnIn').classList.toggle('active',t==='in');
+  document.getElementById('btnDaily').classList.toggle('active',t==='daily');
+  // reset activeCat to first available in this trip
+  const cats = getCats();
+  if(!cats.find(c=>c.id===activeCat)) activeCat = cats[0]?.id || 'essentials';
+  render();
+}
+function toggleEdit() {
+  editMode=!editMode; addingSec=null;
+  document.getElementById('editBtn').textContent=editMode?'完成':'編輯';
+  document.getElementById('editBtn').classList.toggle('active',editMode);
+  document.getElementById('app').classList.toggle('edit-mode',editMode);
+  render();
+}
+function setActiveCat(id) { activeCat=id; render(); }
+
+function toggleItem(catId, itemName) {
+  const st = {...getState()};
+  if(!st[catId]) st[catId]={};
+  st[catId][itemName] = !st[catId][itemName];
+  setState(st); render();
+}
+function removeItem(catId, secName, itemName) {
+  const updated = getCats().map(cat=>cat.id!==catId?cat:{...cat,sections:cat.sections.map(sec=>sec.name!==secName?sec:{...sec,items:sec.items.filter(i=>i!==itemName)})});
+  setCats(updated); render();
+}
+function addItem(catId, secName) {
+  const inp = document.getElementById(`inp-${catId}-${secName}`);
+  const name = inp?.value.trim(); if(!name) return;
+  const updated = getCats().map(cat=>cat.id!==catId?cat:{...cat,sections:cat.sections.map(sec=>sec.name!==secName?sec:{...sec,items:[...sec.items,name]})});
+  setCats(updated);
+  const st={...getState()}; if(!st[catId])st[catId]={}; st[catId][name]=false; setState(st);
+  inp.value=''; render();
+}
+function addSection(catId) {
+  const inp = document.getElementById('new-sec-inp');
+  const name = inp?.value.trim(); if(!name) return;
+  const updated = getCats().map(cat=>cat.id!==catId?cat:{...cat,sections:[...cat.sections,{name,items:[]}]});
+  setCats(updated); addingSec=null; render();
+}
+function resetTrip() {
+  if(trip==='out') stateOut=buildState();
+  else if(trip==='in') stateIn=buildState();
+  else stateDaily=buildState(DAILY_CAT_IDS);
+  render();
+}
+function checkAll() {
+  const st={};
+  getCats().forEach(cat=>{st[cat.id]={};cat.sections.forEach(sec=>sec.items.forEach(item=>st[cat.id][item]=true));});
+  setState(st); render();
+}
+
+function render() {
+  renderTabs(); renderContent(); renderProgress();
+}
+
+function renderProgress() {
+  const p=getTotalProgress();
+  const pct=p.total?Math.round(p.done/p.total*100):0;
+  document.getElementById('totalFill').style.width=pct+'%';
+  const label = trip==='out'?'去程':trip==='in'?'回程':'每日';
+  document.getElementById('totalText').textContent=`${p.done} / ${p.total} 項目已完成`;
+  document.getElementById('resetBtn').textContent=`重置${label}`;
+}
+
+function renderTabs() {
+  const tabs = document.getElementById('catTabs');
+  const addBtn = editMode
+    ? `<div class="cat-tab-add" onclick="openModal()"><span>＋</span><span class="add-label">新增</span></div>`
+    : '';
+  tabs.innerHTML = getCats().map((cat, idx) => {
+    const p = getProgress(cat.id);
+    const isActive = cat.id === activeCat;
+    const isDone = p.total > 0 && p.done === p.total;
+    const draggable = editMode ? 'draggable="true"' : '';
+    return `<div class="cat-tab${isActive?' active':''}${isDone?' done':''}" 
+      data-idx="${idx}" ${draggable}
+      onclick="handleTabClick(event,'${cat.id}')"
+      ondragstart="dragStart(event,${idx})"
+      ondragover="dragOver(event)"
+      ondragleave="dragLeave(event)"
+      ondrop="dragDrop(event,${idx})"
+      ondragend="dragEnd(event)">
+      <span class="drag-handle">⠿</span>
+      <span class="icon">${cat.icon}</span>
+      <span class="name">${cat.name}</span>
+      <span class="prog">${p.done}/${p.total}</span>
+    </div>`;
+  }).join('') + addBtn;
+}
+
+function handleTabClick(e, id) {
+  if(editMode && e.target.classList.contains('drag-handle')) return;
+  setActiveCat(id);
+}
+function dragStart(e, idx) {
+  if(!editMode) { e.preventDefault(); return; }
+  dragSrcIdx = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => e.target.classList.add('dragging'), 0);
+}
+function dragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+function dragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+function dragDrop(e, toIdx) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if(dragSrcIdx === null || dragSrcIdx === toIdx) return;
+  const cats = [...getCats()];
+  const [moved] = cats.splice(dragSrcIdx, 1);
+  cats.splice(toIdx, 0, moved);
+  setCats(cats);
+  dragSrcIdx = null;
+  render();
+}
+function dragEnd(e) {
+  e.target.classList.remove('dragging');
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('drag-over'));
+  dragSrcIdx = null;
+}
+
+function renderContent() {
+  const cat = getCats().find(c=>c.id===activeCat); if(!cat) return;
+  const st = getState()[cat.id]||{};
+  const p = getProgress(cat.id);
+  const pct = p.total?Math.round(p.done/p.total*100):0;
+
+  let html = `<div class="cat-hero">
+    <span class="cat-hero-icon">${cat.icon}</span>
+    <div><div class="cat-hero-name">${cat.name}</div><div class="cat-hero-sub">${p.done} / ${p.total} 已完成</div></div>
+    <button class="cat-hero-del" onclick="deleteCat('${cat.id}')">🗑 刪除分類</button>
+    <div class="cat-hero-ring">${pct}%</div>
+  </div>`;
+
+  cat.sections.forEach((sec, sIdx)=>{
+    const draggable = editMode ? 'draggable="true"' : '';
+    html+=`<div class="section-wrapper" data-sidx="${sIdx}" ${draggable}
+      ondragstart="secDragStart(event,${sIdx})"
+      ondragover="secDragOver(event)"
+      ondragleave="secDragLeave(event)"
+      ondrop="secDragDrop(event,${sIdx})"
+      ondragend="secDragEnd(event)">
+      <div class="section-label">
+        <span class="section-drag-handle" title="拖曳排序">⠿</span>
+        ${sec.name}
+      </div>
+      <div class="section-block">
+      ${sec.items.map(item=>`
+        <div class="item-row${st[item]?' checked':''}">
+          <div class="check-box${st[item]?' checked':''}" onclick="toggleItem('${cat.id}','${escHtml(item)}')">
+            <span class="check-icon">✓</span>
+          </div>
+          <span class="item-name${st[item]?' checked':''}">${escHtml(item)}</span>
+          <button class="del-btn" onclick="removeItem('${cat.id}','${escHtml(sec.name)}','${escHtml(item)}')">×</button>
+        </div>`).join('')}
+      ${editMode?`<div class="add-item-row"><input id="inp-${cat.id}-${escHtml(sec.name)}" placeholder="新增項目..." onkeydown="if(event.key==='Enter')addItem('${cat.id}','${escHtml(sec.name)}')"><button onclick="addItem('${cat.id}','${escHtml(sec.name)}')">加入</button></div>`:''}
+      </div>
+    </div>`;
+  });
+
+  if(editMode){
+    if(addingSec===cat.id){
+      html+=`<div class="add-section-row"><input id="new-sec-inp" placeholder="區塊名稱..." onkeydown="if(event.key==='Enter')addSection('${cat.id}')"><button onclick="addSection('${cat.id}')">新增</button><button class="cancel-btn" onclick="addingSec=null;render()">取消</button></div>`;
+      setTimeout(()=>document.getElementById('new-sec-inp')?.focus(),50);
+    } else {
+      html+=`<button class="add-section-btn" onclick="addingSec='${cat.id}';render()">+ 新增區塊</button>`;
+    }
+  }
+
+  document.getElementById('content').innerHTML=html;
+}
+
+function escHtml(s){return s.replace(/'/g,"\\'");}
+
+// ── Section drag-and-drop ────────────────────────────
+let secDragSrcIdx = null;
+
+function secDragStart(e, idx) {
+  if(!editMode) { e.preventDefault(); return; }
+  secDragSrcIdx = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  e.stopPropagation();
+  setTimeout(() => e.currentTarget.classList.add('sec-dragging'), 0);
+}
+function secDragOver(e) {
+  e.preventDefault(); e.stopPropagation();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('sec-drag-over');
+}
+function secDragLeave(e) {
+  e.stopPropagation();
+  e.currentTarget.classList.remove('sec-drag-over');
+}
+function secDragDrop(e, toIdx) {
+  e.preventDefault(); e.stopPropagation();
+  e.currentTarget.classList.remove('sec-drag-over');
+  if(secDragSrcIdx === null || secDragSrcIdx === toIdx) return;
+  const cats = getCats().map(cat => {
+    if(cat.id !== activeCat) return cat;
+    const secs = [...cat.sections];
+    const [moved] = secs.splice(secDragSrcIdx, 1);
+    secs.splice(toIdx, 0, moved);
+    return {...cat, sections: secs};
+  });
+  setCats(cats);
+  secDragSrcIdx = null;
+  render();
+}
+function secDragEnd(e) {
+  e.currentTarget.classList.remove('sec-dragging');
+  document.querySelectorAll('.section-wrapper').forEach(w => w.classList.remove('sec-drag-over'));
+  secDragSrcIdx = null;
+}
+
+// ── Category add/delete ──────────────────────────────
+const EMOJI_OPTIONS = ['🎒','👜','💼','🧳','🛍','📦','🪣','🧴','💄','💊','🩹','👕','👖','👗','🧣','🧤','🧦','👟','📱','💻','📷','🎧','🔌','🔋','📚','✏️','🎵','🎮','🍱','☕','🍫','🌂','🔑','💳','📝','🛒','🏠','✈️','🚗','⛺','🏖','🎁','❤️','⭐'];
+let selectedEmoji = '📋';
+
+function openModal() {
+  selectedEmoji = EMOJI_OPTIONS[0];
+  document.getElementById('newCatName').value = '';
+  const grid = document.getElementById('emojiGrid');
+  grid.innerHTML = EMOJI_OPTIONS.map(e =>
+    `<div class="emoji-opt${e===selectedEmoji?' selected':''}" onclick="selectEmoji('${e}')">${e}</div>`
+  ).join('');
+  document.getElementById('addCatModal').classList.add('open');
+  setTimeout(() => document.getElementById('newCatName').focus(), 100);
+}
+function closeModal() {
+  document.getElementById('addCatModal').classList.remove('open');
+}
+function closeModalOutside(e) {
+  if(e.target === document.getElementById('addCatModal')) closeModal();
+}
+function selectEmoji(e) {
+  selectedEmoji = e;
+  document.querySelectorAll('.emoji-opt').forEach(el => {
+    el.classList.toggle('selected', el.textContent === e);
+  });
+}
+function confirmAddCat() {
+  const name = document.getElementById('newCatName').value.trim();
+  if(!name) { document.getElementById('newCatName').focus(); return; }
+  const id = 'custom_' + Date.now();
+  const newCat = { id, name, icon: selectedEmoji, sections: [{ name: '項目', items: [] }] };
+  setCats([...getCats(), newCat]);
+  // init state
+  const st = {...getState()};
+  st[id] = {};
+  setState(st);
+  activeCat = id;
+  closeModal();
+  render();
+}
+function deleteCat(catId) {
+  const cats = getCats();
+  if(cats.length <= 1) { alert('至少需要保留一個分類！'); return; }
+  if(!confirm(`確定刪除「${cats.find(c=>c.id===catId)?.name}」分類？\n（此分類的所有項目將一併移除）`)) return;
+  const updated = cats.filter(c => c.id !== catId);
+  setCats(updated);
+  if(activeCat === catId) activeCat = updated[0]?.id;
+  render();
+}
+
+render();
+</script>
+
+</body>
+</html>
