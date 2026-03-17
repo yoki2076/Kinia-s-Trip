@@ -26,13 +26,14 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 body{
+  padding-bottom:80px;
   font-family:'DM Sans','Noto Sans TC',sans-serif;
   background:var(--cream);
   color:var(--ink);
   max-width:430px;
   margin:0 auto;
   min-height:100vh;
-  padding-bottom:80px;
+  padding-bottom:24px;
 }
 
 /* ─── STICKY HEADER ─── */
@@ -600,7 +601,7 @@ body{
 
 <div class="toast" id="toast"></div>
 
-<script>
+<script type="module">
 /* ── CATEGORY META ── */
 const CI={
   sight:    {label:'🏛 景點', photo:'photo-sight',    icon:'🏛'},
@@ -803,16 +804,13 @@ function goCall(p){if(!p){showToast('請先填入電話');return;}window.locatio
 
 /* ── ADD/EDIT SPOT ── */
 function handleImgUpload(ev){
-  const file=ev.target.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const area=document.getElementById('imgUploadArea');
-    const prev=document.getElementById('imgPreview');
-    prev.src=e.target.result;
-    area.classList.add('has-img');
-    S._tmpImg=e.target.result;
-  };
-  reader.readAsDataURL(file);
+  const file=ev.target.files[0]; if(!file)return;
+  S._tmpFile = file;  // 存 File 物件，不轉 base64
+  const url = URL.createObjectURL(file);
+  const area=document.getElementById('imgUploadArea');
+  const prev=document.getElementById('imgPreview');
+  prev.src=url; area.classList.add('has-img');
+  S._tmpPreviewUrl = url;
 }
 function clearImg(ev){
   ev.stopPropagation();
@@ -827,7 +825,9 @@ function _resetImgUI(src){
   if(src){prev.src=src;area.classList.add('has-img');}
   else{prev.src='';area.classList.remove('has-img');}
   document.getElementById('sImgInput').value='';
-  S._tmpImg=src||null;
+  S._tmpImg=src||null;   // src is now a Storage URL (or null)
+  S._tmpFile=null;
+  S._tmpPreviewUrl=null;
 }
 function addSpot(){
   S.editSpotId=null;
@@ -850,15 +850,39 @@ function openEditSpot(id){
   openO('spotModal');
 }
 function pickCat(el){S.selCat=el.dataset.cat;document.querySelectorAll('.c-chip').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');}
-function confirmSpot(){
+async function confirmSpot(){
   const name=document.getElementById('sName').value.trim();if(!name){showToast('請輸入名稱');return;}
   const addr=document.getElementById('sAddr').value.trim(),phone=document.getElementById('sPhone').value.trim(),
         note=document.getElementById('sNote').value.trim(),durText=document.getElementById('sDur').value.trim(),
         tr=document.getElementById('sTr').value.trim();
-  const img=S._tmpImg||null;
-  if(S.editSpotId){const s=findSpot(S.editSpotId);s.name=name;s.cat=S.selCat;s.addr=addr;s.phone=phone;s.note=note;s.durText=durText;s.tr=tr;s.img=img;showToast('已更新 ✓');}
-  else{const day=S.days[S.activeDay];const last=day.spots.length?day.spots[day.spots.length-1].time:'09:00';const[lh,lm]=last.split(':').map(Number);day.spots.push({id:S.nid++,name,cat:S.selCat,time:`${String(Math.min(23,lh+1)).padStart(2,'0')}:${String(lm).padStart(2,'0')}`,dur:60,durText,addr,phone,note,detail:false,tr,img});showToast('已新增 ✓');}
-  closeO('spotModal');renderList(S.activeDay);
+
+  // 上傳圖片到 Firebase Storage（如有新選圖）
+  let imgUrl = S._tmpImg || null;  // 預設用現有 URL
+  if (S._tmpFile) {
+    showToast('上傳圖片中…');
+    try {
+      const ext = S._tmpFile.name.split('.').pop() || 'jpg';
+      const path = `itinerary/spots/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      imgUrl = await window._fbUpload(S._tmpFile, path);
+    } catch(e) { showToast('圖片上傳失敗，以繼續儲存'); imgUrl = null; }
+  }
+
+  if(S.editSpotId){
+    const s=findSpot(S.editSpotId);
+    s.name=name;s.cat=S.selCat;s.addr=addr;s.phone=phone;s.note=note;s.durText=durText;s.tr=tr;s.img=imgUrl;
+    showToast('已更新 ✓');
+  } else {
+    const day=S.days[S.activeDay];
+    const last=day.spots.length?day.spots[day.spots.length-1].time:'09:00';
+    const[lh,lm]=last.split(':').map(Number);
+    day.spots.push({id:S.nid++,name,cat:S.selCat,
+      time:`${String(Math.min(23,lh+1)).padStart(2,'0')}:${String(lm).padStart(2,'0')}`,
+      dur:60,durText,addr,phone,note,detail:false,tr,img:imgUrl});
+    showToast('已新增 ✓');
+  }
+  closeO('spotModal');
+  renderList(S.activeDay);
+  window._fbSave && window._fbSave();
 }
 function confirmDeleteSpot(){if(!S.editSpotId)return;quickDel(S.editSpotId);closeO('spotModal');}
 
@@ -905,6 +929,73 @@ let _tt;
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),2200);}
 
 render();
+
+// ── Firebase 同步 ──────────────────────────────────────
+(async () => {
+  try {
+    // Lazy-load Firebase config
+    const fb = await import('./firebase-config.js');
+    // Read uid from localStorage (set by index.html after Google login)
+    let uid = null;
+    try { uid = localStorage.getItem('tripApp_uid'); } catch(e) {}
+    if (!uid) throw new Error('未登入，跳過 Firebase 同步');
+    const DOC_PATH = `users/${uid}/data/itinerary`;
+
+    // Upload helper exposed globally for confirmSpot
+    window._fbUpload = fb.uploadImage;
+
+    // Save entire S (strip runtime-only fields)
+    window._fbSave = async () => {
+      const data = {
+        title: S.title,
+        days: S.days.map(d => ({
+          ...d,
+          spots: d.spots.map(s => ({
+            id:s.id, name:s.name, cat:s.cat, time:s.time,
+            dur:s.dur, durText:s.durText||'', addr:s.addr||'',
+            phone:s.phone||'', note:s.note||'', tr:s.tr||'',
+            img:s.img||null, detail:false
+          }))
+        })),
+        nid: S.nid
+      };
+      await fb.fsSet(DOC_PATH, data);
+    };
+
+    // Load from Firestore
+    const snap = await fb.fsGet(DOC_PATH);
+    if (snap.exists()) {
+      const d = snap.data();
+      S.title = d.title || S.title;
+      S.days  = d.days  || S.days;
+      S.nid   = d.nid   || S.nid;
+      render();
+      document.getElementById('tripTitleText').textContent = S.title;
+    }
+
+    // Auto-save on every state-changing action
+    // Patch key mutating functions to auto-save
+    const origRender = window.render;
+    let _saveTimer;
+    window.render = function() {
+      origRender();
+      clearTimeout(_saveTimer);
+      _saveTimer = setTimeout(() => window._fbSave && window._fbSave(), 800);
+    };
+
+    // Show sync badge
+    const badge = document.createElement('div');
+    badge.id = 'sync-badge';
+    badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;background:rgba(255,255,255,.9);border:1px solid #DDD4C6;border-radius:20px;padding:4px 10px;font-size:10px;font-family:sans-serif;color:#8B5E3C;font-weight:700;backdrop-filter:blur(8px);';
+    badge.textContent = '☁ 已連線';
+    document.body.appendChild(badge);
+
+  } catch(e) {
+    console.warn('Firebase 未設定，使用本機模式', e.message);
+    window._fbSave = null;
+    window._fbUpload = null;
+  }
+})();
 </script>
 </body>
 </html>

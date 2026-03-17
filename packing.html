@@ -21,8 +21,8 @@
     --tag-bg: #E8F5E9;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body {
-  padding-bottom:80px; font-family: 'Noto Sans TC', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; max-width: 430px; margin: 0 auto; overflow-x: hidden; }
+  body { font-family: 'Noto Sans TC', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; max-width: 430px; margin: 0 auto; overflow-x: hidden;
+  padding-bottom: 80px; }
 
   /* Header */
   .header {
@@ -303,7 +303,7 @@
   </div>
 </div>
 
-<script>
+<script type="module">
 const CATEGORIES = [
   {id:"essentials",name:"隨身物品",icon:"👜",sections:[
     {name:"重要",items:["錢包","駕照","鑰匙 - 家裡、車子","假牙","眼鏡","護照","明細/錢幣夾鏈袋"]},
@@ -365,9 +365,13 @@ let stateOut = buildState(), stateIn = buildState(), stateDaily = buildState(DAI
 let catsOut = buildCats(), catsIn = buildCats(), catsDaily = buildCats(DAILY_CAT_IDS, DAILY_TECH_REMOVE);
 
 const getState = () => trip === 'out' ? stateOut : trip === 'in' ? stateIn : stateDaily;
-const setState = (s) => { if(trip==='out') stateOut=s; else if(trip==='in') stateIn=s; else stateDaily=s; };
+const setState = (s) => {
+  if(trip==='out') stateOut=s; else if(trip==='in') stateIn=s; else stateDaily=s;
+  window._fbSave && clearTimeout(window._fbSaveTimer) || (window._fbSaveTimer=setTimeout(()=>window._fbSave&&window._fbSave(),800)); };
 const getCats = () => trip === 'out' ? catsOut : trip === 'in' ? catsIn : catsDaily;
-const setCats = (c) => { if(trip==='out') catsOut=c; else if(trip==='in') catsIn=c; else catsDaily=c; };
+const setCats = (c) => {
+  if(trip==='out') catsOut=c; else if(trip==='in') catsIn=c; else catsDaily=c;
+  window._fbSave && clearTimeout(window._fbSaveTimer) || (window._fbSaveTimer=setTimeout(()=>window._fbSave&&window._fbSave(),800)); };
 let catsData = getCats();
 
 function getProgress(catId) {
@@ -392,6 +396,8 @@ function setTrip(t) {
   const cats = getCats();
   if(!cats.find(c=>c.id===activeCat)) activeCat = cats[0]?.id || 'essentials';
   render();
+
+  window._fbSave && window._fbSave();
 }
 function toggleEdit() {
   editMode=!editMode; addingSec=null;
@@ -654,6 +660,48 @@ function deleteCat(catId) {
 }
 
 render();
+
+// ── Firebase 同步 ──
+(async () => {
+  try {
+    const fb = await import('./firebase-config.js');
+    // Read uid from localStorage (set by index.html after Google login)
+    let uid = null;
+    try { uid = localStorage.getItem('tripApp_uid'); } catch(e) {}
+    if (!uid) throw new Error('未登入，跳過 Firebase 同步');
+    const DOC = `users/${uid}/data/packing`;
+
+    window._fbSave = async () => {
+      await fb.fsSet(DOC, {
+        stateOut, stateIn, stateDaily,
+        catsOut:  catsOut.map(c => ({ id:c.id, name:c.name, icon:c.icon, sections:c.sections })),
+        catsIn:   catsIn.map(c =>  ({ id:c.id, name:c.name, icon:c.icon, sections:c.sections })),
+        catsDaily:catsDaily.map(c =>({ id:c.id, name:c.name, icon:c.icon, sections:c.sections })),
+      });
+    };
+
+    const snap = await fb.fsGet(DOC);
+    if (snap.exists()) {
+      const d = snap.data();
+      if (d.stateOut)   stateOut   = d.stateOut;
+      if (d.stateIn)    stateIn    = d.stateIn;
+      if (d.stateDaily) stateDaily = d.stateDaily;
+      if (d.catsOut  && d.catsOut.length)   catsOut   = d.catsOut;
+      if (d.catsIn   && d.catsIn.length)    catsIn    = d.catsIn;
+      if (d.catsDaily && d.catsDaily.length) catsDaily = d.catsDaily;
+      render();
+    }
+
+    const badge = document.createElement('div');
+    badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;background:rgba(255,255,255,.9);border:1px solid #DDD4C6;border-radius:20px;padding:4px 10px;font-size:10px;font-family:sans-serif;color:#8B5E3C;font-weight:700;backdrop-filter:blur(8px);';
+    badge.textContent = '☁ 已連線';
+    document.body.appendChild(badge);
+
+  } catch(e) {
+    console.warn('Firebase 未設定，使用本機模式', e.message);
+    window._fbSave = null;
+  }
+})();
 </script>
 
 </body>

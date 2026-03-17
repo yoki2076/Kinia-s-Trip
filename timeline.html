@@ -25,7 +25,7 @@
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
   body {
-  padding-bottom:80px;
+    padding-bottom: 80px;
     background: #F0EBE3;
     font-family: 'Noto Sans TC', sans-serif;
     min-height: 100vh;
@@ -495,7 +495,6 @@
   }
 
   .entry-body {
-  padding-bottom:80px;
     font-family: 'Noto Sans TC', sans-serif;
     font-size: 12px;
     color: var(--caramel);
@@ -862,9 +861,9 @@
   </div>
 </div>
 
-<script>
+<script type="module">
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  let entries = JSON.parse(localStorage.getItem('tlj_v1') || 'null');
+  let entries = null; // loaded from Firestore below
   let sortMode = 'newest';
   let editId = null;
   let currentPhotoData = null; // base64 photo data
@@ -881,14 +880,7 @@
   }
 
   function save() {
-    try {
-      localStorage.setItem('tlj_v1', JSON.stringify(entries));
-    } catch(e) {
-      // If quota exceeded, save without photos
-      const slim = entries.map(x => ({ ...x, photo: null }));
-      try { localStorage.setItem('tlj_v1', JSON.stringify(slim)); } catch(e2) {}
-      alert('照片儲存失敗（空間不足），其餘資料已儲存。');
-    }
+    window._fbSave && window._fbSave();
   }
 
   function openModal(id = null) {
@@ -935,25 +927,11 @@
   function handlePhotoSelect(event) {
     const file = event.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const img = new Image();
-      img.onload = function() {
-        const canvas = document.createElement('canvas');
-        const MAX = 800;
-        let w = img.width, h = img.height;
-        if (w > h) { if (w > MAX) { h = h * MAX / w; w = MAX; } }
-        else { if (h > MAX) { w = w * MAX / h; h = MAX; } }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        currentPhotoData = canvas.toDataURL('image/jpeg', 0.72);
-        document.getElementById('photoPreviewImg').src = currentPhotoData;
-        document.getElementById('photoUploadArea').style.display = 'none';
-        document.getElementById('photoPreviewWrap').style.display = 'block';
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+    window._pendingPhotoFile = file;
+    currentPhotoData = URL.createObjectURL(file);
+    document.getElementById('photoPreviewImg').src = currentPhotoData;
+    document.getElementById('photoUploadArea').style.display = 'none';
+    document.getElementById('photoPreviewWrap').style.display = 'block';
   }
 
   function removePhoto() {
@@ -963,17 +941,29 @@
     document.getElementById('photoUploadArea').style.display = 'block';
   }
 
-  function saveEntry() {
+  async function saveEntry() {
     const title = document.getElementById('iTitle').value.trim();
     const date = document.getElementById('iDate').value;
     if (!title || !date) { document.getElementById('iTitle').style.borderColor = '#b05050'; return; }
     document.getElementById('iTitle').style.borderColor = '';
+
+    // Upload photo to Storage if new file selected
+    let photoUrl = currentPhotoData;
+    if (window._pendingPhotoFile && window._fbUpload) {
+      try {
+        const ext = window._pendingPhotoFile.name.split('.').pop() || 'jpg';
+        const path = `timeline/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+        photoUrl = await window._fbUpload(window._pendingPhotoFile, path);
+        window._pendingPhotoFile = null;
+      } catch(e) { console.warn('Photo upload failed', e); photoUrl = null; }
+    }
+
     const entry = {
       title, date,
       time: document.getElementById('iTime').value,
       tag: document.getElementById('iTag').value,
       body: document.getElementById('iBody').value.trim(),
-      photo: currentPhotoData || null
+      photo: photoUrl || null
     };
     if (editId !== null) {
       const i = entries.findIndex(x => x.id === editId);
@@ -1145,6 +1135,34 @@
 
   renderCalendar();
   render();
+
+// ── Firebase 同步 ──
+(async () => {
+  try {
+    const fb = await import('./firebase-config.js');
+    // Read uid from localStorage (set by index.html after Google login)
+    let uid = null;
+    try { uid = localStorage.getItem('tripApp_uid'); } catch(e) {}
+    if (!uid) throw new Error('未登入，跳過 Firebase 同步');
+    const DOC = `users/${uid}/data/timeline`;
+    window._fbUpload = fb.uploadImage;
+    window._fbSave = async () => { await fb.fsSet(DOC, { entries: entries || [] }); };
+
+    const snap = await fb.fsGet(DOC);
+    entries = snap.exists() ? (snap.data().entries || []) : entries || [];
+    render();
+
+    const badge = document.createElement('div');
+    badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;background:rgba(255,255,255,.9);border:1px solid #DDD4C6;border-radius:20px;padding:4px 10px;font-size:10px;font-family:sans-serif;color:#8B5E3C;font-weight:700;backdrop-filter:blur(8px);';
+    badge.textContent = '☁ 已連線'; document.body.appendChild(badge);
+
+  } catch(e) {
+    console.warn('Firebase 未設定，使用本機模式');
+    window._fbSave = null; window._fbUpload = null;
+    entries = entries || [];
+    render();
+  }
+})();
 </script>
 
 </body>
