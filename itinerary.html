@@ -1728,7 +1728,7 @@ render();
   try {
     var fb = await import('./firebase-config.js');
     var INVITE_CODE = window._inviteCode || 'kinia2026';
-    var SHARED_DOC = 'trips/invite_' + INVITE_CODE + '/itinerary';
+    var SHARED_DOC = 'trips/invite_' + INVITE_CODE + '/data/itinerary';
     window._fbUpload = fb.uploadImage;
 
     window._fbSave = async function() {
