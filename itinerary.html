@@ -1355,9 +1355,16 @@ function renderTimeline() {
     return;
   }
 
+  // 依時間排序（早→晚），格式 HH:MM
+  const sorted = [...day.stops].sort((a, b) => {
+    const ta = (a.time || '00:00').replace(':', '');
+    const tb = (b.time || '00:00').replace(':', '');
+    return ta.localeCompare(tb);
+  });
+
   let html = '';
-  day.stops.forEach((stop, idx) => {
-    const isLast = idx === day.stops.length - 1;
+  sorted.forEach((stop, idx) => {
+    const isLast = idx === sorted.length - 1;
     html += renderStop(stop, idx, isLast);
     if (!isLast) {
       html += renderTransitConnector(stop, idx);
