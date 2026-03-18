@@ -431,16 +431,8 @@ const CATEGORIES = [
 const JPY_TO_TWD = 0.213;
 const TWD_TO_JPY = 4.69;
 
-let expenses = [
-  { id:1, category:"flight",  title:"台北→東京 來回機票", amount:12800, currency:"TWD", date:"2025-04-01", platform:"Expedia",     paymentMethod:"信用卡", store:"長榮航空",        storeAddress:"", note:"早鳥優惠" },
-  { id:2, category:"hotel",   title:"新宿格蘭貝爾酒店 3晚", amount:28000, currency:"JPY", date:"2025-04-02", platform:"Booking.com", paymentMethod:"信用卡", store:"新宿格蘭貝爾酒店",  storeAddress:"東京都新宿区歌舞伎町1-19-1", note:"含早餐" },
-  { id:3, category:"ticket",  title:"環球影城一日票",    amount:10400, currency:"JPY", date:"2025-04-03", platform:"KKday",       paymentMethod:"信用卡", store:"環球影城",        storeAddress:"大阪府大阪市此花区桜島2-1-33", note:"" },
-  { id:4, category:"food",    title:"一蘭拉麵",          amount:1500,  currency:"JPY", date:"2025-04-03", platform:"",            paymentMethod:"現金(日幣)", store:"一蘭拉麵 道頓堀店", storeAddress:"大阪市中央区道頓堀1-7-26", note:"超好吃！",
-    items:[ {name:"一蘭拉麵（原味）", qty:1, price:980}, {name:"替玉（加麵）", qty:1, price:180}, {name:"溏心蛋", qty:1, price:130}, {name:"罐裝啤酒", qty:1, price:210} ] },
-  { id:5, category:"shopping", title:"藥妝店購物",         amount:8200,  currency:"JPY", date:"2025-04-04", platform:"",            paymentMethod:"現金(日幣)", store:"松本清 心齋橋店", storeAddress:"大阪市中央区心斎橋筋1", note:"",
-    items:[ {name:"碳酸洗顏粉", qty:2, price:890}, {name:"眼藥水", qty:3, price:680}, {name:"OK繃", qty:1, price:320}, {name:"面膜", qty:2, price:1200}, {name:"防曬乳", qty:1, price:1540}, {name:"感冒藥", qty:1, price:800} ] },
-];
-let nextId = 100;
+let expenses = [];
+let nextId = 1;
 let displayCurrency = "TWD";
 let filterCategory = "all";
 let sortBy = "date";
@@ -967,7 +959,7 @@ function saveExpense() {
   updateHeader();
   renderList();
   showView('list');
-  window._fbSave && window._fbSave();
+  if(window._fbSave) window._fbSave();
 }
 
 function openDeleteDialog(id) {
@@ -982,7 +974,7 @@ function confirmDelete() {
   if (!deleteTargetId) return;
   expenses = expenses.filter(e => e.id !== deleteTargetId);
   closeDeleteDialog();
-  window._fbSave && window._fbSave();
+  if(window._fbSave) window._fbSave();
   updateHeader();
   renderList();
   showToast('已刪除', 'info');
@@ -1046,22 +1038,19 @@ renderList();
 updateHeader();
 
 // ── Firebase 同步 ──
-(async () => {
+(async function() {
   try {
-    const fb = await import('./firebase-config.js');
-    let uid = null;
+    var fb = await import('./firebase-config.js');
+    var uid = null;
     try { uid = localStorage.getItem('tripApp_uid'); } catch(e) {}
-    if (!uid) throw new Error('未登入');
-    const DOC = 'users/' + uid + '/data/budget';
-
-    window._fbSave = async () => {
+    if (!uid) return;
+    var DOC = 'users/' + uid + '/data/budget';
+    window._fbSave = async function() {
       await fb.fsSet(DOC, { expenses: expenses, nextId: nextId });
     };
-
-    // Load from Firestore
-    const snap = await fb.fsGet(DOC);
+    var snap = await fb.fsGet(DOC);
     if (snap.exists()) {
-      const d = snap.data();
+      var d = snap.data();
       if (d.expenses && d.expenses.length) {
         expenses = d.expenses;
         nextId = d.nextId || nextId;
@@ -1069,21 +1058,11 @@ updateHeader();
         renderList();
       }
     }
-
-    // Auto-save after mutations
-    const _origSave = window._fbSave;
-    ['updateHeader','renderList'].forEach(fn => {
-      const orig = window[fn];
-      if (orig) window[fn] = function() { orig.apply(this, arguments); };
-    });
-
-    const badge = document.createElement('div');
+    var badge = document.createElement('div');
     badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;background:rgba(255,255,255,.9);border:1px solid #DDD4C6;border-radius:20px;padding:4px 10px;font-size:10px;font-family:sans-serif;color:#8B5E3C;font-weight:700;';
     badge.textContent = '☁ 已連線';
     document.body.appendChild(badge);
-
   } catch(e) {
-    console.warn('Firebase 離線模式:', e.message);
     window._fbSave = null;
   }
 })();

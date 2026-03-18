@@ -688,7 +688,7 @@ const W = (() => {
   let currentView='all', currentCat='全部', editingId=null, archiveOpen=false, uploadedImgData=null;
   let editingCats=[], dragSrcIdx=null, emojiTarget=null, pendingNewEmoji='📦';
 
-  function saveItems() { localStorage.setItem('wishlist_items',JSON.stringify(items)); window._fbSave && window._fbSave(); }
+  function saveItems() { localStorage.setItem('wishlist_items',JSON.stringify(items)); if(window._fbSave) window._fbSave(); }
   function saveCatsStore() { localStorage.setItem('wishlist_cats',JSON.stringify(categories)); }
   function toTWD(price,cur) { return Number(price||0)*(RATES[cur||'TWD'].twdPer); }
   function fromTWD(twd,cur) { return twd/(RATES[cur||'TWD'].twdPer); }
@@ -975,21 +975,11 @@ const W = (() => {
 
   // ── Init ──
   function init() {
-    if(items.length===0){
-      items=[
-        {id:genId(),name:'MUJI 超音波芳香噴霧器',source:'Dcard 居家版',note:'網友說超安靜，睡前用很舒服，最新款有定時功能',price:1490,currency:'TWD',priority:'high',category:'家居',tagColor:'#54a0ff',bought:false,fav:true,createdAt:Date.now()-1000,img:null},
-        {id:genId(),name:'Sony WH-1000XM5',source:'PTT WirelessBuds',note:'降噪效果業界頂尖，通勤必備，等特價再買',price:9900,currency:'TWD',priority:'mid',category:'3C',tagColor:'#7b61ff',bought:false,fav:false,createdAt:Date.now()-2000,img:null},
-        {id:genId(),name:'COSRX 蝸牛黏蛋白精華',source:'@skincare_tw',note:'韓系超人氣，修復乾燥肌，cp值超高！',price:14500,currency:'KRW',priority:'low',category:'美妝',tagColor:'#ff6b9d',bought:false,fav:false,createdAt:Date.now()-3000,img:null},
-        {id:genId(),name:'Lululemon Align 瑜珈褲',source:'Reddit r/gym',note:'美國網友激推，等折扣碼再下手',price:98,currency:'USD',priority:'mid',category:'服飾',tagColor:'#00d4aa',bought:false,fav:true,createdAt:Date.now()-4000,img:null},
-      ];
-      saveItems();
-    }
     render();
   }
 
   function reload() {
     items = JSON.parse(localStorage.getItem('wishlist_items')||'[]');
-    categories = JSON.parse(localStorage.getItem('wishlist_cats')||'null') || categories;
     render();
   }
   return {render,setView,setCurrency,setCat,toggleBought,toggleFav,deleteItem,toggleArchive,
@@ -1011,7 +1001,7 @@ const P = (() => {
   let currentView='all', currentCat='全部', editingId=null, archiveOpen=false, uploadedImgData=null, pendingRating=0;
   let editingCats=[], dragSrcIdx=null, emojiTarget=null, pendingNewEmoji='📍';
 
-  function savePlaces() { localStorage.setItem('placelist_items',JSON.stringify(places)); window._fbSavePlaces && window._fbSavePlaces(); }
+  function savePlaces() { localStorage.setItem('placelist_items',JSON.stringify(places)); if(window._fbSavePlaces) window._fbSavePlaces(); }
   function saveCatsStore() { localStorage.setItem('placelist_cats',JSON.stringify(categories)); }
 
   function render() { renderCats(); renderStats(); renderItems(); }
@@ -1055,7 +1045,7 @@ const P = (() => {
     return `<div class="place-card ${place.visited?'visited':''}">
       <div class="place-banner">
         ${place.img?`<img src="${place.img}" alt="">`:''}
-        ${!place.img?`<span class="place-banner-emoji">${catIcon}</span>`:''}
+        ${!place.img ? '<span class="place-banner-emoji">' + catIcon + '</span>' : ''}
       </div>
       <div class="place-body">
         <div class="place-header">
@@ -1253,21 +1243,11 @@ const P = (() => {
 
   // ── Init ──
   function init(){
-    if(places.length===0){
-      places=[
-        {id:genId(),name:'富錦街咖啡',area:'台北・松山',address:'富錦街',source:'IG @taipei_cafe',note:'採光超好的老宅咖啡，假日要提早去不然沒位置，必點手沖和芋泥厚吐司',category:'咖啡廳',tagColor:'#54a0ff',visited:false,fav:true,rating:null,img:null,createdAt:Date.now()-1000},
-        {id:genId(),name:'九份老街阿柑姨芋圓',area:'新北・九份',address:'基山街',source:'朋友推薦',note:'坐在露天座位俯瞰山城海景，芋圓Q彈，雨天更有氣氛',category:'甜點',tagColor:'#ff6b9d',visited:false,fav:true,rating:null,img:null,createdAt:Date.now()-2000},
-        {id:genId(),name:'臺北表演藝術中心',area:'台北・士林',address:'劍潭捷運站旁',source:'Dcard',note:'庫哈斯設計的奇特建築，不看表演也值得來拍照',category:'景點',tagColor:'#7b61ff',visited:false,fav:false,rating:null,img:null,createdAt:Date.now()-3000},
-        {id:genId(),name:'金帥滷肉飯',area:'台北・中正',address:'羅斯福路',source:'PTT',note:'老台北人才知道的銅板美食，控肉飯是一絕',category:'餐廳',tagColor:'#ff9f43',visited:true,fav:false,rating:4,img:null,createdAt:Date.now()-4000},
-      ];
-      savePlaces();
-    }
     render();
   }
 
   function reload() {
     places = JSON.parse(localStorage.getItem('placelist_items')||'[]');
-    categories = JSON.parse(localStorage.getItem('placelist_cats')||'null') || categories;
     render();
   }
   return {render,setView,setCat,toggleFav,toggleVisited,deletePlace,toggleArchive,setRating,
@@ -1281,56 +1261,46 @@ W.init();
 P.render(); // render but don't show (page 1 is hidden)
 
 // ── Firebase 同步 ──
-(async () => {
+(async function() {
   try {
-    const fb = await import('./firebase-config.js');
-    let uid = null;
+    var fb = await import('./firebase-config.js');
+    var uid = null;
     try { uid = localStorage.getItem('tripApp_uid'); } catch(e) {}
-    if (!uid) throw new Error('未登入');
-
-    const W_DOC = 'users/' + uid + '/data/wishlist';
-    const P_DOC = 'users/' + uid + '/data/placelist';
-
+    if (!uid) return;
+    var W_DOC = 'users/' + uid + '/data/wishlist';
+    var P_DOC = 'users/' + uid + '/data/placelist';
     window._fbUpload = fb.uploadImage;
-
-    window._fbSave = async () => {
-      const wItems = JSON.parse(localStorage.getItem('wishlist_items')||'[]');
-      const wCats  = JSON.parse(localStorage.getItem('wishlist_cats')||'[]');
-      const wCur   = localStorage.getItem('wishlist_cur')||'TWD';
+    window._fbSave = async function() {
+      var wItems = JSON.parse(localStorage.getItem('wishlist_items')||'[]');
+      var wCats  = JSON.parse(localStorage.getItem('wishlist_cats')||'[]');
+      var wCur   = localStorage.getItem('wishlist_cur')||'TWD';
       await fb.fsSet(W_DOC, { items: wItems, cats: wCats, currency: wCur });
     };
-    window._fbSavePlaces = async () => {
-      const pItems = JSON.parse(localStorage.getItem('placelist_items')||'[]');
-      const pCats  = JSON.parse(localStorage.getItem('placelist_cats')||'[]');
+    window._fbSavePlaces = async function() {
+      var pItems = JSON.parse(localStorage.getItem('placelist_items')||'[]');
+      var pCats  = JSON.parse(localStorage.getItem('placelist_cats')||'[]');
       await fb.fsSet(P_DOC, { items: pItems, cats: pCats });
     };
-
-    // Load wishlist
-    const wSnap = await fb.fsGet(W_DOC);
+    var wSnap = await fb.fsGet(W_DOC);
     if (wSnap.exists()) {
-      const d = wSnap.data();
-      if (d.items && d.items.length) localStorage.setItem('wishlist_items', JSON.stringify(d.items));
-      if (d.cats  && d.cats.length)  localStorage.setItem('wishlist_cats',  JSON.stringify(d.cats));
-      if (d.currency) localStorage.setItem('wishlist_cur', d.currency);
+      var wd = wSnap.data();
+      if (wd.items && wd.items.length) localStorage.setItem('wishlist_items', JSON.stringify(wd.items));
+      if (wd.cats  && wd.cats.length)  localStorage.setItem('wishlist_cats',  JSON.stringify(wd.cats));
+      if (wd.currency) localStorage.setItem('wishlist_cur', wd.currency);
       if (window.W && window.W.reload) window.W.reload();
     }
-
-    // Load placelist
-    const pSnap = await fb.fsGet(P_DOC);
+    var pSnap = await fb.fsGet(P_DOC);
     if (pSnap.exists()) {
-      const d = pSnap.data();
-      if (d.items && d.items.length) localStorage.setItem('placelist_items', JSON.stringify(d.items));
-      if (d.cats  && d.cats.length)  localStorage.setItem('placelist_cats',  JSON.stringify(d.cats));
+      var pd = pSnap.data();
+      if (pd.items && pd.items.length) localStorage.setItem('placelist_items', JSON.stringify(pd.items));
+      if (pd.cats  && pd.cats.length)  localStorage.setItem('placelist_cats',  JSON.stringify(pd.cats));
       if (window.P && window.P.reload) window.P.reload();
     }
-
-    const badge = document.createElement('div');
+    var badge = document.createElement('div');
     badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;background:rgba(255,255,255,.9);border:1px solid #DDD4C6;border-radius:20px;padding:4px 10px;font-size:10px;font-family:sans-serif;color:#8B5E3C;font-weight:700;';
     badge.textContent = '☁ 已連線';
     document.body.appendChild(badge);
-
   } catch(e) {
-    console.warn('Firebase 離線模式:', e.message);
     window._fbSave = null; window._fbSavePlaces = null; window._fbUpload = null;
   }
 })();

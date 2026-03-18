@@ -1654,43 +1654,42 @@ function esc(s) {
 
 render();
 
-// ── Firebase 同步 ──
-(async () => {
+// ── Firebase 同步（共用行程）──
+(async function() {
   try {
-    const fb = await import('./firebase-config.js');
-
-    // Get uid from localStorage (set by index.html after Google login)
-    let uid = null;
-    try { uid = localStorage.getItem('tripApp_uid'); } catch(e) {}
-    if (!uid) throw new Error('未登入，跳過 Firebase 同步');
-
-    const DOC = `users/${uid}/data/itinerary`;
+    var fb = await import('./firebase-config.js');
+    // 共用行程：固定路徑，不用個人 uid，所有成員共享
+    var SHARED_DOC = 'trips/shared/itinerary';
     window._fbUpload = fb.uploadImage;
 
-    // Expose to window so async closures can access them
-    window._days = () => days;
-    window._activeDay = () => activeDay;
+    function buildSaveData() {
+      return {
+        days: days.map(function(d) {
+          return {
+            id: d.id, label: d.label, date: d.date || '',
+            stops: d.stops.map(function(s) {
+              return {
+                id: s.id, name: s.name, time: s.time || '',
+                stay: s.stay || '', category: s.category || '',
+                address: s.address || '', phone: s.phone || '',
+                note: s.note || '', photo: s.photo || null,
+                transit: s.transit || null
+              };
+            })
+          };
+        }),
+        activeDay: activeDay
+      };
+    }
 
-    window._fbSave = async () => {
-      await fb.fsSet(DOC, {
-        days: days.map(d => ({
-          id: d.id, label: d.label, date: d.date || '',
-          stops: d.stops.map(s => ({
-            id: s.id, name: s.name, time: s.time || '',
-            stay: s.stay || '', category: s.category || '',
-            address: s.address || '', phone: s.phone || '',
-            note: s.note || '', photo: s.photo || null,
-            transit: s.transit || null,
-          }))
-        })),
-        activeDay
-      });
+    window._fbSave = async function() {
+      await fb.fsSet(SHARED_DOC, buildSaveData());
     };
 
-    // Load from Firestore
-    const snap = await fb.fsGet(DOC);
+    // 初次載入
+    var snap = await fb.fsGet(SHARED_DOC);
     if (snap.exists()) {
-      const d = snap.data();
+      var d = snap.data();
       if (d.days && d.days.length) {
         days = d.days;
         activeDay = d.activeDay || days[0].id;
@@ -1698,24 +1697,40 @@ render();
       }
     }
 
-    // Auto-save on render - use MutationObserver instead of patching render()
-    let _t;
-    const _save = () => { clearTimeout(_t); _t = setTimeout(() => window._fbSave && window._fbSave(), 1000); };
-    new MutationObserver(_save).observe(
-      document.getElementById('timeline-root') || document.body,
-      { childList: true, subtree: true }
-    );
+    // 即時監聽：其他成員修改後自動更新
+    var _remoteUpdate = false;
+    fb.fsLive(SHARED_DOC, function(snap) {
+      if (!snap.exists() || _remoteUpdate) return;
+      var d = snap.data();
+      if (!d.days || !d.days.length) return;
+      days = d.days;
+      activeDay = d.activeDay || days[0].id;
+      render();
+    });
 
-    // Sync badge
-    const badge = document.createElement('div');
-    badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;background:rgba(255,255,255,.9);border:1px solid #DDD4C6;border-radius:20px;padding:4px 10px;font-size:10px;font-family:sans-serif;color:#8B5E3C;font-weight:700;backdrop-filter:blur(8px);';
-    badge.textContent = '☁ 已連線';
+    // 儲存前標記，避免自己的更新觸發 onSnapshot 再次 render
+    var origFbSave = window._fbSave;
+    window._fbSave = async function() {
+      _remoteUpdate = true;
+      await origFbSave();
+      setTimeout(function(){ _remoteUpdate = false; }, 2000);
+    };
+
+    // Auto-save on render
+    var _t;
+    var origRender = window.render || render;
+    function render() { origRender(); clearTimeout(_t); _t = setTimeout(function(){ if(window._fbSave) window._fbSave(); }, 1000); }
+    window.render = render;
+
+    // 共用模式徽章
+    var badge = document.createElement('div');
+    badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;background:rgba(255,255,255,.9);border:1px solid #DDD4C6;border-radius:20px;padding:4px 10px;font-size:10px;font-family:sans-serif;color:#8B5E3C;font-weight:700;';
+    badge.textContent = '☁ 共用行程';
     document.body.appendChild(badge);
 
   } catch(e) {
-    console.warn('Firebase 未設定，使用本機模式', e.message);
-    window._fbSave = null;
-    window._fbUpload = null;
+    console.warn('Firebase boot failed:', e.message);
+    window._fbSave = null; window._fbUpload = null;
   }
 })();
 </script>
