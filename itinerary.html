@@ -1723,8 +1723,10 @@ render();
 
 // ── Firebase 同步 ──
 (async () => {
+  console.log('[FB] boot starting...');
   try {
     const fb = await import('./firebase-config.js');
+    console.log('[FB] config loaded');
 
     // Get uid from localStorage (set by index.html after Google login)
     let uid = null;
@@ -1733,6 +1735,10 @@ render();
 
     const DOC = `users/${uid}/data/itinerary`;
     window._fbUpload = fb.uploadImage;
+
+    // Expose to window so async closures can access them
+    window._days = () => days;
+    window._activeDay = () => activeDay;
 
     window._fbSave = async () => {
       await fb.fsSet(DOC, {
@@ -1761,14 +1767,13 @@ render();
       }
     }
 
-    // Auto-save on render
-    const origRender = window.render || render;
+    // Auto-save on render - use MutationObserver instead of patching render()
     let _t;
-    window.render = function() {
-      origRender();
-      clearTimeout(_t);
-      _t = setTimeout(() => window._fbSave && window._fbSave(), 800);
-    };
+    const _save = () => { clearTimeout(_t); _t = setTimeout(() => window._fbSave && window._fbSave(), 1000); };
+    new MutationObserver(_save).observe(
+      document.getElementById('timeline-root') || document.body,
+      { childList: true, subtree: true }
+    );
 
     // Sync badge
     const badge = document.createElement('div');
@@ -1777,7 +1782,7 @@ render();
     document.body.appendChild(badge);
 
   } catch(e) {
-    console.warn('Firebase 未設定，使用本機模式', e.message);
+    console.error('Firebase boot 失敗:', e.message, e.stack);
     window._fbSave = null;
     window._fbUpload = null;
   }
