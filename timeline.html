@@ -25,7 +25,7 @@
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
   body {
-    padding-bottom: 80px;
+  padding-bottom: 80px;
     background: #F0EBE3;
     font-family: 'Noto Sans TC', sans-serif;
     min-height: 100vh;
@@ -863,24 +863,16 @@
 
 <script>
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  let entries = null; // loaded from Firestore below
+  let entries = null; // loaded from Firebase
   let sortMode = 'newest';
   let editId = null;
   let currentPhotoData = null; // base64 photo data
 
-  if (!entries) {
-    entries = [
-      { id: 1, title: '京都嵐山晨霧散步', date: '2024-11-15', time: '09:30', tag: '旅行', body: '晨霧中漫步竹林，光線穿透葉隙，那種靜謐讓人屏息。' },
-      { id: 2, title: '第一次做手工麵包', date: '2024-10-08', time: '14:00', tag: '生活', body: '揉麵團的觸感比想像中療癒，烤出來的香氣充滿整間公寓。' },
-      { id: 3, title: '升遷了', date: '2024-09-01', time: '11:00', tag: '里程碑', body: '努力了兩年，終於等到這一天。心裡比想像中平靜。' },
-      { id: 4, title: '台南老街早午餐', date: '2024-08-22', time: '10:15', tag: '飲食', body: '牛肉湯配白飯，再來一杯甘蔗汁，完美的夏日早晨。' },
-      { id: 5, title: '第一場雪', date: '2024-01-17', time: '07:00', tag: '回憶', body: '窗外的世界突然安靜下來。' },
-    ];
-    save();
-  }
+  if (!entries) { entries = []; }
 
   function save() {
-    window._fbSave && window._fbSave();
+    localStorage.setItem('tlj_v1', JSON.stringify(entries));
+    if (window._fbSave) window._fbSave();
   }
 
   function openModal(id = null) {
@@ -946,24 +938,23 @@
     const date = document.getElementById('iDate').value;
     if (!title || !date) { document.getElementById('iTitle').style.borderColor = '#b05050'; return; }
     document.getElementById('iTitle').style.borderColor = '';
-
-    // Upload photo to Storage if new file selected
-    let photoUrl = currentPhotoData;
-    if (window._pendingPhotoFile && window._fbUpload) {
-      try {
-        const ext = window._pendingPhotoFile.name.split('.').pop() || 'jpg';
-        const path = `timeline/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-        photoUrl = await window._fbUpload(window._pendingPhotoFile, path);
-        window._pendingPhotoFile = null;
-      } catch(e) { console.warn('Photo upload failed', e); photoUrl = null; }
-    }
-
     const entry = {
       title, date,
       time: document.getElementById('iTime').value,
       tag: document.getElementById('iTag').value,
       body: document.getElementById('iBody').value.trim(),
-      photo: photoUrl || null
+      photo: await (async function() {
+        if (window._pendingPhotoFile && window._fbUpload) {
+          try {
+            var ext = window._pendingPhotoFile.name.split('.').pop() || 'jpg';
+            var path = 'timeline/' + Date.now() + '.' + ext;
+            var url = await window._fbUpload(window._pendingPhotoFile, path);
+            window._pendingPhotoFile = null;
+            return url;
+          } catch(e) { return null; }
+        }
+        return currentPhotoData || null;
+      })()
     };
     if (editId !== null) {
       const i = entries.findIndex(x => x.id === editId);
@@ -1137,30 +1128,28 @@
   render();
 
 // ── Firebase 同步 ──
-(async () => {
+(async function() {
   try {
-    const fb = await import('./firebase-config.js');
-    // Read uid from localStorage (set by index.html after Google login)
-    let uid = null;
+    var fb = await import('./firebase-config.js');
+    var uid = null;
     try { uid = localStorage.getItem('tripApp_uid'); } catch(e) {}
-    if (!uid) throw new Error('未登入，跳過 Firebase 同步');
-    const DOC = `users/${uid}/data/timeline`;
+    if (!uid) { entries = entries || []; render(); return; }
+    var DOC = 'users/' + uid + '/data/timeline';
     window._fbUpload = fb.uploadImage;
-    window._fbSave = async () => { await fb.fsSet(DOC, { entries: entries || [] }); };
-
-    const snap = await fb.fsGet(DOC);
-    entries = snap.exists() ? (snap.data().entries || []) : entries || [];
+    window._fbSave = async function() {
+      await fb.fsSet(DOC, { entries: entries || [] });
+    };
+    var snap = await fb.fsGet(DOC);
+    entries = (snap.exists() && snap.data().entries) ? snap.data().entries : [];
     render();
-
-    const badge = document.createElement('div');
-    badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;background:rgba(255,255,255,.9);border:1px solid #DDD4C6;border-radius:20px;padding:4px 10px;font-size:10px;font-family:sans-serif;color:#8B5E3C;font-weight:700;backdrop-filter:blur(8px);';
-    badge.textContent = '☁ 已連線'; document.body.appendChild(badge);
-
+    var badge = document.createElement('div');
+    badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;background:rgba(255,255,255,.9);border:1px solid #DDD4C6;border-radius:20px;padding:4px 10px;font-size:10px;font-family:sans-serif;color:#8B5E3C;font-weight:700;';
+    badge.textContent = '☁ 已連線';
+    document.body.appendChild(badge);
   } catch(e) {
-    console.warn('Firebase 未設定，使用本機模式');
-    window._fbSave = null; window._fbUpload = null;
     entries = entries || [];
     render();
+    window._fbSave = null; window._fbUpload = null;
   }
 })();
 </script>
