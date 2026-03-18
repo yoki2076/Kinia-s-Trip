@@ -5,8 +5,7 @@ import { getFirestore, doc, setDoc, getDoc, onSnapshot }
                                     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
                                     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-import { getAuth, signInAnonymously, onAuthStateChanged,
-         GoogleAuthProvider, signInWithPopup, signOut }
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut }
                                     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // ── 你的 Firebase 設定 ──────────────────────────────────
@@ -37,12 +36,6 @@ export async function logOut() {
   await signOut(auth);
 }
 
-// ── 匿名登入（離線備用）──
-export async function signInAsGuest() {
-  const result = await signInAnonymously(auth);
-  return result.user;
-}
-
 // ── 等待登入狀態，回傳 user（null = 未登入）──
 export const getCurrentUser = () => new Promise(resolve => {
   const unsubscribe = onAuthStateChanged(auth, user => {
@@ -59,10 +52,81 @@ export const fsSet  = (path, data) => setDoc(doc(db, ...path.split('/')), data);
 export const fsGet  = (path)       => getDoc(doc(db, ...path.split('/')));
 export const fsLive = (path, cb)   => onSnapshot(doc(db, ...path.split('/')), cb);
 
-// ── Storage: 上傳 File 物件，回傳下載 URL ──
+// ── 圖片壓縮：上傳前先縮小 + 壓縮，控制在 300KB 以內 ──
+async function compressImage(file, {
+  maxWidth  = 1280,   // 最長邊不超過 1280px
+  maxSizeKB = 300,    // 目標壓縮後 ≤ 300 KB
+  minQuality = 0.45,  // 最低品質（避免過度壓縮）
+} = {}) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let w = img.width, h = img.height;
+
+      // 縮放長邊
+      if (w > maxWidth || h > maxWidth) {
+        if (w >= h) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+        else        { w = Math.round(w * maxWidth / h); h = maxWidth; }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+      // 二分搜尋最佳 quality
+      let lo = minQuality, hi = 0.92, best = null;
+      const tryQ = (q) => canvas.toDataURL('image/jpeg', q);
+
+      for (let i = 0; i < 6; i++) {
+        const mid = (lo + hi) / 2;
+        const dataUrl = tryQ(mid);
+        const kb = Math.round((dataUrl.length * 3) / 4 / 1024);
+        if (kb <= maxSizeKB) { best = { dataUrl, q: mid }; lo = mid; }
+        else                 { hi = mid; }
+      }
+
+      // 若最低品質還超標，直接用最低品質
+      if (!best) {
+        const dataUrl = tryQ(minQuality);
+        best = { dataUrl, q: minQuality };
+      }
+
+      const kb = Math.round((best.dataUrl.length * 3) / 4 / 1024);
+      console.log(`[compress] ${file.name}: ${Math.round(file.size/1024)}KB → ${kb}KB (q=${best.q.toFixed(2)}, ${w}×${h})`);
+
+      // 轉回 Blob
+      canvas.toBlob(
+        blob => resolve(blob),
+        'image/jpeg',
+        best.q
+      );
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('圖片載入失敗')); };
+    img.src = url;
+  });
+}
+
+// ── Storage: 壓縮後上傳，回傳下載 URL ──
 export async function uploadImage(file, storagePath) {
+  // 只壓縮圖片（跳過 GIF/SVG 等）
+  let uploadFile = file;
+  if (file.type.startsWith('image/') && file.type !== 'image/gif' && file.type !== 'image/svg+xml') {
+    try {
+      const compressed = await compressImage(file);
+      // 將壓縮後的 blob 包成 File，保留副檔名改為 .jpg
+      const baseName = storagePath.split('/').pop().replace(/\.[^.]+$/, '');
+      uploadFile = new File([compressed], baseName + '.jpg', { type: 'image/jpeg' });
+      // 更新 storagePath 副檔名
+      storagePath = storagePath.replace(/\.[^.]+$/, '.jpg');
+    } catch (e) {
+      console.warn('[compress] 壓縮失敗，使用原檔:', e.message);
+    }
+  }
+
   const storageRef = ref(storage, storagePath);
-  await uploadBytes(storageRef, file);
+  await uploadBytes(storageRef, uploadFile);
   return await getDownloadURL(storageRef);
 }
 
