@@ -21,7 +21,8 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body {
-    padding-bottom: 80px;
+  padding-bottom: 80px;
+  padding-bottom:80px;
     font-family: 'Noto Sans TC', sans-serif;
     background: var(--bg); color: var(--text);
     min-height: 100vh; max-width: 430px; margin: 0 auto; overflow-x: hidden;
@@ -177,7 +178,8 @@
   .item-card.bought .item-name { text-decoration: line-through; color: var(--text2); }
   .item-img { width: 90px; height: 90px; flex-shrink: 0; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 28px; }
   .item-img img { width: 100%; height: 100%; object-fit: cover; }
-  .item-body { flex: 1; padding: 12px; min-width: 0; }
+  .item-body {
+  padding-bottom:80px; flex: 1; padding: 12px; min-width: 0; }
   .item-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
   .item-name { font-size: 15px; font-weight: 500; color: var(--text); line-height: 1.3; flex: 1; min-width: 0; word-break: break-word; }
   .item-actions { display: flex; gap: 4px; flex-shrink: 0; }
@@ -215,7 +217,8 @@
   }
   .place-banner img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .place-banner-emoji { position: relative; z-index: 1; }
-  .place-body { padding: 12px; }
+  .place-body {
+  padding-bottom:80px; padding: 12px; }
   .place-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
   .place-name { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.3; flex: 1; min-width: 0; word-break: break-word; }
   .place-actions { display: flex; gap: 4px; flex-shrink: 0; }
@@ -247,7 +250,8 @@
   .archive-count { font-size: 11px; background: var(--surface2); color: var(--text2); border: 1px solid var(--border); border-radius: 10px; padding: 1px 8px; }
   .archive-chevron { font-size: 12px; color: var(--text2); transition: transform 0.25s; display: inline-block; }
   .archive-chevron.open { transform: rotate(180deg); }
-  .archive-body { overflow: hidden; max-height: 0; transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1); }
+  .archive-body {
+  padding-bottom:80px; overflow: hidden; max-height: 0; transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1); }
   .archive-body.open { max-height: 9999px; }
   .archive-cats { display: flex; flex-direction: column; gap: 16px; }
   .archive-cat-label {
@@ -684,14 +688,8 @@ const W = (() => {
   let currentView='all', currentCat='全部', editingId=null, archiveOpen=false, uploadedImgData=null;
   let editingCats=[], dragSrcIdx=null, emojiTarget=null, pendingNewEmoji='📦';
 
-  function saveItems() {
-    localStorage.setItem('wishlist_items',JSON.stringify(items));
-    window._fbSave && window._fbSave();
-  }
-  function saveCatsStore() {
-    localStorage.setItem('wishlist_cats',JSON.stringify(categories));
-    window._fbSaveWishlist && window._fbSaveWishlist();
-  }
+  function saveItems() { localStorage.setItem('wishlist_items',JSON.stringify(items)); window._fbSave && window._fbSave(); }
+  function saveCatsStore() { localStorage.setItem('wishlist_cats',JSON.stringify(categories)); }
   function toTWD(price,cur) { return Number(price||0)*(RATES[cur||'TWD'].twdPer); }
   function fromTWD(twd,cur) { return twd/(RATES[cur||'TWD'].twdPer); }
   function fmtPrice(price,origCur,showCur) {
@@ -714,7 +712,7 @@ const W = (() => {
     if(!all.includes(currentCat)) currentCat='全部';
     el.innerHTML=all.map(name=>{
       const cat=categories.find(c=>c.name===name);
-      return `<div class="cat-chip ${name===currentCat?'active':''}" onclick="W.setCat(\`${esc(name)}\`)">${cat?cat.icon:'✦'} ${esc(name)}</div>`;
+      return `<div class="cat-chip ${name===currentCat?'active':''}" onclick="W.setCat(`${esc(name)}`)">${cat?cat.icon:'✦'} ${esc(name)}</div>`;
     }).join('');
   }
   function renderStats() {
@@ -854,7 +852,7 @@ const W = (() => {
       `<option value="${esc(c.name)}" ${c.name===sel?'selected':''}>${c.icon} ${esc(c.name)}</option>`).join('');
   }
   function openAddModal() {
-    editingId=null; uploadedImgData=null; window._wPendingFile=null;
+    editingId=null; uploadedImgData=null;
     document.getElementById('wModalTitle').textContent='新增商品';
     ['wfName','wfSource','wfNote','wfPrice','wfOriginalPrice'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('wfCurrency').value='TWD';
@@ -888,29 +886,19 @@ const W = (() => {
   function closeModal() { document.getElementById('wModalOverlay').classList.remove('open'); }
   function handleImgUpload(e) {
     const file=e.target.files[0]; if(!file)return;
-    if(file.size>5*1024*1024){alert('圖片請小於 5MB');return;}
-    uploadedImgData = null;
-    window._wPendingFile = file;
-    const previewUrl = URL.createObjectURL(file);
-    const el=document.getElementById('wImgUpload');
-    el.innerHTML=`<input type="file" id="wImgFileInput" accept="image/*" onchange="W.handleImgUpload(event)">`;
-    const img=document.createElement('img');img.src=previewUrl;el.appendChild(img);
+    if(file.size>2*1024*1024){alert('圖片請小於 2MB');return;}
+    const r=new FileReader();
+    r.onload=ev=>{
+      uploadedImgData=ev.target.result;
+      const el=document.getElementById('wImgUpload');
+      el.innerHTML=`<input type="file" id="wImgFileInput" accept="image/*" onchange="W.handleImgUpload(event)">`;
+      const img=document.createElement('img');img.src=uploadedImgData;el.appendChild(img);
+    };
+    r.readAsDataURL(file);
   }
-  async function saveItem() {
+  function saveItem() {
     const name=document.getElementById('wfName').value.trim();
     if(!name){alert('請輸入商品名稱');return;}
-
-    // Upload image to Storage if new file selected
-    let imgUrl = uploadedImgData; // existing URL or null
-    if (window._wPendingFile && window._fbUpload) {
-      try {
-        const ext = window._wPendingFile.name.split('.').pop()||'jpg';
-        const path = `wishlist/items/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-        imgUrl = await window._fbUpload(window._wPendingFile, path);
-        window._wPendingFile = null;
-      } catch(e2) { console.warn('Image upload failed',e2); imgUrl = null; }
-    }
-
     const data={name,
       source:document.getElementById('wfSource').value.trim(),
       note:document.getElementById('wfNote').value.trim(),
@@ -999,10 +987,15 @@ const W = (() => {
     render();
   }
 
+  function reload() {
+    items = JSON.parse(localStorage.getItem('wishlist_items')||'[]');
+    categories = JSON.parse(localStorage.getItem('wishlist_cats')||'null') || categories;
+    render();
+  }
   return {render,setView,setCurrency,setCat,toggleBought,toggleFav,deleteItem,toggleArchive,
     openAddModal,openEditModal,closeModal,handleImgUpload,saveItem,
     openCatManager,closeCatModal,addCategory,removeCat,saveCats,openEmojiPicker,
-    dragStart,dragOver,dragLeave,dragDrop,_editingCats,init};
+    dragStart,dragOver,dragLeave,dragDrop,_editingCats,init,reload};
 })();
 
 // ═══════════════════════════════════════════
@@ -1018,14 +1011,8 @@ const P = (() => {
   let currentView='all', currentCat='全部', editingId=null, archiveOpen=false, uploadedImgData=null, pendingRating=0;
   let editingCats=[], dragSrcIdx=null, emojiTarget=null, pendingNewEmoji='📍';
 
-  function savePlaces() {
-    localStorage.setItem('placelist_items',JSON.stringify(places));
-    window._fbSave && window._fbSave();
-  }
-  function saveCatsStore() {
-    localStorage.setItem('placelist_cats',JSON.stringify(categories));
-    window._fbSavePlaces && window._fbSavePlaces();
-  }
+  function savePlaces() { localStorage.setItem('placelist_items',JSON.stringify(places)); window._fbSavePlaces && window._fbSavePlaces(); }
+  function saveCatsStore() { localStorage.setItem('placelist_cats',JSON.stringify(categories)); }
 
   function render() { renderCats(); renderStats(); renderItems(); }
   function renderCats() {
@@ -1034,7 +1021,7 @@ const P = (() => {
     if(!all.includes(currentCat)) currentCat='全部';
     el.innerHTML=all.map(name=>{
       const cat=categories.find(c=>c.name===name);
-      return `<div class="cat-chip ${name===currentCat?'active':''}" onclick="P.setCat(\`${esc(name)}\`)">${cat?cat.icon:'✦'} ${esc(name)}</div>`;
+      return `<div class="cat-chip ${name===currentCat?'active':''}" onclick="P.setCat(`${esc(name)}`)">${cat?cat.icon:'✦'} ${esc(name)}</div>`;
     }).join('');
   }
   function renderStats() {
@@ -1068,7 +1055,7 @@ const P = (() => {
     return `<div class="place-card ${place.visited?'visited':''}">
       <div class="place-banner">
         ${place.img?`<img src="${place.img}" alt="">`:''}
-        <span class="place-banner-emoji">${catIcon}</span>
+        ${!place.img?`<span class="place-banner-emoji">${catIcon}</span>`:''}
       </div>
       <div class="place-body">
         <div class="place-header">
@@ -1150,7 +1137,7 @@ const P = (() => {
       `<option value="${esc(c.name)}" ${c.name===sel?'selected':''}>${c.icon} ${esc(c.name)}</option>`).join('');
   }
   function openAddModal(){
-    editingId=null;uploadedImgData=null;pendingRating=0;window._pPendingFile=null;
+    editingId=null;uploadedImgData=null;pendingRating=0;
     document.getElementById('pModalTitle').textContent='新增店家';
     ['pfName','pfArea','pfAddress','pfSource','pfNote'].forEach(id=>document.getElementById(id).value='');
     populateCatSelect(categories[0]?.name||'');
@@ -1180,26 +1167,19 @@ const P = (() => {
   function closeModal(){document.getElementById('pModalOverlay').classList.remove('open');}
   function handleImgUpload(e){
     const file=e.target.files[0];if(!file)return;
-    if(file.size>5*1024*1024){alert('圖片請小於 5MB');return;}
-    window._pPendingFile = file;
-    const previewUrl = URL.createObjectURL(file);
-    uploadedImgData = null;
-    const el=document.getElementById('pImgUpload');
-    el.innerHTML=`<input type="file" id="pImgFileInput" accept="image/*" onchange="P.handleImgUpload(event)">`;
-    const img=document.createElement('img');img.src=previewUrl;el.appendChild(img);
+    if(file.size>2*1024*1024){alert('圖片請小於 2MB');return;}
+    const r=new FileReader();
+    r.onload=ev=>{
+      uploadedImgData=ev.target.result;
+      const el=document.getElementById('pImgUpload');
+      el.innerHTML=`<input type="file" id="pImgFileInput" accept="image/*" onchange="P.handleImgUpload(event)">`;
+      const img=document.createElement('img');img.src=uploadedImgData;el.appendChild(img);
+    };
+    r.readAsDataURL(file);
   }
-  async function savePlace(){
+  function savePlace(){
     const name=document.getElementById('pfName').value.trim();
     if(!name){alert('請輸入店家名稱');return;}
-    let imgUrl = uploadedImgData;
-    if(window._pPendingFile && window._fbUpload){
-      try{
-        const ext=window._pPendingFile.name.split('.').pop()||'jpg';
-        const path=`wishlist/places/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-        imgUrl=await window._fbUpload(window._pPendingFile, path);
-        window._pPendingFile=null;
-      }catch(e2){console.warn('Place image upload failed',e2);imgUrl=null;}
-    }
     const data={name,category:document.getElementById('pfCategory').value,
       area:document.getElementById('pfArea').value.trim(),
       address:document.getElementById('pfAddress').value.trim(),
@@ -1207,7 +1187,7 @@ const P = (() => {
       note:document.getElementById('pfNote').value.trim(),
       rating:pendingRating||null,
       tagColor:getSelectedColor('pTagColorsList'),
-      img:imgUrl||null,
+      img:uploadedImgData,
     };
     if(editingId){const idx=places.findIndex(x=>x.id===editingId);places[idx]={...places[idx],...data};}
     else places.unshift({id:genId(),createdAt:Date.now(),visited:false,fav:false,...data});
@@ -1285,10 +1265,15 @@ const P = (() => {
     render();
   }
 
+  function reload() {
+    places = JSON.parse(localStorage.getItem('placelist_items')||'[]');
+    categories = JSON.parse(localStorage.getItem('placelist_cats')||'null') || categories;
+    render();
+  }
   return {render,setView,setCat,toggleFav,toggleVisited,deletePlace,toggleArchive,setRating,
     openAddModal,openEditModal,closeModal,handleImgUpload,savePlace,
     openCatManager,closeCatModal,addCategory,removeCat,saveCats,openEmojiPicker,
-    dragStart,dragOver,dragLeave,dragDrop,_editingCats,init};
+    dragStart,dragOver,dragLeave,dragDrop,_editingCats,init,reload};
 })();
 
 // ── Boot ──
@@ -1299,58 +1284,53 @@ P.render(); // render but don't show (page 1 is hidden)
 (async () => {
   try {
     const fb = await import('./firebase-config.js');
-    // Read uid from localStorage (set by index.html after Google login)
     let uid = null;
     try { uid = localStorage.getItem('tripApp_uid'); } catch(e) {}
-    if (!uid) throw new Error('未登入，跳過 Firebase 同步');
+    if (!uid) throw new Error('未登入');
+
+    const W_DOC = 'users/' + uid + '/data/wishlist';
+    const P_DOC = 'users/' + uid + '/data/placelist';
+
     window._fbUpload = fb.uploadImage;
 
-    const W_DOC = `users/${uid}/data/wishlist`;
-    const P_DOC = `users/${uid}/data/placelist`;
-
-    // Wishlist save/load
     window._fbSave = async () => {
       const wItems = JSON.parse(localStorage.getItem('wishlist_items')||'[]');
       const wCats  = JSON.parse(localStorage.getItem('wishlist_cats')||'[]');
       const wCur   = localStorage.getItem('wishlist_cur')||'TWD';
       await fb.fsSet(W_DOC, { items: wItems, cats: wCats, currency: wCur });
     };
-    window._fbSaveWishlist = window._fbSave;
-
-    // Place list save/load
     window._fbSavePlaces = async () => {
       const pItems = JSON.parse(localStorage.getItem('placelist_items')||'[]');
       const pCats  = JSON.parse(localStorage.getItem('placelist_cats')||'[]');
       await fb.fsSet(P_DOC, { items: pItems, cats: pCats });
     };
 
-    // Load wishlist from Firestore
+    // Load wishlist
     const wSnap = await fb.fsGet(W_DOC);
     if (wSnap.exists()) {
       const d = wSnap.data();
-      if (d.items)    localStorage.setItem('wishlist_items', JSON.stringify(d.items));
-      if (d.cats)     localStorage.setItem('wishlist_cats',  JSON.stringify(d.cats));
-      if (d.currency) localStorage.setItem('wishlist_cur',   d.currency);
-      // Reload W namespace from updated localStorage
-      window.W && window.W.reload && window.W.reload();
+      if (d.items && d.items.length) localStorage.setItem('wishlist_items', JSON.stringify(d.items));
+      if (d.cats  && d.cats.length)  localStorage.setItem('wishlist_cats',  JSON.stringify(d.cats));
+      if (d.currency) localStorage.setItem('wishlist_cur', d.currency);
+      if (window.W && window.W.reload) window.W.reload();
     }
 
-    // Load placelist from Firestore
+    // Load placelist
     const pSnap = await fb.fsGet(P_DOC);
     if (pSnap.exists()) {
       const d = pSnap.data();
-      if (d.items) localStorage.setItem('placelist_items', JSON.stringify(d.items));
-      if (d.cats)  localStorage.setItem('placelist_cats',  JSON.stringify(d.cats));
-      window.P && window.P.reload && window.P.reload();
+      if (d.items && d.items.length) localStorage.setItem('placelist_items', JSON.stringify(d.items));
+      if (d.cats  && d.cats.length)  localStorage.setItem('placelist_cats',  JSON.stringify(d.cats));
+      if (window.P && window.P.reload) window.P.reload();
     }
 
     const badge = document.createElement('div');
-    badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;background:rgba(255,255,255,.9);border:1px solid #DDD4C6;border-radius:20px;padding:4px 10px;font-size:10px;font-family:sans-serif;color:#8B5E3C;font-weight:700;backdrop-filter:blur(8px);';
+    badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;background:rgba(255,255,255,.9);border:1px solid #DDD4C6;border-radius:20px;padding:4px 10px;font-size:10px;font-family:sans-serif;color:#8B5E3C;font-weight:700;';
     badge.textContent = '☁ 已連線';
     document.body.appendChild(badge);
 
   } catch(e) {
-    console.warn('Firebase 未設定，使用本機模式', e.message);
+    console.warn('Firebase 離線模式:', e.message);
     window._fbSave = null; window._fbSavePlaces = null; window._fbUpload = null;
   }
 })();

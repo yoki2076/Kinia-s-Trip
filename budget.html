@@ -7,7 +7,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #F0EBE3; padding-bottom: 80px; font-family: 'Noto Sans TC', sans-serif; display: flex; justify-content: center; min-height: 100vh; }
+  body {
+  padding-bottom: 80px;
+  padding-bottom:80px; background: #F0EBE3; font-family: 'Noto Sans TC', sans-serif; display: flex; justify-content: center; min-height: 100vh; }
   #app { width: 100%; max-width: 430px; min-height: 100vh; background: #F7F3EE; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 40px #00000014; }
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: #F0EBE3; }
@@ -92,7 +94,7 @@
   .btn-row { display: flex; gap: 10px; margin-top: 20px; }
 
   /* FAB */
-  .fab { position: fixed; bottom: 24px; right: calc(50% - 215px + 20px); width: 56px; height: 56px; border-radius: 50%; background: #8B5E3C; border: none; color: #FFFFFF; font-size: 28px; cursor: pointer; box-shadow: 0 4px 20px #00000030; display: flex; align-items: center; justify-content: center; transition: all 0.15s; z-index: 50; }
+  .fab { position: fixed; bottom: 84px; right: calc(50% - 215px + 20px); width: 56px; height: 56px; border-radius: 50%; background: #8B5E3C; border: none; color: #FFFFFF; font-size: 28px; cursor: pointer; box-shadow: 0 4px 20px #00000030; display: flex; align-items: center; justify-content: center; transition: all 0.15s; z-index: 50; }
   .fab:hover { background: rgba(255,255,255,0.25); transform: scale(1.05); }
   @media (max-width: 430px) { .fab { right: 20px; } }
 
@@ -348,7 +350,7 @@
         </div>
         <div class="field">
           <label>備註</label>
-          <input type="text" id="f-note" placeholder="選填">
+          <textarea id="f-note" placeholder="選填（可換行）" rows="3" style="resize:vertical;min-height:60px;"></textarea>
         </div>
 
         <!-- ITEM DETAILS -->
@@ -448,7 +450,7 @@ let editingId = null;
 let deleteTargetId = null;
 let formCategory = "flight";
 let formItems = []; // [{name, qty, price}]
-let formReceipts = []; // items: { file?, previewUrl?, url? }
+let formReceipts = []; // base64 strings
 
 // ── OTHER CUSTOM INPUT ─────────────────────────────────────
 function toggleOther(field) {
@@ -464,8 +466,9 @@ function handleReceiptUpload(event) {
   event.target.value = '';
   files.forEach(file => {
     if (!file.type.startsWith('image/')) return;
-    formReceipts.push({ file, previewUrl: URL.createObjectURL(file) });
-    renderReceiptGrid();
+    const reader = new FileReader();
+    reader.onload = e => { formReceipts.push(e.target.result); renderReceiptGrid(); };
+    reader.readAsDataURL(file);
   });
 }
 
@@ -484,13 +487,11 @@ function renderReceiptGrid() {
   } else {
     empty.style.display = 'none';
     grid.style.display = 'grid';
-    grid.innerHTML = formReceipts.map((r, i) => {
-      const src = r.previewUrl || r.url || r;
-      return `<div class="receipt-thumb" onclick="openLightbox('${src}')">
+    grid.innerHTML = formReceipts.map((src, i) => `
+      <div class="receipt-thumb" onclick="openLightbox('${src}')">
         <img src="${src}" alt="收據${i+1}">
         <button class="receipt-thumb-del" onclick="event.stopPropagation();removeReceipt(${i})">✕</button>
-      </div>`;
-    }).join('');
+      </div>`).join('');
   }
 }
 
@@ -828,6 +829,7 @@ function openAdd() {
   document.getElementById('form-title').textContent = '➕ 新增消費';
   document.getElementById('save-btn').textContent = '新增記錄 ✓';
   document.getElementById('cancel-btn').textContent = '取消';
+  document.getElementById('f-title').value = '';
   document.getElementById('f-amount').value = '';
   document.getElementById('f-currency').value = 'TWD';
   document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
@@ -853,7 +855,7 @@ function openEdit(id) {
   editingId = id;
   formCategory = exp.category;
   formItems = (exp.items || []).map(i => ({ ...i, _id: Date.now() + Math.random() }));
-  formReceipts = (exp.receipts || []).map(r => typeof r === "string" ? { url: r } : r);
+  formReceipts = [...(exp.receipts || [])];
   document.getElementById('form-title').textContent = '✏️ 編輯記錄';
   document.getElementById('save-btn').textContent = '儲存變更 ✓';
   document.getElementById('cancel-btn').textContent = '取消';
@@ -922,7 +924,7 @@ function updateConvertHint() {
   renderItemTotals();
 }
 
-async function saveExpense() {
+function saveExpense() {
   const title = document.getElementById('f-title').value.trim();
   const amount = parseFloat(document.getElementById('f-amount').value);
   if (!title || !amount) { showToast('請填寫名稱和金額', 'error'); return; }
@@ -953,23 +955,7 @@ async function saveExpense() {
     storeAddress: document.getElementById('f-address').value,
     note: document.getElementById('f-note').value,
     items: cleanItems,
-    receipts: await (async () => {
-      // Upload any new File receipts to Storage, keep existing URLs
-      const uploaded = [];
-      for (const r of formReceipts) {
-        if (r.file && window._fbUpload) {
-          try {
-            const ext = r.file.name.split('.').pop() || 'jpg';
-            const path = `budget/receipts/\${Date.now()}_\${Math.random().toString(36).slice(2)}.\${ext}`;
-            const url = await window._fbUpload(r.file, path);
-            uploaded.push(url);
-          } catch(e) { console.warn('Receipt upload failed', e); }
-        } else if (r.url) {
-          uploaded.push(r.url);
-        }
-      }
-      return uploaded;
-    })(),
+    receipts: [...formReceipts],
   };
   if (editingId) {
     expenses = expenses.map(e => e.id === editingId ? { ...data, id: editingId } : e);
@@ -1063,34 +1049,42 @@ updateHeader();
 (async () => {
   try {
     const fb = await import('./firebase-config.js');
-    // Read uid from localStorage (set by index.html after Google login)
     let uid = null;
     try { uid = localStorage.getItem('tripApp_uid'); } catch(e) {}
-    if (!uid) throw new Error('未登入，跳過 Firebase 同步');
-    const DOC = `users/${uid}/data/budget`;
-    window._fbUpload = fb.uploadImage;
+    if (!uid) throw new Error('未登入');
+    const DOC = 'users/' + uid + '/data/budget';
+
     window._fbSave = async () => {
-      await fb.fsSet(DOC, { expenses, nextId });
+      await fb.fsSet(DOC, { expenses: expenses, nextId: nextId });
     };
 
+    // Load from Firestore
     const snap = await fb.fsGet(DOC);
     if (snap.exists()) {
       const d = snap.data();
-      expenses = d.expenses || expenses;
-      nextId   = d.nextId   || nextId;
-      updateHeader();
-      renderList();
+      if (d.expenses && d.expenses.length) {
+        expenses = d.expenses;
+        nextId = d.nextId || nextId;
+        updateHeader();
+        renderList();
+      }
     }
 
+    // Auto-save after mutations
+    const _origSave = window._fbSave;
+    ['updateHeader','renderList'].forEach(fn => {
+      const orig = window[fn];
+      if (orig) window[fn] = function() { orig.apply(this, arguments); };
+    });
+
     const badge = document.createElement('div');
-    badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;background:rgba(255,255,255,.9);border:1px solid #DDD4C6;border-radius:20px;padding:4px 10px;font-size:10px;font-family:sans-serif;color:#8B5E3C;font-weight:700;backdrop-filter:blur(8px);';
+    badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;background:rgba(255,255,255,.9);border:1px solid #DDD4C6;border-radius:20px;padding:4px 10px;font-size:10px;font-family:sans-serif;color:#8B5E3C;font-weight:700;';
     badge.textContent = '☁ 已連線';
     document.body.appendChild(badge);
 
   } catch(e) {
-    console.warn('Firebase 未設定，使用本機模式', e.message);
+    console.warn('Firebase 離線模式:', e.message);
     window._fbSave = null;
-    window._fbUpload = null;
   }
 })();
 </script>
