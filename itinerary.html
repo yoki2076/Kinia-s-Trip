@@ -1705,7 +1705,6 @@ render();
             })
           };
         }),
-        activeDay: activeDay
       };
       await fb.fsSet(SHARED_DOC, data);
     };
@@ -1716,7 +1715,7 @@ render();
       var d = snap.data();
       if (d.days && d.days.length) {
         days = d.days;
-        activeDay = d.activeDay || days[0].id;
+        // Don't restore activeDay - keep user's current view
         render();
       }
     }
@@ -1728,7 +1727,7 @@ render();
       var ld = liveSnap.data();
       if (!ld.days || !ld.days.length) return;
       days = ld.days;
-      activeDay = ld.activeDay || days[0].id;
+      // Don't sync activeDay - each user controls their own view
       render();
     });
 
