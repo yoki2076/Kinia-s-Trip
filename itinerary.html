@@ -1219,7 +1219,11 @@ const CAT_EMOJI = {
 };
 
 let days = [
-  { id: 1, label: '第1天', date: '', stops: [] }
+  { id: 1, label: 'Day 1', date: '2025-05-18', stops: [] },
+  { id: 2, label: 'Day 2', date: '2025-05-19', stops: [] },
+  { id: 3, label: 'Day 3', date: '2025-05-20', stops: [] },
+  { id: 4, label: 'Day 4', date: '2025-05-21', stops: [] },
+  { id: 5, label: 'Day 5', date: '2025-05-22', stops: [] },
 ]
 let activeDay = 1;
 let editStopId = null;
@@ -1658,7 +1662,11 @@ render();
 (async function() {
   try {
     var fb = await import('./firebase-config.js');
-    var SHARED_DOC = 'trips/shared/itinerary';
+    // 邀請碼行程：只有知道邀請碼的人才能存取
+    var INVITE_CODE = localStorage.getItem('tripInviteCode') || 'kinia2025';
+    var SHARED_DOC = 'trips/invite_' + INVITE_CODE + '/itinerary';
+    window._inviteCode = INVITE_CODE;
+
     window._fbUpload = fb.uploadImage;
 
     // Save function
@@ -1726,9 +1734,35 @@ render();
     }).observe(document.body, { childList: true, subtree: true });
     _dataLoaded = true; // set AFTER observer is registered
 
+    // Badge showing invite code + join button
     var badge = document.createElement('div');
-    badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;background:rgba(255,255,255,.9);border:1px solid #DDD4C6;border-radius:20px;padding:4px 10px;font-size:10px;font-family:sans-serif;color:#8B5E3C;font-weight:700;';
-    badge.textContent = '☁ 共用行程';
+    badge.id = 'invite-badge';
+    badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.95);border:1px solid #DDD4C6;border-radius:20px;padding:5px 12px;font-size:11px;font-family:sans-serif;color:#8B5E3C;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.08);cursor:pointer;';
+    badge.innerHTML = '&#9729; <span id="invite-code-label">' + INVITE_CODE + '</span>';
+    badge.title = '點擊查看/更換邀請碼';
+    badge.onclick = function() {
+      var panel = document.getElementById('invite-panel');
+      if (panel) { panel.style.display = panel.style.display === 'none' ? 'block' : 'none'; return; }
+      var p = document.createElement('div');
+      p.id = 'invite-panel';
+      p.style.cssText = 'position:fixed;top:46px;right:12px;z-index:9999;background:#fff;border:1px solid #DDD4C6;border-radius:16px;padding:16px;width:260px;box-shadow:0 4px 20px rgba(0,0,0,0.12);font-family:sans-serif;';
+      p.innerHTML = '<div style="font-size:12px;font-weight:700;color:#2C2016;margin-bottom:8px;">☁ 共用行程邀請碼</div>'
+        + '<div style="font-size:11px;color:#8B7355;margin-bottom:10px;">把邀請碼分享給旅伴，輸入相同邀請碼就能共同查看、編輯行程</div>'
+        + '<div style="font-size:18px;font-weight:900;color:#8B5E3C;text-align:center;background:#F7F3EE;border-radius:10px;padding:10px;letter-spacing:3px;margin-bottom:10px;" id="code-display">' + INVITE_CODE + '</div>'
+        + '<button onclick="var c=document.getElementById(\'code-display\').textContent;navigator.clipboard.writeText(c).then(function(){alert(\'邀請碼已複製！\');});" style="width:100%;padding:8px;background:#8B5E3C;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px;">複製邀請碼</button>'
+        + '<div style="font-size:11px;color:#A8917A;margin-bottom:6px;">加入別人的行程：</div>'
+        + '<div style="display:flex;gap:6px;"><input id="join-code-inp" placeholder="輸入邀請碼" style="flex:1;padding:7px 10px;border:1px solid #DDD4C6;border-radius:8px;font-size:13px;outline:none;"><button onclick="var v=document.getElementById(\'join-code-inp\').value.trim();if(!v)return;localStorage.setItem(\'tripInviteCode\',v);location.reload();" style="padding:7px 12px;background:#2C2016;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">加入</button></div>';
+      document.body.appendChild(p);
+      // Close on outside click
+      setTimeout(function(){
+        document.addEventListener('click', function closePanel(e){
+          if (!p.contains(e.target) && e.target !== badge) {
+            p.style.display = 'none';
+            document.removeEventListener('click', closePanel);
+          }
+        });
+      }, 100);
+    };
     document.body.appendChild(badge);
 
   } catch(e) {
