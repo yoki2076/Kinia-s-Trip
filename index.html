@@ -34,16 +34,12 @@
   }
   #login-screen.hiding { opacity: 0; transform: translateY(-24px); pointer-events: none; }
   #login-screen.hidden { display: none; }
-
   #login-screen::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
     background: linear-gradient(90deg, #8B5E3C 0%, #C4956A 50%, #8B5E3C 100%);
   }
-
   .login-stamp {
-    width: 88px; height: 88px;
-    border: 2.5px solid #8B5E3C; border-radius: 50%;
+    width: 88px; height: 88px; border: 2.5px solid #8B5E3C; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     margin-bottom: 28px; position: relative; background: #FDFAF6;
     box-shadow: 0 4px 24px rgba(139,94,60,0.15), inset 0 1px 0 rgba(255,255,255,0.8);
@@ -52,59 +48,109 @@
     content: ''; position: absolute; inset: 5px;
     border: 1px dashed #C4956A; border-radius: 50%; opacity: 0.6;
   }
-  .login-stamp-emoji { font-size: 38px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(139,94,60,0.2)); }
-
+  .login-stamp-emoji { font-size: 38px; line-height: 1; }
   .login-subtitle { font-size: 10px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: #A8917A; margin-bottom: 8px; }
   .login-title { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 900; color: #2C2016; letter-spacing: -0.5px; margin-bottom: 6px; text-align: center; }
   .login-desc { font-size: 13px; color: #8B7355; text-align: center; line-height: 1.6; margin-bottom: 44px; }
-
   .login-divider { display: flex; align-items: center; gap: 12px; width: 100%; margin-bottom: 20px; }
   .login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: #DDD4C6; }
-  .login-divider span { font-size: 11px; color: #A8917A; font-weight: 600; letter-spacing: 1px; white-space: nowrap; }
-
+  .login-divider span { font-size: 11px; color: #A8917A; font-weight: 600; letter-spacing: 1px; }
   .btn-google {
-    width: 100%;
-    display: flex; align-items: center; justify-content: center; gap: 12px;
-    padding: 15px 20px; background: #fff;
-    border: 1.5px solid #DDD4C6; border-radius: 14px; cursor: pointer;
-    font-family: 'Noto Sans TC', sans-serif; font-size: 15px; font-weight: 700; color: #2C2016;
-    transition: all 0.18s; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px;
+    padding: 15px 20px; background: #fff; border: 1.5px solid #DDD4C6; border-radius: 14px;
+    cursor: pointer; font-family: 'Noto Sans TC', sans-serif; font-size: 15px; font-weight: 700;
+    color: #2C2016; transition: all 0.18s; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   }
-  .btn-google:active { transform: scale(0.98); box-shadow: none; background: #F7F3EE; }
+  .btn-google:active { transform: scale(0.98); background: #F7F3EE; }
   .btn-google.loading { opacity: 0.6; pointer-events: none; }
-
   .login-error {
-    background: #FEF2F2; border: 1px solid #FCA5A5;
-    border-radius: 10px; padding: 10px 14px;
-    font-size: 12px; color: #DC2626; margin-bottom: 14px;
-    text-align: center; display: none;
+    background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 10px; padding: 10px 14px;
+    font-size: 12px; color: #DC2626; margin-bottom: 14px; text-align: center; display: none;
   }
   .login-error.show { display: block; }
 
-  /* ══ USER BAR ════════════════════════════════════════ */
-  #user-bar {
-    display: none; flex-shrink: 0;
-    background: #FDFAF6; border-bottom: 1px solid #DDD4C6;
-    padding: 10px 16px; align-items: center; justify-content: space-between;
+  /* ══ SIDE DRAWER ═════════════════════════════════════ */
+  #drawer-overlay {
+    display: none; position: fixed; inset: 0; z-index: 300;
+    background: rgba(0,0,0,0.35); backdrop-filter: blur(2px);
+    transition: opacity 0.25s;
   }
-  #user-bar.visible { display: flex; }
-  .user-bar-info { display: flex; align-items: center; gap: 8px; }
-  .user-avatar {
-    width: 28px; height: 28px; border-radius: 50%;
-    background: linear-gradient(135deg, #8B5E3C, #C4956A);
+  #drawer-overlay.open { display: block; }
+
+  #side-drawer {
+    position: fixed; top: 0; left: 50%;
+    transform: translateX(-430px); /* off-screen left (relative to app center) */
+    width: 280px; height: 100dvh; z-index: 301;
+    background: #FDFAF6;
+    border-right: 1px solid #DDD4C6;
+    display: flex; flex-direction: column;
+    transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.12);
+    max-width: 280px;
+  }
+  /* When app is centered, drawer needs to align with app left edge */
+  @media (min-width: 430px) {
+    #side-drawer { left: calc(50% - 215px); transform: translateX(-280px); }
+    #side-drawer.open { transform: translateX(0); }
+  }
+  #side-drawer.open { transform: translateX(calc(-50vw + 50%)); }
+
+  /* Simpler approach: fixed position relative to viewport */
+  #side-drawer {
+    position: fixed; top: 0; left: 0;
+    transform: translateX(-100%);
+    width: min(280px, 75vw); height: 100dvh; z-index: 301;
+    background: #FDFAF6; border-right: 1px solid #DDD4C6;
+    display: flex; flex-direction: column;
+    transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.12);
+  }
+  #side-drawer.open { transform: translateX(0); }
+
+  .drawer-header {
+    padding: 52px 20px 20px;
+    background: linear-gradient(160deg, #6B4428 0%, #8B5E3C 100%);
+    flex-shrink: 0;
+  }
+  .drawer-avatar {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    border: 2px solid rgba(255,255,255,0.5);
     display: flex; align-items: center; justify-content: center;
-    font-size: 13px; color: #fff; font-weight: 700; overflow: hidden; flex-shrink: 0;
+    font-size: 22px; color: #fff; font-weight: 700;
+    overflow: hidden; margin-bottom: 12px;
   }
-  .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .user-name { font-size: 12px; font-weight: 700; color: #4A3728; }
-  .user-mode { font-size: 10px; color: #A8917A; }
-  .btn-logout {
-    font-size: 11px; color: #A8917A; font-weight: 600;
-    background: none; border: 1px solid #DDD4C6;
-    border-radius: 8px; padding: 4px 10px; cursor: pointer;
-    font-family: 'Noto Sans TC', sans-serif; transition: all 0.15s;
+  .drawer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .drawer-name { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+  .drawer-mode { font-size: 11px; color: rgba(255,255,255,0.75); }
+
+  .drawer-body { flex: 1; padding: 12px 0; overflow-y: auto; }
+  .drawer-section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: #A8917A;
+    padding: 8px 20px 4px;
   }
-  .btn-logout:active { background: #F0EBE3; color: #6B4428; }
+  .drawer-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 20px; font-size: 14px; font-weight: 600;
+    color: #4A3728; cursor: pointer;
+    transition: background 0.15s;
+    border: none; background: none; width: 100%; text-align: left;
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+  .drawer-item:active { background: #F0EBE3; }
+  .drawer-item-icon { font-size: 18px; width: 24px; text-align: center; }
+  .drawer-divider { height: 1px; background: #EEE8E0; margin: 8px 0; }
+
+  .drawer-footer { padding: 16px 20px; border-top: 1px solid #EEE8E0; flex-shrink: 0; }
+  .btn-logout-drawer {
+    width: 100%; padding: 11px; border-radius: 10px;
+    border: 1.5px solid #DDD4C6; background: transparent;
+    font-family: 'Noto Sans TC', sans-serif; font-size: 13px;
+    font-weight: 700; color: #A8917A; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-logout-drawer:active { background: #F0EBE3; color: #6B4428; border-color: #C4956A; }
 
   /* ══ MAIN AREA ═══════════════════════════════════════ */
   #main-area {
@@ -123,6 +169,17 @@
     background: #FDFAF6; border-top: 1.5px solid #DDD4C6;
     padding-bottom: env(safe-area-inset-bottom, 0px); z-index: 100;
   }
+
+  /* Menu button on the left of bottom nav */
+  #menu-btn {
+    flex-shrink: 0; width: 52px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    padding: 10px 4px 11px; background: none; border: none; border-right: 1px solid #EEE8E0;
+    cursor: pointer; color: #A8917A; outline: none;
+  }
+  #menu-btn:active { background: #F0EBE3; }
+  #menu-btn .bar { width: 16px; height: 1.5px; background: currentColor; border-radius: 2px; transition: all 0.2s; }
+
   .nav-btn {
     flex: 1; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 3px;
@@ -152,8 +209,6 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading-text { font-size: 12px; color: #A8917A; font-weight: 600; letter-spacing: 1px; }
 
-  /* ══ OFFLINE BANNER ══════════════════════════════════ */
-  #offline-banner { display: none; background: #FEF9EE; border-bottom: 1px solid #F0D9A0; padding: 7px 16px; font-size: 11px; color: #8B6914; font-weight: 600; text-align: center; }
   #offline-banner.show { display: block; }
 </style>
 </head>
@@ -162,17 +217,13 @@
 
   <!-- ══ LOGIN SCREEN ══════════════════════════════════ -->
   <div id="login-screen">
-    <div class="login-stamp">
-      <span class="login-stamp-emoji">✈️</span>
-    </div>
+    <div class="login-stamp"><span class="login-stamp-emoji">✈️</span></div>
     <div class="login-subtitle">Travel Journal</div>
     <div class="login-title">旅遊手帳</div>
     <div class="login-desc">記錄每段旅程的美好時光</div>
-
     <div style="width:100%">
       <div class="login-error" id="login-error"></div>
       <div class="login-divider"><span>請登入以繼續</span></div>
-
       <button class="btn-google" id="btn-google" onclick="window._googleLogin()">
         <svg width="20" height="20" viewBox="0 0 48 48">
           <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.6 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/>
@@ -185,21 +236,40 @@
     </div>
   </div>
 
+  <!-- ══ SIDE DRAWER ════════════════════════════════════ -->
+  <div id="drawer-overlay" onclick="closeDrawer()"></div>
+  <div id="side-drawer">
+    <div class="drawer-header">
+      <div class="drawer-avatar" id="drawer-avatar">？</div>
+      <div class="drawer-name" id="drawer-name">使用者</div>
+      <div class="drawer-mode" id="drawer-mode">☁ 雲端同步</div>
+      <div id="offline-banner" style="display:none;margin-top:8px;background:#FEF9EE;border:1px solid #F0D9A0;border-radius:8px;padding:6px 10px;font-size:11px;color:#8B6914;font-weight:600;text-align:center;">📴 目前離線</div>
+    </div>
+    <div class="drawer-body">
+      <div class="drawer-section-label">頁面</div>
+      <button class="drawer-item" onclick="switchPage('itinerary');closeDrawer()">
+        <span class="drawer-item-icon">🗺</span>行程
+      </button>
+      <button class="drawer-item" onclick="switchPage('timeline');closeDrawer()">
+        <span class="drawer-item-icon">📖</span>時間軸
+      </button>
+      <button class="drawer-item" onclick="switchPage('budget');closeDrawer()">
+        <span class="drawer-item-icon">💰</span>記帳
+      </button>
+      <button class="drawer-item" onclick="switchPage('wishlist');closeDrawer()">
+        <span class="drawer-item-icon">✨</span>待買清單
+      </button>
+      <button class="drawer-item" onclick="switchPage('packing');closeDrawer()">
+        <span class="drawer-item-icon">🧳</span>行李清單
+      </button>
+    </div>
+    <div class="drawer-footer">
+      <button class="btn-logout-drawer" onclick="handleLogout()">登出</button>
+    </div>
+  </div>
+
   <!-- ══ MAIN APP ═══════════════════════════════════════ -->
   <div id="main-area">
-    <div id="offline-banner">📴 目前離線 — 資料將在恢復連線後同步</div>
-
-    <div id="user-bar">
-      <div class="user-bar-info">
-        <div class="user-avatar" id="user-avatar">？</div>
-        <div>
-          <div class="user-name" id="user-name">使用者</div>
-          <div class="user-mode" id="user-mode">☁ 雲端同步</div>
-        </div>
-      </div>
-      <button class="btn-logout" onclick="handleLogout()">登出</button>
-    </div>
-
     <div id="iframe-wrap">
       <div class="iframe-loading" id="loading">
         <div class="loading-spinner"></div>
@@ -213,6 +283,12 @@
     </div>
 
     <nav id="bottom-nav">
+      <!-- Hamburger menu button -->
+      <button id="menu-btn" onclick="openDrawer()" aria-label="選單">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+      </button>
       <button class="nav-btn active" onclick="switchPage('itinerary')" id="nav-itinerary">
         <span class="nav-icon">🗺</span><span class="nav-label">行程</span>
       </button>
@@ -234,6 +310,16 @@
 </div>
 
 <script type="module">
+// ── Drawer ────────────────────────────────────────────
+window.openDrawer = function() {
+  document.getElementById('side-drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.add('open');
+};
+window.closeDrawer = function() {
+  document.getElementById('side-drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.remove('open');
+};
+
 // ── Page switching ────────────────────────────────────
 const PAGE_SRCS = { itinerary:'itinerary.html', timeline:'timeline.html', budget:'budget.html', wishlist:'wishlist.html', packing:'packing.html' };
 let currentPage = 'itinerary';
@@ -262,18 +348,17 @@ window.switchPage = function(pageId) {
 
 // ── Show main app ─────────────────────────────────────
 function showApp(user) {
-  // Set user info bar
-  const nameEl  = document.getElementById('user-name');
-  const modeEl  = document.getElementById('user-mode');
-  const avatar  = document.getElementById('user-avatar');
+  // Update drawer user info
+  const nameEl   = document.getElementById('drawer-name');
+  const modeEl   = document.getElementById('drawer-mode');
+  const avatarEl = document.getElementById('drawer-avatar');
   nameEl.textContent = user.displayName || user.email || '使用者';
   modeEl.textContent = '☁ 雲端同步';
   if (user.photoURL) {
-    avatar.innerHTML = `<img src="${user.photoURL}" alt="">`;
+    avatarEl.innerHTML = `<img src="${user.photoURL}" alt="">`;
   } else {
-    avatar.textContent = (user.displayName || user.email || 'U')[0].toUpperCase();
+    avatarEl.textContent = (user.displayName || user.email || 'U')[0].toUpperCase();
   }
-  document.getElementById('user-bar').classList.add('visible');
 
   // Animate out login screen
   const ls = document.getElementById('login-screen');
@@ -293,19 +378,16 @@ function showApp(user) {
 }
 
 // ── Google Login ──────────────────────────────────────
-window._googleLogin = async function handleGoogleLogin() {
+window._googleLogin = async function() {
   const btn  = document.getElementById('btn-google');
   const errEl = document.getElementById('login-error');
   btn.classList.add('loading');
-  btn.querySelector('svg') && (btn.querySelector('svg').style.opacity = '0.5');
+  btn.textContent = '登入中…';
   errEl.classList.remove('show');
-
   try {
     const { signInWithGoogle } = await import('./firebase-config.js');
     const user = await signInWithGoogle();
-    try {
-      localStorage.setItem('tripApp_uid', user.uid);
-    } catch(e) {}
+    try { localStorage.setItem('tripApp_uid', user.uid); } catch(e) {}
     showApp(user);
   } catch(e) {
     btn.classList.remove('loading');
@@ -348,17 +430,16 @@ window.handleLogout = async function() {
   } catch(e) {
     console.warn('Firebase init failed:', e.message);
   }
-  // Not logged in — show login screen
 })();
 
 // ── Network status ────────────────────────────────────
 window.addEventListener('offline', () => {
   document.getElementById('offline-banner').classList.add('show');
-  document.getElementById('user-mode').textContent = '📴 目前離線';
+  document.getElementById('drawer-mode').textContent = '📴 目前離線';
 });
 window.addEventListener('online', () => {
   document.getElementById('offline-banner').classList.remove('show');
-  document.getElementById('user-mode').textContent = '☁ 雲端同步';
+  document.getElementById('drawer-mode').textContent = '☁ 雲端同步';
 });
 
 // ── Service Worker ────────────────────────────────────
