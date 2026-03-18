@@ -1711,12 +1711,20 @@ render();
       setTimeout(function(){ _isSaving = false; }, 3000);
     };
 
-    // Auto-save: watch DOM mutations (fired after every render)
+    // Auto-save: watch DOM mutations ONLY after data is loaded
+    // Use a flag so we don't save the default empty state on first load
+    var _dataLoaded = false;
     var _t;
     new MutationObserver(function() {
+      if (!_dataLoaded) return;
       clearTimeout(_t);
-      _t = setTimeout(function(){ if(window._fbSave) window._fbSave(); }, 1200);
+      _t = setTimeout(function(){
+        // Only save if we have actual stops (not just default empty)
+        var hasData = days.some(function(d){ return d.stops && d.stops.length > 0; });
+        if (hasData && window._fbSave) window._fbSave();
+      }, 1200);
     }).observe(document.body, { childList: true, subtree: true });
+    _dataLoaded = true; // set AFTER observer is registered
 
     var badge = document.createElement('div');
     badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;background:rgba(255,255,255,.9);border:1px solid #DDD4C6;border-radius:20px;padding:4px 10px;font-size:10px;font-family:sans-serif;color:#8B5E3C;font-weight:700;';
