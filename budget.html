@@ -960,7 +960,7 @@ async function saveExpense() {
         if (r.file && window._fbUpload) {
           try {
             const ext = r.file.name.split('.').pop() || 'jpg';
-            const path = \`budget/receipts/\${Date.now()}_\${Math.random().toString(36).slice(2)}.\${ext}\`;
+            const path = `budget/receipts/\${Date.now()}_\${Math.random().toString(36).slice(2)}.\${ext}`;
             const url = await window._fbUpload(r.file, path);
             uploaded.push(url);
           } catch(e) { console.warn('Receipt upload failed', e); }

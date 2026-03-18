@@ -408,10 +408,11 @@ function toggleEdit() {
 }
 function setActiveCat(id) { activeCat=id; render(); }
 
-function toggleItem(catId, itemName) {
+function toggleItem(catId, secName, itemName) {
   const st = {...getState()};
   if(!st[catId]) st[catId]={};
-  st[catId][itemName] = !st[catId][itemName];
+  const key = secName + '__' + itemName;
+  st[catId][key] = !st[catId][key];
   setState(st); render();
 }
 function removeItem(catId, secName, itemName) {
@@ -423,7 +424,7 @@ function addItem(catId, secName) {
   const name = inp?.value.trim(); if(!name) return;
   const updated = getCats().map(cat=>cat.id!==catId?cat:{...cat,sections:cat.sections.map(sec=>sec.name!==secName?sec:{...sec,items:[...sec.items,name]})});
   setCats(updated);
-  const st={...getState()}; if(!st[catId])st[catId]={}; st[catId][name]=false; setState(st);
+  const st={...getState()}; if(!st[catId])st[catId]={}; st[catId][secName+'__'+name]=false; setState(st);
   inp.value=''; render();
 }
 function addSection(catId) {
@@ -440,7 +441,7 @@ function resetTrip() {
 }
 function checkAll() {
   const st={};
-  getCats().forEach(cat=>{st[cat.id]={};cat.sections.forEach(sec=>sec.items.forEach(item=>st[cat.id][item]=true));});
+  getCats().forEach(cat=>{st[cat.id]={};cat.sections.forEach(sec=>sec.items.forEach(item=>st[cat.id][sec.name+'__'+item]=true));});
   setState(st); render();
 }
 
@@ -538,17 +539,18 @@ function renderContent() {
       ondrop="secDragDrop(event,${sIdx})"
       ondragend="secDragEnd(event)">
       <div class="section-label">
-        <span class="section-drag-handle" title="拖曳排序">⠿</span>
+        ${editMode?`<span class="section-drag-handle" title="拖曳排序">⠿</span>`:''}
         ${sec.name}
+        ${editMode?`<button onclick="deleteSection('${cat.id}','${escHtml(sec.name)}')" style="margin-left:auto;background:none;border:none;color:#c0392b;font-size:14px;cursor:pointer;padding:0 4px;line-height:1;" title="刪除區塊">✕</button>`:''}
       </div>
       <div class="section-block">
-      ${sec.items.map(item=>`
-        <div class="item-row${st[item]?' checked':''}">
-          <div class="check-box${st[item]?' checked':''}" onclick="toggleItem('${cat.id}','${escHtml(item)}')">
+      ${sec.items.map(item=>{const stKey=sec.name+'__'+item; return `
+        <div class="item-row${st[stKey]?' checked':''}">
+          <div class="check-box${st[stKey]?' checked':''}" onclick="toggleItem('${cat.id}','${escHtml(sec.name)}','${escHtml(item)}')">
             <span class="check-icon">✓</span>
           </div>
-          <span class="item-name${st[item]?' checked':''}">${escHtml(item)}</span>
-          <button class="del-btn" onclick="removeItem('${cat.id}','${escHtml(sec.name)}','${escHtml(item)}')">×</button>
+          <span class="item-name${st[stKey]?' checked':''}">${escHtml(item)}</span>
+          <button class="del-btn" onclick="removeItem('${cat.id}','${escHtml(sec.name)}','${escHtml(item)}')">×</button>`}).join('')
         </div>`).join('')}
       ${editMode?`<div class="add-item-row"><input id="inp-${cat.id}-${escHtml(sec.name)}" placeholder="新增項目..." onkeydown="if(event.key==='Enter')addItem('${cat.id}','${escHtml(sec.name)}')"><button onclick="addItem('${cat.id}','${escHtml(sec.name)}')">加入</button></div>`:''}
       </div>
@@ -649,6 +651,24 @@ function confirmAddCat() {
   closeModal();
   render();
 }
+function deleteSection(catId, secName) {
+  if(!confirm(`確定刪除「${secName}」區塊？`)) return;
+  const updated = getCats().map(cat => cat.id !== catId ? cat : {
+    ...cat,
+    sections: cat.sections.filter(s => s.name !== secName)
+  });
+  // Also clean up state keys for this section
+  const st = {...getState()};
+  if(st[catId]) {
+    Object.keys(st[catId]).forEach(key => {
+      if(key.startsWith(secName + '__')) delete st[catId][key];
+    });
+    setState(st);
+  }
+  setCats(updated);
+  render();
+}
+
 function deleteCat(catId) {
   const cats = getCats();
   if(cats.length <= 1) { alert('至少需要保留一個分類！'); return; }
