@@ -714,7 +714,7 @@ const W = (() => {
     if(!all.includes(currentCat)) currentCat='全部';
     el.innerHTML=all.map(name=>{
       const cat=categories.find(c=>c.name===name);
-      return `<div class="cat-chip ${name===currentCat?'active':''}" onclick="W.setCat(`${esc(name)}`)">${cat?cat.icon:'✦'} ${esc(name)}</div>`;
+      return `<div class="cat-chip ${name===currentCat?'active':''}" onclick="W.setCat(\`${esc(name)}\`)">${cat?cat.icon:'✦'} ${esc(name)}</div>`;
     }).join('');
   }
   function renderStats() {
@@ -921,7 +921,7 @@ const W = (() => {
       priority:document.getElementById('wfPriority').value,
       category:document.getElementById('wfCategory').value,
       tagColor:getSelectedColor('wTagColorsList'),
-      img:imgUrl||null,
+      img:uploadedImgData,
     };
     if(editingId){const idx=items.findIndex(x=>x.id===editingId);items[idx]={...items[idx],...data};}
     else items.unshift({id:genId(),createdAt:Date.now(),bought:false,fav:false,...data});
@@ -1002,8 +1002,7 @@ const W = (() => {
   return {render,setView,setCurrency,setCat,toggleBought,toggleFav,deleteItem,toggleArchive,
     openAddModal,openEditModal,closeModal,handleImgUpload,saveItem,
     openCatManager,closeCatModal,addCategory,removeCat,saveCats,openEmojiPicker,
-    dragStart,dragOver,dragLeave,dragDrop,_editingCats,init,
-    reload: function(){ items=JSON.parse(localStorage.getItem('wishlist_items')||'[]'); render(); }};
+    dragStart,dragOver,dragLeave,dragDrop,_editingCats,init};
 })();
 
 // ═══════════════════════════════════════════
@@ -1035,7 +1034,7 @@ const P = (() => {
     if(!all.includes(currentCat)) currentCat='全部';
     el.innerHTML=all.map(name=>{
       const cat=categories.find(c=>c.name===name);
-      return `<div class="cat-chip ${name===currentCat?'active':''}" onclick="P.setCat(`${esc(name)}`)">${cat?cat.icon:'✦'} ${esc(name)}</div>`;
+      return `<div class="cat-chip ${name===currentCat?'active':''}" onclick="P.setCat(\`${esc(name)}\`)">${cat?cat.icon:'✦'} ${esc(name)}</div>`;
     }).join('');
   }
   function renderStats() {
@@ -1069,7 +1068,7 @@ const P = (() => {
     return `<div class="place-card ${place.visited?'visited':''}">
       <div class="place-banner">
         ${place.img?`<img src="${place.img}" alt="">`:''}
-        ${!place.img?`<span class="place-banner-emoji">${catIcon}</span>`:''}
+        <span class="place-banner-emoji">${catIcon}</span>
       </div>
       <div class="place-body">
         <div class="place-header">
@@ -1289,8 +1288,7 @@ const P = (() => {
   return {render,setView,setCat,toggleFav,toggleVisited,deletePlace,toggleArchive,setRating,
     openAddModal,openEditModal,closeModal,handleImgUpload,savePlace,
     openCatManager,closeCatModal,addCategory,removeCat,saveCats,openEmojiPicker,
-    dragStart,dragOver,dragLeave,dragDrop,_editingCats,init,
-    reload: function(){ places=JSON.parse(localStorage.getItem('placelist_items')||'[]'); render(); }};
+    dragStart,dragOver,dragLeave,dragDrop,_editingCats,init};
 })();
 
 // ── Boot ──
@@ -1301,6 +1299,7 @@ P.render(); // render but don't show (page 1 is hidden)
 (async () => {
   try {
     const fb = await import('./firebase-config.js');
+    // Read uid from localStorage (set by index.html after Google login)
     let uid = null;
     try { uid = localStorage.getItem('tripApp_uid'); } catch(e) {}
     if (!uid) throw new Error('未登入，跳過 Firebase 同步');
@@ -1309,7 +1308,7 @@ P.render(); // render but don't show (page 1 is hidden)
     const W_DOC = `users/${uid}/data/wishlist`;
     const P_DOC = `users/${uid}/data/placelist`;
 
-    // ── Save: read from in-memory vars via W/P render cycle ──
+    // Wishlist save/load
     window._fbSave = async () => {
       const wItems = JSON.parse(localStorage.getItem('wishlist_items')||'[]');
       const wCats  = JSON.parse(localStorage.getItem('wishlist_cats')||'[]');
@@ -1317,38 +1316,34 @@ P.render(); // render but don't show (page 1 is hidden)
       await fb.fsSet(W_DOC, { items: wItems, cats: wCats, currency: wCur });
     };
     window._fbSaveWishlist = window._fbSave;
+
+    // Place list save/load
     window._fbSavePlaces = async () => {
       const pItems = JSON.parse(localStorage.getItem('placelist_items')||'[]');
       const pCats  = JSON.parse(localStorage.getItem('placelist_cats')||'[]');
       await fb.fsSet(P_DOC, { items: pItems, cats: pCats });
     };
 
-    // ── Load wishlist from Firestore → update localStorage → re-init W ──
+    // Load wishlist from Firestore
     const wSnap = await fb.fsGet(W_DOC);
     if (wSnap.exists()) {
       const d = wSnap.data();
-      if (d.items && d.items.length) {
-        localStorage.setItem('wishlist_items', JSON.stringify(d.items));
-        // Update in-memory items in W namespace by re-reading localStorage
-        // W reads from localStorage on init(), re-calling init reloads items
-        if (window.W && window.W.init) window.W.init();
-      }
-      if (d.cats && d.cats.length)  localStorage.setItem('wishlist_cats', JSON.stringify(d.cats));
-      if (d.currency) localStorage.setItem('wishlist_cur', d.currency);
+      if (d.items)    localStorage.setItem('wishlist_items', JSON.stringify(d.items));
+      if (d.cats)     localStorage.setItem('wishlist_cats',  JSON.stringify(d.cats));
+      if (d.currency) localStorage.setItem('wishlist_cur',   d.currency);
+      // Reload W namespace from updated localStorage
+      window.W && window.W.reload && window.W.reload();
     }
 
-    // ── Load placelist from Firestore → update localStorage → re-init P ──
+    // Load placelist from Firestore
     const pSnap = await fb.fsGet(P_DOC);
     if (pSnap.exists()) {
       const d = pSnap.data();
-      if (d.items && d.items.length) {
-        localStorage.setItem('placelist_items', JSON.stringify(d.items));
-        if (window.P && window.P.init) window.P.init();
-      }
-      if (d.cats && d.cats.length) localStorage.setItem('placelist_cats', JSON.stringify(d.cats));
+      if (d.items) localStorage.setItem('placelist_items', JSON.stringify(d.items));
+      if (d.cats)  localStorage.setItem('placelist_cats',  JSON.stringify(d.cats));
+      window.P && window.P.reload && window.P.reload();
     }
 
-    // Sync badge
     const badge = document.createElement('div');
     badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;background:rgba(255,255,255,.9);border:1px solid #DDD4C6;border-radius:20px;padding:4px 10px;font-size:10px;font-family:sans-serif;color:#8B5E3C;font-weight:700;backdrop-filter:blur(8px);';
     badge.textContent = '☁ 已連線';
