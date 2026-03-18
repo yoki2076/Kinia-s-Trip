@@ -1715,29 +1715,25 @@ render();
       var d = snap.data();
       if (d.days && d.days.length) {
         days = d.days;
-        // Keep current activeDay if still valid, else go to first day
-        if (!days.find(function(d){ return d.id === activeDay; })) {
-          activeDay = days[0].id;
-        }
+        // 不覆蓋 activeDay，各自保留自己在看的那天
+        if (!days.find(function(d){ return d.id === activeDay; })) activeDay = days[0].id;
         render();
       }
     }
 
     // Real-time listener
     var _isSaving = false;
-    var _isRemoteUpdate = false;
+    var _remoteRendering = false;
     fb.fsLive(SHARED_DOC, function(liveSnap) {
       if (_isSaving || !liveSnap.exists()) return;
       var ld = liveSnap.data();
       if (!ld.days || !ld.days.length) return;
-      _isRemoteUpdate = true;
+      _remoteRendering = true;
       days = ld.days;
-      // Validate activeDay still exists in updated days
-      if (!days.find(function(d){ return d.id === activeDay; })) {
-        activeDay = days[0].id;
-      }
+      // 不覆蓋 activeDay，各自看各自的天
+      if (!days.find(function(d){ return d.id === activeDay; })) activeDay = days[0].id;
       render();
-      setTimeout(function(){ _isRemoteUpdate = false; }, 1500);
+      setTimeout(function(){ _remoteRendering = false; }, 1500);
     });
 
     // Wrap save to block listener during own save
@@ -1752,10 +1748,10 @@ render();
     var _dataLoaded = false;
     var _t;
     new MutationObserver(function() {
-      if (!_dataLoaded || _isRemoteUpdate) return;
+      if (!_dataLoaded || _remoteRendering) return;
       clearTimeout(_t);
       _t = setTimeout(function(){
-        if (_isRemoteUpdate) return;
+        if (_remoteRendering) return;
         var hasData = days.some(function(d){ return d.stops && d.stops.length > 0; });
         if (hasData && window._fbSave) window._fbSave();
       }, 1200);
