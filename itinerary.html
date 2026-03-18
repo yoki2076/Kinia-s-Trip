@@ -1208,6 +1208,7 @@
 </div>
 
 <script>
+console.log("[ITINERARY] script loaded");
 // ─── DATA ───
 const TRANSPORT_ICONS = {
   '步行': '🚶', '計程車': '🚕', '捷運': '🚇', '公車': '🚌',
@@ -1721,6 +1722,7 @@ function esc(s) {
 
 render();
 
+console.log('[FB] about to start boot');
 // ── Firebase 同步 ──
 (async () => {
   console.log('[FB] boot starting...');
