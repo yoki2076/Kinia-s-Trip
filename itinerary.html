@@ -1660,65 +1660,13 @@ render();
 
 // ── Firebase 同步（共用行程）──
 
-// Invite code UI - runs immediately, no Firebase needed
+// Show shared badge immediately
 (function() {
-  var INVITE_CODE = localStorage.getItem('tripInviteCode') || 'kinia2026';
-  window._inviteCode = INVITE_CODE;
-
-  window._joinTrip = function() {
-    var inp = document.getElementById('join-code-inp');
-    var v = inp ? inp.value.trim() : '';
-    if (!v) { alert('請輸入邀請碼'); return; }
-    localStorage.setItem('tripInviteCode', v);
-    location.reload();
-  };
-
-  window._copyCode = function() {
-    var code = window._inviteCode || 'kinia2026';
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(code).then(function(){ alert('已複製邀請碼：' + code); });
-    } else {
-      prompt('請手動複製邀請碼：', code);
-    }
-  };
-
-  window._toggleInvitePanel = function() {
-    var p = document.getElementById('invite-panel');
-    if (p) { p.style.display = p.style.display === 'none' ? 'flex' : 'none'; return; }
-    var panel = document.createElement('div');
-    panel.id = 'invite-panel';
-    panel.style.cssText = 'position:fixed;top:50px;right:12px;z-index:10000;background:#fff;border:1px solid #DDD4C6;border-radius:16px;padding:18px;width:270px;box-shadow:0 4px 24px rgba(0,0,0,0.15);font-family:"Noto Sans TC",sans-serif;display:flex;flex-direction:column;gap:10px;';
-    panel.innerHTML =
-      '<div style="font-size:13px;font-weight:700;color:#2C2016;">☁ 共用行程邀請碼</div>' +
-      '<div style="font-size:11px;color:#8B7355;line-height:1.5;">把邀請碼分享給旅伴，對方輸入相同邀請碼就能共同查看、編輯行程</div>' +
-      '<div style="font-size:22px;font-weight:900;color:#8B5E3C;text-align:center;background:#F7F3EE;border-radius:10px;padding:12px;letter-spacing:4px;">' + INVITE_CODE + '</div>' +
-      '<button onclick="window._copyCode()" style="padding:10px;background:#8B5E3C;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">複製邀請碼</button>' +
-      '<hr style="border:none;border-top:1px solid #EEE;margin:0;">' +
-      '<div style="font-size:11px;color:#A8917A;font-weight:600;">加入別人的行程：</div>' +
-      '<div style="display:flex;gap:8px;align-items:center;">' +
-        '<input id="join-code-inp" placeholder="輸入邀請碼" style="flex:1;padding:9px 12px;border:1px solid #DDD4C6;border-radius:8px;font-size:13px;outline:none;font-family:inherit;">' +
-        '<button onclick="window._joinTrip()" style="padding:9px 14px;background:#2C2016;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">加入</button>' +
-      '</div>';
-    document.body.appendChild(panel);
-    setTimeout(function() {
-      document.addEventListener('click', function closePanel(e) {
-        var badge = document.getElementById('invite-badge');
-        if (!panel.contains(e.target) && e.target !== badge && !badge.contains(e.target)) {
-          panel.style.display = 'none';
-          document.removeEventListener('click', closePanel);
-        }
-      });
-    }, 100);
-  };
-
-  // Show badge immediately
   window.addEventListener('DOMContentLoaded', function() {
     var badge = document.createElement('div');
-    badge.id = 'invite-badge';
-    badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.95);border:1px solid #DDD4C6;border-radius:20px;padding:5px 12px;font-size:11px;font-family:sans-serif;color:#8B5E3C;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.08);cursor:pointer;';
-    badge.innerHTML = '&#9729; ' + INVITE_CODE;
-    badge.title = '點擊管理邀請碼';
-    badge.onclick = window._toggleInvitePanel;
+    badge.id = 'collab-badge';
+    badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.95);border:1px solid #DDD4C6;border-radius:20px;padding:5px 12px;font-size:11px;font-family:sans-serif;color:#8B5E3C;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.08);';
+    badge.textContent = '☁ 共用行程';
     document.body.appendChild(badge);
   });
 })();
@@ -1740,8 +1688,7 @@ render();
       return;
     }
 
-    var INVITE_CODE = window._inviteCode || 'kinia2026';
-    var SHARED_DOC = 'trips/invite_' + INVITE_CODE + '/data/itinerary';
+    var SHARED_DOC = 'trips/shared/data/itinerary';
     window._fbUpload = fb.uploadImage;
 
     window._fbSave = async function() {
@@ -1806,9 +1753,8 @@ render();
     }).observe(document.body, { childList: true, subtree: true });
     _dataLoaded = true;
 
-    // Update badge to show sync status
-    var badge = document.getElementById('invite-badge');
-    if (badge) badge.innerHTML = '&#9729; ' + INVITE_CODE;
+    var badge = document.getElementById('collab-badge');
+    if (badge) badge.textContent = '☁ 共用行程（已連線）';
 
   } catch(e) {
     console.warn('Firebase boot failed:', e.message);
