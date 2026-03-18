@@ -2,990 +2,1776 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>旅遊行程</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Iansui&family=Long+Cang&family=Caveat:wght@400;600;700&family=Noto+Serif+TC:wght@300;400;500;600&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+
 <style>
-:root{
-  --ink:#0e0c0b;
-  --ink2:#4a3f38;
-  --ink3:#9a8a80;
-  --cream:#faf7f4;
-  --warm:#f0e9e2;
-  --border:#e5ddd6;
-  --red:#c8392b;
-  --red-l:#fdf0ee;
+  :root {
+    --cream: #F0EBE3;
+    --cream-dark: #E8E0D5;
+    --butter: #F7F3EE;
+    --caramel: #8B5E3C;
+    --caramel-light: #A87850;
+    --caramel-dark: #6B4428;
+    --sand: #DDD4C6;
+    --sand-light: #F0E8DC;
+    --mocha: #2C2016;
+    --fog: #A8917A;
+    --ink: #2C2016;
+    --accent: #8B5E3C;
+    --transit-bg: rgba(139,94,60,0.07);
+    --transit-border: rgba(139,94,60,0.18);
+  }
 
-  /* category gradients for photo area */
-  --g-sight:  linear-gradient(160deg,#1a3a5c 0%,#2e6da4 50%,#6fb3d3 100%);
-  --g-food:   linear-gradient(160deg,#5c1a0e 0%,#c0502a 50%,#e8956a 100%);
-  --g-hotel:  linear-gradient(160deg,#0e3320 0%,#1e7a45 50%,#5fba80 100%);
-  --g-shop:   linear-gradient(160deg,#3a1a5c 0%,#7a3aaa 50%,#c08ae0 100%);
-  --g-transport:linear-gradient(160deg,#2a2a2a 0%,#5a5a5a 50%,#9a9a9a 100%);
-  --g-other:  linear-gradient(160deg,#4a3a10 0%,#a08020 50%,#d4b060 100%);
-}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-body{
-  padding-bottom:80px;
-  font-family:'DM Sans','Noto Sans TC',sans-serif;
-  background:var(--cream);
-  color:var(--ink);
-  max-width:430px;
-  margin:0 auto;
-  min-height:100vh;
-  padding-bottom:24px;
-}
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-/* ─── STICKY HEADER ─── */
-.header{
-  background:var(--cream);
-  border-bottom:1px solid var(--border);
-  padding:18px 20px 0;
-  position:sticky;top:0;z-index:100;
-}
-.header-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
-.trip-label{
-  font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;
-  letter-spacing:3px;text-transform:uppercase;color:var(--ink3);
-  margin-bottom:4px;
-}
-.trip-title{
-  font-family:'Playfair Display',serif;
-  font-size:22px;font-weight:900;color:var(--ink);
-  cursor:pointer;line-height:1.1;
-  display:flex;align-items:center;gap:7px;
-}
-.trip-title:active{opacity:.7;}
+  body {
+  padding-bottom: 80px;
+    background: #E8E0D5;
+    font-family: 'Noto Sans TC', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 0 0 80px;
+  }
 
+  .phone-frame {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100vh;
+    background: var(--butter);
+    position: relative;
+    overflow-x: hidden;
+  }
 
-/* ─── DAY TABS ─── */
-.tabs-row{display:flex;align-items:center;gap:6px;padding-bottom:14px;}
-.tabs-scroll{display:flex;gap:5px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;}
-.tabs-scroll::-webkit-scrollbar{display:none;}
-.day-tab{
-  flex-shrink:0;padding:6px 16px;
-  border-radius:30px;border:1px solid var(--border);
-  background:transparent;color:var(--ink3);
-  font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;
-  cursor:pointer;white-space:nowrap;transition:all .18s;position:relative;
-  display:flex;flex-direction:column;align-items:center;
-}
-.day-tab .tab-day{font-size:13px;font-weight:700;line-height:1.2;}
-.day-tab .tab-date{font-size:9px;opacity:.65;margin-top:1px;}
-.day-tab.active{
-  background:var(--ink);color:#fff;
-  border-color:var(--ink);
-  box-shadow:0 3px 14px rgba(14,12,11,.22);
-}
-.tab-del-x{
-  display:none;position:absolute;top:-5px;right:-5px;
-  width:15px;height:15px;border-radius:50%;
-  background:var(--red);color:#fff;font-size:8px;
-  border:none;cursor:pointer;align-items:center;justify-content:center;
-}
-.tabs-edit-mode .tab-del-x{display:flex;}
-.btn-tab-sm{
-  flex-shrink:0;padding:6px 11px;border-radius:30px;
-  border:1px solid var(--border);background:transparent;
-  color:var(--ink2);font-size:12px;font-weight:700;
-  cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;
-  transition:all .15s;
-}
-.btn-tab-sm:active{background:var(--warm);}
-.btn-tab-sm.active-edit{background:var(--red);color:#fff;border-color:var(--red);}
+  /* Grain texture */
+  .phone-frame::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 430px;
+    height: 100vh;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+  }
 
-/* ─── CONTENT ─── */
-.day-section{display:none;}
-.day-section.active{display:block;}
+  /* ─── HEADER ─── */
+  .header {
+    background: var(--caramel-dark);
+    padding: 52px 28px 40px;
+    position: relative;
+    overflow: hidden;
+  }
 
-.day-header-row{
-  display:flex;align-items:baseline;justify-content:space-between;
-  padding:16px 20px 8px;
-}
-.day-date-label{
-  font-family:'Playfair Display',serif;
-  font-size:15px;font-style:italic;color:var(--ink2);font-weight:700;
-}
-.day-note-toggle{
-  font-size:11px;color:var(--ink3);background:none;border:none;
-  cursor:pointer;transition:color .15s;
-}
-.day-note-toggle:active{color:var(--ink);}
-.day-note-panel{max-height:0;overflow:hidden;transition:max-height .3s;padding:0 20px;}
-.day-note-panel.open{max-height:180px;}
-.day-note-ta{
-  width:100%;border:1px solid var(--border);border-radius:10px;
-  background:var(--warm);padding:10px 12px;
-  font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);
-  resize:none;min-height:64px;outline:none;transition:border-color .2s;
-}
-.day-note-ta:focus{border-color:var(--ink);}
+  .header-bg-text {
+    position: absolute;
+    bottom: -8px; right: -6px;
+    font-family: 'Long Cang', cursive;
+    font-size: 96px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.04);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
 
-/* ─── CARD FEED ─── */
-.spot-list{padding:6px 20px 0;}
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    height: 32px;
+    background: var(--butter);
+    border-radius: 32px 32px 0 0;
+  }
 
-.spot-card{
-  border-radius:16px;overflow:hidden;
-  border:1px solid var(--border);
-  background:#fff;
-  margin-bottom:16px;
-  box-shadow:0 2px 16px rgba(14,12,11,.07);
-  transition:box-shadow .2s;
-  cursor:default;
-}
-.spot-card.dragging{opacity:.4;box-shadow:none;}
-.spot-card.drag-over{box-shadow:0 0 0 2px var(--ink);}
+  .header-deco {
+    position: absolute;
+    top: 54px; right: 28px;
+    font-size: 11px;
+    color: var(--sand);
+    opacity: 0.55;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+  }
 
-/* photo area */
-.card-photo{
-  width:100%;height:180px;
-  position:relative;overflow:hidden;
-  flex-shrink:0;
-}
-.card-photo-bg{
-  width:100%;height:100%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:54px;
-  transition:transform .3s;
-}
-.card-photo:active .card-photo-bg{transform:scale(1.03);}
+  .header-eyebrow {
+    font-family: 'Caveat', cursive;
+    font-size: 15px;
+    letter-spacing: 3px;
+    color: var(--sand);
+    margin-bottom: 8px;
+    opacity: 0.75;
+  }
 
-/* gradient per category */
-.photo-sight     {background:var(--g-sight);}
-.photo-food      {background:var(--g-food);}
-.photo-hotel     {background:var(--g-hotel);}
-.photo-shop      {background:var(--g-shop);}
-.photo-transport {background:var(--g-transport);}
-.photo-other     {background:var(--g-other);}
+  .header-title {
+    font-family: 'Iansui', 'Long Cang', cursive;
+    font-size: 48px;
+    font-weight: normal;
+    color: var(--cream);
+    line-height: 1.15;
+    margin-bottom: 6px;
+    letter-spacing: 8px;
+    text-shadow: 0 2px 16px rgba(44,32,22,0.3);
+  }
 
-/* overlay chips on photo */
-.photo-overlay{
-  position:absolute;inset:0;
-  display:flex;flex-direction:column;justify-content:space-between;
-  padding:12px 14px;
-  background:linear-gradient(to bottom,rgba(0,0,0,.06) 0%,rgba(0,0,0,.0) 40%,rgba(0,0,0,.55) 100%);
-}
-.photo-top{display:flex;justify-content:space-between;align-items:flex-start;}
-.photo-time-badge{
-  background:rgba(255,255,255,.92);
-  color:var(--ink);
-  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;
-  padding:4px 11px;border-radius:20px;
-  cursor:pointer;transition:background .15s;letter-spacing:.3px;
-  border:none;backdrop-filter:blur(4px);
-}
-.photo-time-badge:active{background:rgba(255,255,255,.7);}
-.photo-actions{display:flex;gap:5px;}
-.photo-btn{
-  width:30px;height:30px;border-radius:50%;
-  background:rgba(255,255,255,.85);color:var(--ink2);
-  border:none;font-size:13px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:all .15s;backdrop-filter:blur(4px);
-}
-.photo-btn:active{background:#fff;transform:scale(.9);}
-@keyframes swPulse{0%,100%{box-shadow:0 0 0 2px rgba(200,57,43,.5);}50%{box-shadow:0 0 0 6px rgba(200,57,43,.1);}}
-.photo-bottom{display:flex;align-items:flex-end;justify-content:space-between;}
-.photo-cat-badge{
-  font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;
-  letter-spacing:.5px;text-transform:uppercase;
-  color:rgba(255,255,255,.85);
-  background:rgba(255,255,255,.15);backdrop-filter:blur(4px);
-  padding:3px 9px;border-radius:20px;border:1px solid rgba(255,255,255,.2);
-}
-.photo-icon-big{
-  font-size:52px;
-  opacity:.55;
-  user-select:none;
-}
+  .header-sub {
+    font-size: 12px;
+    color: var(--fog);
+    letter-spacing: 1px;
+    font-style: italic;
+  }
 
-/* card body */
-.card-body{padding:14px 16px 14px;}
-.card-title-row{
-  display:flex;align-items:flex-start;justify-content:space-between;gap:8px;
-  margin-bottom:10px;
-}
-.card-name{
-  font-family:'Playfair Display',serif;
-  font-size:20px;font-weight:700;color:var(--ink);
-  cursor:pointer;line-height:1.2;flex:1;min-width:0;
-}
-.card-name:active{opacity:.7;}
-.card-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
-.meta-pill{
-  font-size:11px;font-weight:500;color:var(--ink2);
-  background:var(--warm);border:1px solid var(--border);
-  padding:3px 10px;border-radius:20px;
-  display:flex;align-items:center;gap:4px;
-}
-.card-note-preview{
-  font-size:12px;color:var(--ink3);line-height:1.5;
-  margin-bottom:6px;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
-}
-.card-chips{display:flex;gap:5px;flex-wrap:wrap;}
-.info-chip{
-  font-size:11px;padding:3px 10px;border-radius:8px;
-  background:var(--warm);color:var(--ink2);border:1px solid var(--border);
-  cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;
-  transition:all .12s;
-}
-.info-chip:active{background:var(--border);}
+  /* ─── TRIP META ─── */
+  /* ─── DAY TABS ─── */
+  .day-tabs-wrap {
+    padding: 14px 24px 10px;
+    border-bottom: 1px solid var(--cream-dark);
+  }
 
-/* ─── DETAIL EXPAND ─── */
-.card-detail{max-height:0;overflow:hidden;transition:max-height .35s ease;}
-.card-detail.open{max-height:700px;}
-.card-detail-inner{
-  border-top:1px solid var(--border);
-  padding:14px 16px 10px;
-  display:flex;flex-direction:column;gap:10px;
-}
-.det-lbl{
-  font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
-  color:var(--ink3);margin-bottom:-4px;
-}
-.det-row{display:flex;align-items:center;gap:8px;}
-.det-icon{font-size:14px;flex-shrink:0;width:20px;text-align:center;color:var(--ink3);}
-.det-input{
-  flex:1;border:none;border-bottom:1.5px solid var(--border);
-  background:transparent;padding:5px 2px;
-  font-family:'DM Sans','Noto Sans TC',sans-serif;font-size:13px;color:var(--ink);
-  outline:none;transition:border-color .2s;
-}
-.det-input:focus{border-bottom-color:var(--ink);}
-.det-btn{
-  padding:4px 11px;border-radius:8px;border:1px solid var(--border);
-  font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;
-  background:var(--warm);color:var(--ink2);transition:all .15s;
-}
-.det-btn:active{background:var(--ink);color:#fff;border-color:var(--ink);}
-.det-ta{
-  flex:1;border:1px solid var(--border);background:var(--warm);
-  border-radius:8px;padding:8px 10px;
-  font-family:'DM Sans','Noto Sans TC',sans-serif;font-size:13px;color:var(--ink);
-  resize:none;min-height:54px;outline:none;transition:border-color .2s;
-}
-.det-ta:focus{border-color:var(--ink);}
-.save-btn{
-  width:100%;padding:11px;border-radius:10px;border:none;
-  background:var(--ink);color:#fff;
-  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;
-  cursor:pointer;transition:opacity .15s;
-  letter-spacing:.3px;
-}
-.save-btn:active{opacity:.8;}
+  .day-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .day-tabs::-webkit-scrollbar { display: none; }
 
-/* ─── IMAGE UPLOAD ─── */
-.img-upload-area{
-  width:100%;height:140px;border-radius:12px;
-  border:2px dashed var(--border);background:var(--warm);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:6px;cursor:pointer;transition:all .2s;margin-bottom:12px;
-  position:relative;overflow:hidden;
-}
-.img-upload-area:active{border-color:var(--ink);background:var(--border);}
-.img-upload-area.has-img{border-style:solid;border-color:var(--border);}
-.img-upload-preview{
-  width:100%;height:100%;object-fit:cover;display:none;
-}
-.img-upload-area.has-img .img-upload-preview{display:block;}
-.img-upload-placeholder{
-  display:flex;flex-direction:column;align-items:center;gap:5px;
-  pointer-events:none;
-}
-.img-upload-area.has-img .img-upload-placeholder{display:none;}
-.img-upload-icon{font-size:28px;opacity:.4;}
-.img-upload-hint{font-size:11px;color:var(--ink3);font-weight:500;}
-.img-clear-btn{
-  position:absolute;top:8px;right:8px;
-  width:26px;height:26px;border-radius:50%;
-  background:rgba(0,0,0,.55);color:#fff;font-size:12px;
-  border:none;cursor:pointer;display:none;
-  align-items:center;justify-content:center;
-}
-.img-upload-area.has-img .img-clear-btn{display:flex;}
-#sImgInput{display:none;}
+  .day-tab {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    border-radius: 14px;
+    background: var(--cream);
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    min-width: 64px;
+    position: relative;
+    text-align: center;
+  }
 
-/* card action bar — icon circles, inline with name */
-.card-action-bar{
-  display:flex;flex-direction:row;gap:5px;flex-shrink:0;align-items:center;padding-top:3px;
-}
-.card-act-btn{
-  width:32px;height:32px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  border:1px solid var(--border);background:var(--warm);
-  font-size:14px;cursor:pointer;transition:all .15s;flex-shrink:0;
-}
-.card-act-btn:active{background:var(--border);}
-.card-act-btn.sw-btn.running{
-  background:var(--red);color:#fff;border-color:var(--red);
-  animation:swPulse 1.1s ease-in-out infinite;
-}
-.card-act-btn.edit-btn:active{background:var(--ink);border-color:var(--ink);}
+  .day-tab.active {
+    background: var(--caramel-dark);
+    border-color: var(--caramel-dark);
+  }
 
-.add-spot-btn{
-  display:flex;align-items:center;justify-content:center;gap:7px;
-  width:100%;margin:4px 0 20px;padding:13px;
-  border-radius:14px;border:1.5px dashed var(--border);background:transparent;
-  color:var(--ink3);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;
-  cursor:pointer;transition:all .15s;
-}
-.add-spot-btn:active{border-color:var(--ink);color:var(--ink);background:var(--warm);}
+  .day-tab-num {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--caramel-dark);
+    line-height: 1;
+  }
 
-/* ─── FAB ─── */
-.fab{
-  position:fixed;bottom:84px;right:20px;
-  width:52px;height:52px;border-radius:50%;
-  background:var(--ink);color:#fff;font-size:24px;border:none;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 6px 24px rgba(14,12,11,.28);
-  transition:transform .2s;z-index:50;
-}
-.fab:active{transform:scale(.92);}
+  .day-tab.active .day-tab-num { color: var(--cream); }
 
-/* ─── MODALS ─── */
-.overlay{
-  position:fixed;inset:0;background:rgba(14,12,11,.5);
-  display:flex;align-items:flex-end;justify-content:center;
-  z-index:200;opacity:0;pointer-events:none;transition:opacity .22s;
-}
-.overlay.open{opacity:1;pointer-events:all;}
-.modal{
-  background:var(--cream);width:100%;max-width:430px;
-  border-radius:22px 22px 0 0;
-  padding:12px 20px 36px;
-  max-height:92vh;overflow-y:auto;
-  transform:translateY(40px);transition:transform .22s;
-  border-top:3px solid var(--ink);
-}
-.overlay.open .modal{transform:translateY(0);}
-.m-handle{width:32px;height:3px;border-radius:2px;background:var(--border);margin:0 auto 18px;}
-.m-title{
-  font-family:'Playfair Display',serif;font-size:22px;font-weight:700;
-  color:var(--ink);margin-bottom:16px;
-}
-.m-label{
-  font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
-  color:var(--ink3);margin-bottom:5px;
-}
-.m-input{
-  width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;
-  font-family:'DM Sans','Noto Sans TC',sans-serif;font-size:14px;color:var(--ink);
-  outline:none;margin-bottom:12px;background:#fff;transition:border-color .2s;
-}
-.m-input:focus{border-color:var(--ink);}
-.cat-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;}
-.c-chip{
-  padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;
-  cursor:pointer;border:1.5px solid var(--border);background:var(--warm);
-  color:var(--ink2);transition:all .15s;
-}
-.c-chip.sel{background:var(--ink);color:#fff;border-color:var(--ink);}
-.m-btn{
-  width:100%;padding:14px;border-radius:12px;border:none;
-  background:var(--ink);color:#fff;
-  font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;
-  cursor:pointer;transition:opacity .15s;letter-spacing:.3px;
-}
-.m-btn:active{opacity:.8;}
-.m-btn.ghost{background:var(--warm);color:var(--ink2);border:1.5px solid var(--border);}
-.m-del-btn{
-  width:100%;padding:12px;border-radius:12px;
-  border:1.5px solid rgba(200,57,43,.35);background:var(--red-l);color:var(--red);
-  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;
-  cursor:pointer;margin-top:8px;transition:background .15s;
-}
-.m-del-btn:active{background:#fae0dd;}
+  .day-tab-date {
+    font-size: 9px;
+    color: var(--fog);
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+  }
 
-/* time picker */
-.tp-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:20px;}
-.tp-col{display:flex;flex-direction:column;align-items:center;gap:6px;}
-.tp-val{
-  font-family:'Playfair Display',serif;font-size:52px;font-weight:700;color:var(--ink);
-  min-width:78px;text-align:center;background:var(--warm);
-  border-radius:12px;padding:8px 12px;border:1px solid var(--border);
-}
-.tp-sep{font-family:'Playfair Display',serif;font-size:44px;font-weight:700;color:var(--red);margin-bottom:12px;}
-.tp-btn{
-  width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
-  background:var(--warm);color:var(--ink);font-size:17px;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;
-}
-.tp-btn:active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .day-tab.active .day-tab-date { color: rgba(240,235,227,0.65); }
 
-/* stopwatch */
-.sw-label{
-  text-align:center;font-size:10px;font-weight:700;letter-spacing:2.5px;
-  text-transform:uppercase;color:var(--ink3);margin-bottom:12px;
-}
-.sw-screen{
-  background:var(--ink);border-radius:16px;
-  margin:0 0 14px;padding:20px 14px 16px;text-align:center;
-}
-.sw-display{
-  font-family:'Playfair Display',serif;font-weight:700;font-size:60px;
-  color:#fff;line-height:1;
-  display:flex;align-items:baseline;justify-content:center;
-  font-variant-numeric:tabular-nums;
-}
-.sw-ms{font-family:'DM Sans',sans-serif;font-size:28px;color:rgba(255,255,255,.4);margin-left:5px;}
-.sw-result-area{margin-top:12px;display:none;flex-direction:column;gap:4px;}
-.sw-result-area.show{display:flex;}
-.sw-result-row{display:flex;justify-content:space-between;font-size:12px;padding:2px 0;}
-.sw-result-lbl{color:rgba(255,255,255,.45);font-weight:500;}
-.sw-result-val{color:#fff;font-weight:700;}
-.sw-controls{display:flex;gap:8px;margin-bottom:12px;}
-.sw-ctrl-btn{
-  flex:1;padding:13px;border-radius:12px;border:none;
-  font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;
-  cursor:pointer;transition:opacity .15s;
-}
-.sw-ctrl-btn:active{opacity:.8;}
-.sw-start{background:#d5f0dc;color:#1a6632;}
-.sw-stop {background:#fde8e6;color:var(--red);}
-.sw-reset{background:var(--warm);color:var(--ink2);border:1px solid var(--border);flex:0 0 74px;}
-.sw-use-btn{
-  width:100%;padding:13px;border-radius:12px;border:none;
-  background:var(--red);color:#fff;
-  font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;
-  cursor:pointer;margin-bottom:8px;display:none;transition:opacity .15s;
-}
-.sw-use-btn:active{opacity:.8;}
-.sw-use-btn.show{display:block;}
+  .day-tab-delete {
+    display: none; /* now only shown in edit mode via JS */
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #9e4e4e;
+    color: white;
+    border: 2px solid var(--butter);
+    font-size: 9px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    z-index: 10;
+    flex-shrink: 0;
+    transition: all 0.18s;
+  }
 
-.toast{
-  position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(16px);
-  background:var(--ink);color:#fff;padding:9px 20px;
-  border-radius:20px;font-size:13px;font-weight:600;
-  opacity:0;pointer-events:none;transition:all .25s;white-space:nowrap;z-index:999;
-}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-.empty-state{text-align:center;padding:40px 20px;color:var(--ink3);}
-.empty-icon{font-size:44px;margin-bottom:10px;}
-.empty-state p{font-family:'Playfair Display',serif;font-style:italic;font-size:16px;}
+  .day-tab-delete.visible { display: flex; }
+  .day-tab-delete:active { background: #7a2e2e; }
+
+  /* Edit button on the right of day tabs row */
+  .day-tabs-edit-btn {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 1.5px solid var(--sand-light);
+    background: var(--cream);
+    color: var(--fog);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: 2px;
+    align-self: center;
+  }
+
+  .day-tabs-edit-btn.active-edit {
+    background: var(--caramel-dark);
+    border-color: var(--caramel-dark);
+    color: var(--cream);
+  }
+
+  .day-tabs-edit-btn:active { transform: scale(0.92); }
+
+  /* Day modal */
+  .day-modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(44,26,14,0.5);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 300;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .day-modal-backdrop.open { display: flex; animation: bIn 0.22s ease; }
+
+  .day-modal {
+    width: 100%;
+    max-width: 320px;
+    background: var(--butter);
+    border-radius: 22px;
+    padding: 24px 22px 22px;
+    animation: scaleIn 0.28s cubic-bezier(0.22,0.9,0.36,1);
+  }
+
+  .day-modal-title {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 18px;
+    text-align: center;
+  }
+
+  .day-modal-btns { display: flex; gap: 10px; margin-top: 18px; }
+
+  /* ─── TOOLBAR ─── */
+  .toolbar {
+    padding: 14px 24px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .toolbar-title {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 14px;
+    color: var(--caramel-dark);
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  .add-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--caramel-dark);
+    border: none;
+    color: var(--cream);
+    font-size: 22px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 14px rgba(92,58,30,0.38);
+    transition: transform 0.18s, box-shadow 0.18s;
+    line-height: 1;
+    padding-bottom: 2px;
+  }
+  .add-btn:active { transform: scale(0.92); box-shadow: 0 2px 8px rgba(92,58,30,0.28); }
+
+  /* ─── TIMELINE ─── */
+  .timeline-container {
+    padding: 4px 20px 120px;
+    position: relative;
+  }
+
+  /* ─── STOP ENTRY ─── */
+  .stop-row {
+    display: flex;
+    gap: 12px;
+    position: relative;
+    animation: fadeSlide 0.38s ease forwards;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  @keyframes fadeSlide { to { opacity: 1; transform: translateY(0); } }
+
+  /* Left column */
+  .stop-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 48px;
+    flex-shrink: 0;
+    padding-top: 4px;
+  }
+
+  .stop-time {
+    text-align: center;
+    margin-bottom: 6px;
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .time-full {
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--caramel-dark);
+    line-height: 1;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .no-time {
+    font-size: 10px;
+    color: var(--sand);
+    display: block;
+    letter-spacing: 1px;
+  }
+
+  .stop-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--caramel-light);
+    border: 2.5px solid var(--butter);
+    box-shadow: 0 0 0 1.5px var(--sand);
+    flex-shrink: 0;
+    z-index: 1;
+  }
+
+  .stop-line {
+    width: 1.5px;
+    flex: 1;
+    min-height: 16px;
+    background: linear-gradient(to bottom, var(--sand), var(--cream-dark));
+    margin-top: 4px;
+  }
+
+  /* ─── STOP CARD ─── */
+  .stop-card {
+    flex: 1;
+    background: var(--cream);
+    border-radius: 16px;
+    padding: 14px 15px;
+    box-shadow: 0 2px 10px rgba(60,35,20,0.07), 0 1px 3px rgba(60,35,20,0.04);
+    border: 1px solid rgba(212,184,150,0.25);
+    transition: transform 0.18s, box-shadow 0.18s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 0;
+  }
+
+  .stop-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(to right, var(--sand-light), transparent);
+    border-radius: 16px 16px 0 0;
+  }
+
+  .stop-card:active { transform: scale(0.985); box-shadow: 0 1px 5px rgba(60,35,20,0.07); }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    gap: 6px;
+  }
+
+  .stop-category {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--accent);
+    background: rgba(139,94,60,0.1);
+    padding: 3px 9px;
+    border-radius: 20px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    line-height: 1.4;
+  }
+
+  .stop-category .cat-emoji {
+    font-size: 12px;
+    line-height: 1;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .stop-category .cat-text {
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .stop-duration {
+    font-size: 10px;
+    color: var(--fog);
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: 2px;
+  }
+
+  .stop-name {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 7px;
+    line-height: 1.4;
+  }
+
+  /* Photo */
+  .stop-photo {
+    width: 100%;
+    max-height: 155px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  /* Info rows */
+  .info-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 5px;
+    font-size: 12px;
+    color: var(--caramel);
+    line-height: 1.4;
+  }
+
+  .info-icon {
+    font-size: 13px;
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+
+  .info-text {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .info-text-label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .info-actions {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+
+  .mini-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--caramel-light);
+    background: none;
+    border: 1px solid rgba(168,120,80,0.3);
+    padding: 4px 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: 'Noto Sans TC', sans-serif;
+    text-decoration: none;
+  }
+
+  .mini-btn:active { background: var(--caramel); color: var(--cream); border-color: var(--caramel); }
+
+  .stop-note {
+    margin-top: 8px;
+    padding: 8px 10px;
+    background: rgba(221,212,198,0.35);
+    border-radius: 8px;
+    border-left: 2.5px solid var(--sand);
+    font-size: 11.5px;
+    color: var(--fog);
+    line-height: 1.65;
+    font-style: italic;
+  }
+
+  /* Card edit/delete actions */
+  .card-actions {
+    display: none;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--cream-dark);
+  }
+
+  .action-btn {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--caramel-light);
+    background: none;
+    border: 1px solid var(--sand-light);
+    padding: 5px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+
+  .action-btn:active { background: var(--caramel); color: var(--cream); border-color: var(--caramel); }
+  .action-btn.del { color: #9e4e4e; border-color: rgba(158,78,78,0.25); margin-left: auto; }
+  .action-btn.del:active { background: #9e4e4e; color: white; border-color: #9e4e4e; }
+
+  /* ─── TRANSIT CONNECTOR ─── */
+  /* The whole row mirrors stop-row: 48px left gutter + flex:1 card area */
+  .transit-row {
+    display: flex;
+    gap: 12px;
+    margin: 0;
+    position: relative;
+    min-height: 60px;
+  }
+
+  /* Left gutter — same width as .stop-left so everything stays aligned */
+  .transit-gutter {
+    width: 48px;
+    flex-shrink: 0;
+    /* nothing visible here — line is on the right side */
+  }
+
+  /* Card-column area: centered line + chip on top */
+  .transit-body {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 0;
+  }
+
+  /* Vertical line running full height through the chip, centered in card column */
+  .transit-body::before {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1.5px;
+    background: linear-gradient(to bottom, var(--sand), var(--cream-dark), var(--sand));
+    z-index: 0;
+  }
+
+  /* Chip floats on top of the line; opaque bg hides line behind it */
+  .transit-chip {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--butter);
+    border: 1px solid var(--transit-border);
+    border-radius: 20px;
+    padding: 6px 12px 6px 10px;
+    box-shadow: 0 1px 4px rgba(60,35,20,0.06);
+  }
+
+  .transit-time-unit { font-size: 12px; color: var(--fog); }
+
+  /* spacer between card and transit */
+  .stop-spacer { height: 4px; }
+
+  /* ─── MODAL ─── */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(44,26,14,0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 200;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .modal-backdrop.open { display: flex; animation: bIn 0.22s ease; }
+  @keyframes bIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    width: 100%;
+    max-width: 430px;
+    background: var(--butter);
+    border-radius: 28px 28px 0 0;
+    padding: 10px 26px 52px;
+    animation: mUp 0.32s cubic-bezier(0.22,0.9,0.36,1);
+    max-height: 92vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  @keyframes mUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  .modal-handle {
+    width: 36px; height: 4px;
+    background: var(--sand);
+    border-radius: 4px;
+    margin: 10px auto 16px;
+  }
+
+  .modal-title {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+  }
+
+  .form-group { margin-bottom: 16px; }
+
+  .form-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--fog);
+    display: block;
+    margin-bottom: 7px;
+  }
+
+  .form-row { display: flex; gap: 10px; }
+
+  .form-input, .form-textarea, .form-select {
+    width: 100%;
+    background: var(--cream);
+    border: 1px solid var(--sand-light);
+    border-radius: 12px;
+    padding: 11px 13px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 13.5px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .form-input:focus, .form-textarea:focus, .form-select:focus {
+    border-color: var(--caramel-light);
+    box-shadow: 0 0 0 3px rgba(139,94,60,0.1);
+  }
+
+  .form-textarea { resize: none; min-height: 72px; line-height: 1.65; }
+
+  .form-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23B07A52' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    padding-right: 34px;
+    cursor: pointer;
+  }
+
+  .modal-footer {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .modal-cancel {
+    flex: 1;
+    background: none;
+    border: 1px solid var(--sand-light);
+    border-radius: 16px;
+    padding: 14px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 14px;
+    color: var(--fog);
+    cursor: pointer;
+    transition: background 0.18s;
+  }
+
+  .modal-cancel:active { background: var(--sand); }
+
+  .modal-submit {
+    flex: 2;
+    background: var(--caramel-dark);
+    color: var(--cream);
+    border: none;
+    border-radius: 16px;
+    padding: 14px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 14px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    box-shadow: 0 6px 18px rgba(92,58,30,0.28);
+  }
+
+  .modal-submit:active { background: var(--caramel); transform: scale(0.98); }
+
+  .transit-chip-icon { font-size: 14px; line-height: 1; }
+
+  .transit-chip-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--caramel-dark);
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .transit-chip-time {
+    font-size: 10px;
+    color: var(--fog);
+    white-space: nowrap;
+  }
+
+  .transit-chip-edit {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 1px solid rgba(168,120,80,0.22);
+    background: rgba(247,243,238,0.9);
+    color: var(--fog);
+    font-size: 10px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.18s;
+    margin-left: 2px;
+  }
+
+  .transit-chip-edit:active { background: var(--caramel); color: white; border-color: var(--caramel); }
+
+  /* Duration input: hours + minutes side by side */
+  .duration-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .duration-cell {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--cream);
+    border: 1px solid var(--sand-light);
+    border-radius: 12px;
+    padding: 10px 13px;
+  }
+
+  .duration-cell input {
+    flex: 1;
+    border: none;
+    background: none;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    outline: none;
+    width: 40px;
+    text-align: center;
+  }
+
+  .duration-unit {
+    font-size: 11px;
+    color: var(--fog);
+    letter-spacing: 0.5px;
+  }
+
+  /* Photo upload */
+  .photo-upload-area {
+    border: 2px dashed var(--sand-light);
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .photo-upload-area:hover { border-color: var(--caramel-light); background: rgba(139,94,60,0.04); }
+
+  .photo-upload-area input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+
+  .photo-upload-icon { font-size: 26px; margin-bottom: 5px; opacity: 0.45; }
+  .photo-upload-text { font-size: 12px; color: var(--fog); letter-spacing: 1px; }
+
+  .photo-preview-wrap { position: relative; display: inline-block; width: 100%; }
+
+  .photo-preview-img {
+    width: 100%; max-height: 180px; object-fit: cover;
+    border-radius: 10px; display: block;
+  }
+
+  .photo-preview-remove {
+    position: absolute; top: 8px; right: 8px;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: rgba(44,26,14,0.65);
+    color: white; border: none; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+
+  /* Transit modal */
+  .transit-modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(44,26,14,0.5);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 300;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .transit-modal-backdrop.open { display: flex; animation: bIn 0.22s ease; }
+
+  .transit-modal {
+    width: 100%;
+    max-width: 360px;
+    background: var(--butter);
+    border-radius: 22px;
+    padding: 24px 22px 26px;
+    animation: scaleIn 0.28s cubic-bezier(0.22,0.9,0.36,1);
+  }
+
+  @keyframes scaleIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .transit-modal-title {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 18px;
+    letter-spacing: 0.5px;
+    text-align: center;
+  }
+
+  .transport-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  .transport-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 4px;
+    border-radius: 12px;
+    border: 1.5px solid var(--sand-light);
+    cursor: pointer;
+    transition: all 0.18s;
+    background: var(--cream);
+    gap: 4px;
+  }
+
+  .transport-option.selected {
+    border-color: var(--caramel);
+    background: rgba(139,94,60,0.1);
+  }
+
+  .transport-option-icon { font-size: 20px; }
+  .transport-option-label { font-size: 9px; letter-spacing: 0.5px; color: var(--fog); }
+  .transport-option.selected .transport-option-label { color: var(--caramel-dark); font-weight: 700; }
+
+  .transit-modal-btns { display: flex; gap: 10px; }
+
+  .transit-modal-cancel {
+    flex: 1; padding: 12px;
+    background: none;
+    border: 1px solid var(--sand-light);
+    border-radius: 12px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 13px; color: var(--fog); cursor: pointer;
+    transition: background 0.18s;
+  }
+
+  .transit-modal-cancel:active { background: var(--sand); }
+
+  .transit-modal-save {
+    flex: 2; padding: 12px;
+    background: var(--caramel-dark);
+    border: none; border-radius: 12px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 13px; color: var(--cream);
+    cursor: pointer; letter-spacing: 2px;
+    transition: background 0.18s;
+  }
+
+  .transit-modal-save:active { background: var(--caramel); }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 56px 24px;
+  }
+
+  .empty-icon { font-size: 34px; margin-bottom: 14px; opacity: 0.28; }
+
+  .empty-state p {
+    font-style: italic;
+    font-size: 15px;
+    color: var(--sand);
+    line-height: 1.6;
+  }
+
+  /* ─── CUSTOM CATEGORY PICKER ─── */
+  .cat-picker {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 7px;
+  }
+
+  .cat-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 10px 4px 8px;
+    border-radius: 12px;
+    border: 1.5px solid var(--sand-light);
+    background: var(--cream);
+    cursor: pointer;
+    transition: all 0.18s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .cat-option.selected {
+    border-color: var(--caramel);
+    background: rgba(139,94,60,0.1);
+  }
+
+  .cat-option:active { transform: scale(0.95); }
+
+  .cat-option-emoji {
+    font-size: 20px;
+    line-height: 1;
+    display: block;
+    text-align: center;
+  }
+
+  .cat-option-label {
+    font-size: 10px;
+    color: var(--fog);
+    font-family: 'Noto Sans TC', sans-serif;
+    letter-spacing: 0.5px;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  .cat-option.selected .cat-option-label {
+    color: var(--caramel-dark);
+    font-weight: 700;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--sand); border-radius: 4px; }
 </style>
 </head>
 <body>
+<div class="phone-frame">
 
-<div class="header">
-  <div class="header-top">
-    <div>
-      <div class="trip-label">✈ My Journey</div>
-      <div class="trip-title" onclick="editTripTitle()">
-        <span id="tripTitleText">🌏 日本東京五日遊</span>
-      </div>
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-deco">Day by Day</div>
+    <div class="header-bg-text">行程</div>
+    <div class="header-eyebrow">My Journey</div>
+    <div class="header-title">旅遊行程</div>
+    <div class="header-sub">每一站都是一個故事</div>
+  </div>
+
+  <!-- DAY TABS -->
+  <div class="day-tabs-wrap">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="day-tabs" id="dayTabs" style="flex:1"></div>
+      <button class="day-tabs-edit-btn" id="dayEditBtn" onclick="toggleDayEditMode()" title="編輯天數">✎</button>
     </div>
   </div>
-  <div class="tabs-row">
-    <div class="tabs-scroll" id="tabsWrap"></div>
-    <button class="btn-tab-sm" onclick="addDay()">＋</button>
-    <button class="btn-tab-sm" id="tabEditBtn" onclick="toggleTabEditMode()">✎</button>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="toolbar-title" id="toolbarTitle">第 1 天</div>
+    <button class="add-btn" onclick="openStopModal()">＋</button>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="timeline-container" id="timeline"></div>
+
+</div>
+
+<!-- STOP MODAL -->
+<div class="modal-backdrop" id="stopModal" onclick="handleStopBackdrop(event)">
+  <div class="modal" id="stopModalInner">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="stopModalLabel">新增景點</div>
+
+    <div class="form-group">
+      <label class="form-label">景點名稱</label>
+      <input class="form-input" id="iName" type="text" placeholder="這個地方叫什麼…">
+    </div>
+
+    <div class="form-group">
+      <div class="form-row">
+        <div style="flex:1">
+          <label class="form-label">到達時間</label>
+          <input class="form-input" id="iTime" type="time">
+        </div>
+        <div style="flex:1">
+          <label class="form-label">停留時間</label>
+          <input class="form-input" id="iStay" type="text" placeholder="例：90分鐘">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">類型</label>
+      <input type="hidden" id="iCategory" value="景點">
+      <div class="cat-picker" id="catPicker">
+        <div class="cat-option selected" data-cat="景點" onclick="selectCat(this)">
+          <span class="cat-option-emoji">🏛</span>
+          <span class="cat-option-label">景點</span>
+        </div>
+        <div class="cat-option" data-cat="餐廳" onclick="selectCat(this)">
+          <span class="cat-option-emoji">🍜</span>
+          <span class="cat-option-label">餐廳</span>
+        </div>
+        <div class="cat-option" data-cat="咖啡廳" onclick="selectCat(this)">
+          <span class="cat-option-emoji">☕</span>
+          <span class="cat-option-label">咖啡廳</span>
+        </div>
+        <div class="cat-option" data-cat="購物" onclick="selectCat(this)">
+          <span class="cat-option-emoji">🛍</span>
+          <span class="cat-option-label">購物</span>
+        </div>
+        <div class="cat-option" data-cat="住宿" onclick="selectCat(this)">
+          <span class="cat-option-emoji">🏨</span>
+          <span class="cat-option-label">住宿</span>
+        </div>
+        <div class="cat-option" data-cat="戶外" onclick="selectCat(this)">
+          <span class="cat-option-emoji">🌿</span>
+          <span class="cat-option-label">戶外</span>
+        </div>
+        <div class="cat-option" data-cat="交通" onclick="selectCat(this)">
+          <span class="cat-option-emoji">🚉</span>
+          <span class="cat-option-label">交通</span>
+        </div>
+        <div class="cat-option" data-cat="其他" onclick="selectCat(this)">
+          <span class="cat-option-emoji">✦</span>
+          <span class="cat-option-label">其他</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">地址</label>
+      <input class="form-input" id="iAddress" type="text" placeholder="輸入地址…">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">電話</label>
+      <input class="form-input" id="iPhone" type="tel" placeholder="+886-x-xxxx-xxxx">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">備註</label>
+      <textarea class="form-textarea" id="iNote" placeholder="提醒自己的小事、開放時間、推薦事項…"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">照片</label>
+      <div id="photoUploadArea" class="photo-upload-area">
+        <input type="file" id="iPhoto" accept="image/*" onchange="handlePhotoSelect(event)">
+        <div class="photo-upload-icon">📷</div>
+        <div class="photo-upload-text">點擊上傳照片</div>
+      </div>
+      <div id="photoPreviewWrap" class="photo-preview-wrap" style="display:none;margin-top:10px;">
+        <img id="photoPreviewImg" class="photo-preview-img" src="" alt="preview">
+        <button class="photo-preview-remove" onclick="removePhoto()">✕</button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeStopModal()">取消</button>
+      <button class="modal-submit" onclick="saveStop()">— 儲存景點 —</button>
+    </div>
   </div>
 </div>
 
-<div id="mainContent"></div>
-
-<button class="fab" onclick="addSpot()">＋</button>
-
-<!-- Spot Modal -->
-<div class="overlay" id="spotModal">
-  <div class="modal">
-    <div class="m-handle"></div>
-    <div class="m-title" id="spotModalTitle">新增景點</div>
-    <div class="m-label">封面圖片</div>
-    <div class="img-upload-area" id="imgUploadArea" onclick="document.getElementById('sImgInput').click()">
-      <img class="img-upload-preview" id="imgPreview" src="" alt=""/>
-      <div class="img-upload-placeholder">
-        <div class="img-upload-icon">🖼️</div>
-        <div class="img-upload-hint">點擊選擇圖片</div>
-      </div>
-      <button class="img-clear-btn" id="imgClearBtn" onclick="clearImg(event)">✕</button>
+<!-- DAY MODAL -->
+<div class="day-modal-backdrop" id="dayModal" onclick="handleDayBackdrop(event)">
+  <div class="day-modal">
+    <div class="day-modal-title" id="dayModalLabel">編輯天數</div>
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label">日期</label>
+      <input class="form-input" id="iDayDate" type="date">
     </div>
-    <input type="file" id="sImgInput" accept="image/*" onchange="handleImgUpload(event)"/>
-    <div class="m-label">景點名稱</div>
-    <input class="m-input" id="sName" placeholder="景點 / 活動名稱" />
-    <div class="m-label">地址</div>
-    <input class="m-input" id="sAddr" placeholder="地址（選填）" />
-    <div class="m-label">電話</div>
-    <input class="m-input" id="sPhone" placeholder="電話（選填）" />
-    <div class="m-label">備註</div>
-    <textarea class="m-input" id="sNote" placeholder="備註、提醒…" style="resize:none;min-height:60px;margin-bottom:12px;"></textarea>
-    <div style="display:flex;gap:10px;margin-bottom:0;">
-      <div style="flex:1;"><div class="m-label">停留時間</div><input class="m-input" id="sDur" placeholder="例：1小時30分" style="margin-bottom:12px;"/></div>
-      <div style="flex:1;"><div class="m-label">交通時間</div><input class="m-input" id="sTr" placeholder="例：地鐵25分" style="margin-bottom:12px;"/></div>
+    <div class="day-modal-btns">
+      <button class="transit-modal-cancel" onclick="closeDayModal()">取消</button>
+      <button class="transit-modal-save" onclick="saveDayDate()">— 確認 —</button>
     </div>
-    <div class="m-label">分類</div>
-    <div class="cat-row">
-      <div class="c-chip sel" data-cat="sight"     onclick="pickCat(this)">🏛 景點</div>
-      <div class="c-chip"     data-cat="food"      onclick="pickCat(this)">🍜 餐廳</div>
-      <div class="c-chip"     data-cat="hotel"     onclick="pickCat(this)">🏨 住宿</div>
-      <div class="c-chip"     data-cat="shop"      onclick="pickCat(this)">🛍 購物</div>
-      <div class="c-chip"     data-cat="transport" onclick="pickCat(this)">🚌 交通</div>
-      <div class="c-chip"     data-cat="other"     onclick="pickCat(this)">📌 其他</div>
-    </div>
-    <button class="m-btn" onclick="confirmSpot()">確認</button>
-    <button class="m-del-btn" id="sDelBtn" style="display:none" onclick="confirmDeleteSpot()">🗑 刪除此景點</button>
   </div>
 </div>
 
-<!-- Time Modal -->
-<div class="overlay" id="timeModal">
-  <div class="modal">
-    <div class="m-handle"></div>
-    <div class="m-title">調整時間</div>
-    <div class="tp-row">
-      <div class="tp-col">
-        <button class="tp-btn" onclick="adj('h',1)">▲</button>
-        <div class="tp-val" id="tH">09</div>
-        <button class="tp-btn" onclick="adj('h',-1)">▼</button>
-      </div>
-      <div class="tp-sep">:</div>
-      <div class="tp-col">
-        <button class="tp-btn" onclick="adj('m',5)">▲</button>
-        <div class="tp-val" id="tM">00</div>
-        <button class="tp-btn" onclick="adj('m',-5)">▼</button>
-      </div>
-    </div>
-    <button class="m-btn" onclick="confirmTime()">確認</button>
-  </div>
-</div>
+<!-- TRANSIT MODAL -->
+<div class="transit-modal-backdrop" id="transitModal" onclick="handleTransitBackdrop(event)">
+  <div class="transit-modal">
+    <div class="transit-modal-title">交通方式</div>
 
-<!-- Title Modal -->
-<div class="overlay" id="titleModal">
-  <div class="modal">
-    <div class="m-handle"></div>
-    <div class="m-title">編輯行程名稱</div>
-    <input class="m-input" id="tripTitleInput" placeholder="行程名稱"/>
-    <button class="m-btn" onclick="confirmTripTitle()">確認</button>
-  </div>
-</div>
-
-<!-- Day Modal -->
-<div class="overlay" id="dayModal">
-  <div class="modal">
-    <div class="m-handle"></div>
-    <div class="m-title">編輯天數</div>
-    <div class="m-label">天數標題</div>
-    <input class="m-input" id="dLabel" placeholder="例：Day 1"/>
-    <div class="m-label">日期</div>
-    <input class="m-input" type="date" id="dDatePicker" style="margin-bottom:6px;" oninput="updateDayPreview()"/>
-    <div id="dDatePreview" style="text-align:center;font-family:'Playfair Display',serif;font-size:15px;font-style:italic;color:var(--red);margin-bottom:14px;min-height:18px;"></div>
-    <button class="m-btn" onclick="confirmDayEdit()">確認</button>
-    <button class="m-del-btn" onclick="confirmDeleteDay()">🗑 刪除此天</button>
-  </div>
-</div>
-
-<!-- Stopwatch Modal -->
-<div class="overlay" id="swModal">
-  <div class="modal">
-    <div class="m-handle"></div>
-    <div class="sw-label" id="swTypeLabel">Stopwatch</div>
-    <div class="sw-screen">
-      <div class="sw-display">
-        <span id="swH" style="display:none"></span><span id="swM">0</span>:<span id="swS">00</span><span class="sw-ms">.<span id="swCs">00</span></span>
+    <div class="transport-grid">
+      <div class="transport-option selected" data-mode="步行" onclick="selectTransport(this)">
+        <span class="transport-option-icon">🚶</span>
+        <span class="transport-option-label">步行</span>
       </div>
-      <div class="sw-result-area" id="swResultArea">
-        <div class="sw-result-row"><span class="sw-result-lbl">⏱ 計時結果</span><span class="sw-result-val" id="swResTotal">—</span></div>
-        <div class="sw-result-row"><span class="sw-result-lbl">開始時間</span><span class="sw-result-val" id="swResStart">—</span></div>
-        <div class="sw-result-row"><span class="sw-result-lbl">結束時間</span><span class="sw-result-val" id="swResEnd">—</span></div>
+      <div class="transport-option" data-mode="計程車" onclick="selectTransport(this)">
+        <span class="transport-option-icon">🚕</span>
+        <span class="transport-option-label">計程車</span>
+      </div>
+      <div class="transport-option" data-mode="捷運" onclick="selectTransport(this)">
+        <span class="transport-option-icon">🚇</span>
+        <span class="transport-option-label">捷運</span>
+      </div>
+      <div class="transport-option" data-mode="公車" onclick="selectTransport(this)">
+        <span class="transport-option-icon">🚌</span>
+        <span class="transport-option-label">公車</span>
+      </div>
+      <div class="transport-option" data-mode="火車" onclick="selectTransport(this)">
+        <span class="transport-option-icon">🚂</span>
+        <span class="transport-option-label">火車</span>
+      </div>
+      <div class="transport-option" data-mode="開車" onclick="selectTransport(this)">
+        <span class="transport-option-icon">🚗</span>
+        <span class="transport-option-label">開車</span>
+      </div>
+      <div class="transport-option" data-mode="腳踏車" onclick="selectTransport(this)">
+        <span class="transport-option-icon">🚲</span>
+        <span class="transport-option-label">腳踏車</span>
+      </div>
+      <div class="transport-option" data-mode="飛機" onclick="selectTransport(this)">
+        <span class="transport-option-icon">✈️</span>
+        <span class="transport-option-label">飛機</span>
       </div>
     </div>
-    <div class="sw-controls">
-      <button class="sw-ctrl-btn sw-reset" onclick="swReset()">重置</button>
-      <button class="sw-ctrl-btn sw-start" id="swStartBtn" onclick="swToggle()">▶ 開始</button>
+
+    <div class="form-label" style="margin-bottom:10px;">⏱ 路途時間</div>
+    <div class="duration-row">
+      <div class="duration-cell">
+        <input id="transitHours" type="number" min="0" max="99" placeholder="0">
+        <span class="duration-unit">小時</span>
+      </div>
+      <div class="duration-cell">
+        <input id="transitMins" type="number" min="0" max="59" placeholder="0">
+        <span class="duration-unit">分鐘</span>
+      </div>
     </div>
-    <button class="sw-use-btn" id="swUseBtn" onclick="swApply()">✓ 套用此時間</button>
-    <button class="m-btn ghost" onclick="closeO('swModal')">關閉（計時繼續）</button>
+
+    <div class="transit-modal-btns">
+      <button class="transit-modal-cancel" onclick="closeTransitModal()">取消</button>
+      <button class="transit-modal-save" onclick="saveTransit()">— 確認 —</button>
+    </div>
   </div>
 </div>
-
-<div class="toast" id="toast"></div>
 
 <script>
-/* ── CATEGORY META ── */
-const CI={
-  sight:    {label:'🏛 景點', photo:'photo-sight',    icon:'🏛'},
-  food:     {label:'🍜 餐廳', photo:'photo-food',     icon:'🍜'},
-  hotel:    {label:'🏨 住宿', photo:'photo-hotel',    icon:'🏨'},
-  shop:     {label:'🛍 購物', photo:'photo-shop',     icon:'🛍'},
-  transport:{label:'🚌 交通', photo:'photo-transport',icon:'🚌'},
-  other:    {label:'📌 其他', photo:'photo-other',    icon:'📌'},
+// ─── DATA ───
+const TRANSPORT_ICONS = {
+  '步行': '🚶', '計程車': '🚕', '捷運': '🚇', '公車': '🚌',
+  '火車': '🚂', '開車': '🚗', '腳踏車': '🚲', '飛機': '✈️'
 };
 
-/* ── STATE ── */
-const S={
-  title:'🌏 日本東京五日遊',
-  days:[
-    {id:1,label:'Day 1',date:'06/10 週一',isoDate:'',note:'',noteOpen:false,spots:[
-      {id:101,name:'成田機場',cat:'transport',time:'10:30',dur:60,addr:'千葉縣成田市',phone:'',note:'換JR Pass！出關後左轉',detail:false,tr:'',durText:'1小時',img:null},
-      {id:102,name:'淺草寺',cat:'sight',time:'14:00',dur:90,addr:'東京都台東區淺草2-3-1',phone:'03-3842-0181',note:'人潮多，早點去',detail:false,tr:'搭地鐵約25分',durText:'1小時30分',img:null},
-      {id:103,name:'雷門拉麵',cat:'food',time:'16:30',dur:60,addr:'東京都台東區淺草1-7',phone:'',note:'道地老店，必點叉燒拉麵',detail:false,tr:'步行5分',durText:'1小時',img:null},
-    ]},
-    {id:2,label:'Day 2',date:'06/11 週二',isoDate:'',note:'',noteOpen:false,spots:[
-      {id:201,name:'新宿御苑',cat:'sight',time:'09:00',dur:120,addr:'東京都新宿區內藤町11',phone:'03-3350-0151',note:'帶飲料去野餐',detail:false,tr:'',durText:'2小時',img:null},
-      {id:202,name:'新宿高島屋',cat:'shop',time:'13:00',dur:120,addr:'東京都渋谷區千駄ヶ谷5-24-2',phone:'',note:'',detail:false,tr:'步行10分',durText:'2小時',img:null},
-      {id:203,name:'歌舞伎町居酒屋',cat:'food',time:'19:00',dur:90,addr:'東京都新宿區歌舞伎町',phone:'',note:'已預約！',detail:false,tr:'步行5分',durText:'1小時30分',img:null},
-    ]},
-    {id:3,label:'Day 3',date:'06/12 週三',isoDate:'',note:'',noteOpen:false,spots:[
-      {id:301,name:'築地場外市場',cat:'food',time:'08:00',dur:90,addr:'東京都中央區築地4-16-2',phone:'',note:'早點去！海鮮最新鮮',detail:false,tr:'',durText:'1小時30分',img:null},
-      {id:302,name:'東京鐵塔',cat:'sight',time:'11:00',dur:90,addr:'東京都港區芝公園4-2-8',phone:'03-3433-5111',note:'',detail:false,tr:'搭地鐵約30分',durText:'1小時30分',img:null},
-      {id:303,name:'六本木之丘',cat:'shop',time:'14:00',dur:120,addr:'東京都港區六本木6-10-1',phone:'',note:'',detail:false,tr:'步行10分',durText:'2小時',img:null},
-      {id:304,name:'東京中城飯店',cat:'hotel',time:'18:00',dur:30,addr:'東京都港區赤坂9-7-1',phone:'03-3475-3100',note:'Check-in 帶護照',detail:false,tr:'搭車15分',durText:'30分',img:null},
-    ]},
-  ],
-  activeDay:0,editSpotId:null,editTimeId:null,editDayIdx:null,
-  selCat:'sight',tmpH:9,tmpM:0,tabEditMode:false,nid:500,
+const CAT_EMOJI = {
+  '景點':'🏛','餐廳':'🍜','咖啡廳':'☕','購物':'🛍','住宿':'🏨','戶外':'🌿','交通':'🚉','其他':'✦'
 };
 
-function e(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-function durStr(d){const h=Math.floor(d/60),m=d%60;return h?`${h}小時${m?m+'分':''}`:m+'分';}
-function findSpot(id){for(const d of S.days){const s=d.spots.find(x=>x.id===id);if(s)return s;}return null;}
-function findDi(id){for(let i=0;i<S.days.length;i++){if(S.days[i].spots.find(x=>x.id===id))return i;}return -1;}
+let days = [
+  {
+    id: 1,
+    label: '第1天',
+    date: '2025-05-18',
+    stops: [
+      {
+        id: 101, name: '松山機場', time: '09:00', stay: '30分鐘',
+        category: '交通', address: '台北市松山區敦化北路340號', phone: '02-8770-3430',
+        note: '入境大廳見面，領行李後搭計程車前往飯店。',
+        photo: null,
+        transit: { mode: '計程車', hours: '0', mins: '25' }
+      },
+      {
+        id: 102, name: '晶華酒店', time: '09:55', stay: '60分鐘',
+        category: '住宿', address: '台北市中山區中山北路二段41號', phone: '02-2523-8000',
+        note: '提早辦理行李寄放，稍作梳洗後出發。',
+        photo: null,
+        transit: { mode: '步行', hours: '0', mins: '12' }
+      },
+      {
+        id: 103, name: '林東芳牛肉麵', time: '11:30', stay: '60分鐘',
+        category: '餐廳', address: '台北市中山區安東街31號', phone: '02-2751-3606',
+        note: '台北必吃！建議提前1小時到排隊，招牌半筋半肉大碗。',
+        photo: null,
+        transit: { mode: '捷運', hours: '0', mins: '18' }
+      },
+      {
+        id: 104, name: '大安森林公園', time: '13:10', stay: '90分鐘',
+        category: '戶外', address: '台北市大安區新生南路二段1號', phone: null,
+        note: '散步賞荷，有時有音樂表演，天氣好的話非常舒適。',
+        photo: null,
+        transit: null
+      },
+    ]
+  },
+  {
+    id: 2,
+    label: '第2天',
+    date: '2025-05-19',
+    stops: [
+      {
+        id: 201, name: '鼎泰豐（信義店）', time: '11:30', stay: '75分鐘',
+        category: '餐廳', address: '台北市信義區市府路45號B1', phone: '02-8101-7799',
+        note: '小籠包必點，蝦仁炒飯跟酸辣湯也很推。',
+        photo: null,
+        transit: { mode: '捷運', hours: '0', mins: '8' }
+      },
+      {
+        id: 202, name: '台北101觀景台', time: '14:00', stay: '90分鐘',
+        category: '景點', address: '台北市信義區市府路45號', phone: '02-8101-8800',
+        note: '建議傍晚前抵達，可以欣賞夕陽後的城市燈火。',
+        photo: null,
+        transit: null
+      }
+    ]
+  },
+  {
+    id: 3,
+    label: '第3天',
+    date: '2025-05-20',
+    stops: []
+  },
+  {
+    id: 4,
+    label: '第4天',
+    date: '2025-05-21',
+    stops: []
+  },
+  {
+    id: 5,
+    label: '第5天',
+    date: '2025-05-22',
+    stops: []
+  }
+];
 
-/* ── RENDER ── */
-function render(){renderTabs();renderDays();}
+let activeDay = 1;
+let editStopId = null;
+let editTransitAfterStopId = null; // which stop's AFTER-transit to edit
+let currentPhotoData = null;
+let selectedTransportMode = '步行';
 
-function renderTabs(){
-  const wrap=document.getElementById('tabsWrap');
-  wrap.innerHTML='';
-  S.days.forEach((d,i)=>{
-    const btn=document.createElement('button');
-    btn.className='day-tab'+(i===S.activeDay?' active':'');
-    btn.innerHTML=`<span class="tab-day">${e(d.label)}</span><span class="tab-date">${e(d.date)}</span><button class="tab-del-x" onclick="tabDelDay(${i},event)">✕</button>`;
-    btn.onclick=()=>{if(S.tabEditMode){openDayEdit(i);}else{S.activeDay=i;render();}};
-    wrap.appendChild(btn);
-  });
-  wrap.classList.toggle('tabs-edit-mode',!!S.tabEditMode);
-  document.getElementById('tabEditBtn').classList.toggle('active-edit',!!S.tabEditMode);
-  document.getElementById('tabEditBtn').textContent=S.tabEditMode?'完成':'✎';
-  const tabs=wrap.querySelectorAll('.day-tab');
-  if(tabs[S.activeDay]) tabs[S.activeDay].scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+// ─── RENDER ───
+function render() {
+  renderDayTabs();
+  renderTimeline();
 }
 
-function renderDays(){
-  const mc=document.getElementById('mainContent');
-  mc.innerHTML='';
-  S.days.forEach((day,di)=>{
-    const sec=document.createElement('div');
-    sec.className='day-section'+(di===S.activeDay?' active':'');
-    const hasNote=day.note||day.noteOpen;
-    sec.innerHTML=`
-      <div class="day-header-row">
-        <div class="day-date-label">${e(day.date)}</div>
-        <button class="day-note-toggle" onclick="toggleDayNote(${di})">📝 備註${day.note?' ●':''}</button>
-      </div>
-      <div class="day-note-panel${hasNote?' open':''}" id="dnp-${di}" style="padding:0 20px 10px;">
-        <textarea class="day-note-ta" placeholder="本日備註…" oninput="S.days[${di}].note=this.value">${e(day.note||'')}</textarea>
-      </div>
-      <div class="spot-list" id="sl-${di}"></div>
-      <div style="padding:0 20px;">
-        <button class="add-spot-btn" onclick="S.activeDay=${di};addSpot()">＋ 新增景點</button>
+let dayEditMode = false;
+
+function toggleDayEditMode() {
+  dayEditMode = !dayEditMode;
+  const btn = document.getElementById('dayEditBtn');
+  btn.classList.toggle('active-edit', dayEditMode);
+  btn.textContent = dayEditMode ? '完成' : '✎';
+  renderDayTabs();
+}
+
+function renderDayTabs() {
+  const container = document.getElementById('dayTabs');
+  container.innerHTML = days.map((d, i) => {
+    const dateLabel = d.date ? formatShortDate(d.date) : '設定日期';
+    const isOnly = days.length === 1;
+    const showDel = dayEditMode && !isOnly;
+    return `
+      <div class="day-tab ${d.id === activeDay ? 'active' : ''}" onclick="switchDay(${d.id})">
+        <span class="day-tab-num">Day ${i + 1}</span>
+        <span class="day-tab-date" onclick="openDayModal(${d.id},event)">${dateLabel}</span>
+        ${showDel ? `<button class="day-tab-delete visible" onclick="deleteDay(${d.id},event)" title="刪除">✕</button>` : ''}
       </div>
     `;
-    mc.appendChild(sec);
-    renderList(di);
-  });
-}
-
-function renderList(di){
-  const list=document.getElementById(`sl-${di}`);
-  if(!list)return;
-  const spots=S.days[di].spots;
-  if(!spots.length){list.innerHTML=`<div class="empty-state"><div class="empty-icon">✈️</div><p>點擊下方按鈕新增第一個景點</p></div>`;return;}
-  list.innerHTML=spots.map((s,si)=>cardHTML(s,di,si)).join('');
-  bindDrag(di);
-  spots.forEach(s=>{
-    ['dur','tr'].forEach(f=>{
-      const t=getTmr(s.id,f);
-      if(t.running){const b=document.getElementById(f==='dur'?`swDur-${s.id}`:`swTr-${s.id}`);if(b)b.classList.add('running');}
-    });
-  });
-}
-
-function cardHTML(s,di,si){
-  const ci=CI[s.cat]||CI.other;
-  const ds=s.durText||durStr(s.dur);
-  const photoBg=s.img
-    ? `<img src="${s.img}" style="width:100%;height:100%;object-fit:cover;display:block;" alt=""/>`
-    : `<div class="card-photo-bg ${ci.photo}"><span style="font-size:52px;opacity:.55">${ci.icon}</span></div>`;
-  return`
-<div class="spot-card" id="sc-${s.id}" data-di="${di}" data-si="${si}" draggable="true">
-  <div class="card-photo">
-    ${photoBg}
-    <div class="photo-overlay">
-      <div class="photo-top">
-        <button class="photo-time-badge" onclick="openTimePicker(${s.id})">${e(s.time)}</button>
-      </div>
-      <div class="photo-bottom">
-        <span class="photo-cat-badge">${ci.label}</span>
-      </div>
+  }).join('') + `
+    <div class="day-tab" onclick="addDay()" style="opacity:0.55;border-style:dashed;">
+      <span class="day-tab-num" style="font-size:20px;line-height:1.2;">＋</span>
+      <span class="day-tab-date">新增</span>
     </div>
-  </div>
-  <div class="card-body">
-    <div class="card-title-row">
-      <div class="card-name" onclick="toggleDet(${s.id})">${e(s.name)}</div>
-      <div class="card-action-bar">
-        <button class="card-act-btn sw-btn" id="swDur-${s.id}" onclick="openSw(${s.id},'dur')" title="停留碼錶">⏱</button>
-        <button class="card-act-btn sw-btn" id="swTr-${s.id}" onclick="openSw(${s.id},'tr')" title="交通碼錶">🚗</button>
-        <button class="card-act-btn edit-btn" onclick="openEditSpot(${s.id})" title="編輯">✏️</button>
-      </div>
-    </div>
-    <div class="card-meta">
-      <span class="meta-pill">⏱ ${e(ds)}</span>
-      ${s.tr?`<span class="meta-pill">🚗 ${e(s.tr)}</span>`:''}
-    </div>
-    ${s.note&&!s.detail?`<div class="card-note-preview">${e(s.note)}</div>`:''}
-    ${s.addr||s.phone?`<div class="card-chips">
-      ${s.addr?`<div class="info-chip" onclick="goNav('${e(s.addr)}')">📍 ${e(s.addr)}</div>`:''}
-      ${s.phone?`<div class="info-chip" onclick="goCall('${e(s.phone)}')">📞 ${e(s.phone)}</div>`:''}
-    </div>`:''}
-  </div>
-  <div class="card-detail${s.detail?' open':''}" id="det-${s.id}">
-    <div class="card-detail-inner">
-      <div class="det-lbl">停留時間</div>
-      <div class="det-row"><span class="det-icon">⏱</span>
-        <input class="det-input" placeholder="例：1小時30分" value="${e(s.durText||durStr(s.dur))}" onchange="updF(${s.id},'durText',this.value);recard(${s.id})"/></div>
-      <div class="det-lbl">交通時間</div>
-      <div class="det-row"><span class="det-icon">🚗</span>
-        <input class="det-input" placeholder="前往方式、時間…" value="${e(s.tr||'')}" onchange="updF(${s.id},'tr',this.value);recard(${s.id})"/></div>
-      <div class="det-lbl">地址 / 電話</div>
-      <div class="det-row"><span class="det-icon">📍</span>
-        <input class="det-input" placeholder="地址" value="${e(s.addr)}" onchange="updF(${s.id},'addr',this.value)"/>
-        <button class="det-btn" onclick="goNav('${e(s.addr)}')">導航</button></div>
-      <div class="det-row"><span class="det-icon">📞</span>
-        <input class="det-input" placeholder="電話" value="${e(s.phone)}" onchange="updF(${s.id},'phone',this.value)"/>
-        <button class="det-btn" onclick="goCall('${e(s.phone)}')">撥打</button></div>
-      <div class="det-lbl">備註</div>
-      <div class="det-row" style="align-items:flex-start"><span class="det-icon">📝</span>
-        <textarea class="det-ta" placeholder="備註、連結…" onchange="updF(${s.id},'note',this.value)">${e(s.note||'')}</textarea></div>
-      <button class="save-btn" onclick="saveSpot(${s.id})">儲存</button>
-    </div>
-  </div>
-</div>`;
+  `;
+  const d = days.find(x => x.id === activeDay);
+  document.getElementById('toolbarTitle').textContent = d ? `Day ${days.indexOf(d)+1}${d.date ? ' · '+formatShortDate(d.date) : ''}` : '';
 }
 
-/* ── DRAG ── */
-function bindDrag(di){
-  document.querySelectorAll(`#sl-${di} .spot-card`).forEach(card=>{
-    card.addEventListener('dragstart',ev=>{S.ddi=+card.dataset.di;S.dsi=+card.dataset.si;ev.dataTransfer.effectAllowed='move';setTimeout(()=>card.classList.add('dragging'),0);});
-    card.addEventListener('dragend',()=>{card.classList.remove('dragging');document.querySelectorAll('.spot-card').forEach(c=>c.classList.remove('drag-over'));});
-    card.addEventListener('dragover',ev=>{ev.preventDefault();document.querySelectorAll(`#sl-${di} .spot-card`).forEach(c=>c.classList.remove('drag-over'));card.classList.add('drag-over');});
-    card.addEventListener('dragleave',()=>card.classList.remove('drag-over'));
-    card.addEventListener('drop',ev=>{ev.preventDefault();card.classList.remove('drag-over');const tdi=+card.dataset.di,tsi=+card.dataset.si;if(S.ddi!==tdi||S.dsi===tsi)return;const arr=S.days[tdi].spots;const[mv]=arr.splice(S.dsi,1);arr.splice(tsi,0,mv);renderList(tdi);showToast('已重新排序 ✓');});
-    let ty0=0,clone=null,src=null,tmr=null,active=false;
-    card.addEventListener('touchstart',ev=>{if(ev.touches.length>1)return;ty0=ev.touches[0].clientY;tmr=setTimeout(()=>{active=true;src=card;S.ddi=+card.dataset.di;S.dsi=+card.dataset.si;const r=card.getBoundingClientRect();clone=card.cloneNode(true);clone.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;opacity:.55;pointer-events:none;z-index:9999;transform:scale(1.02);border-radius:16px;overflow:hidden;`;document.body.appendChild(clone);card.classList.add('dragging');},340);},{passive:true});
-    card.addEventListener('touchmove',ev=>{clearTimeout(tmr);if(!active||!clone)return;ev.preventDefault();const dy=ev.touches[0].clientY-ty0;clone.style.top=(parseFloat(clone.style.top)+dy)+'px';ty0=ev.touches[0].clientY;document.querySelectorAll(`#sl-${di} .spot-card`).forEach(c=>c.classList.remove('drag-over'));const el=document.elementFromPoint(ev.touches[0].clientX,ev.touches[0].clientY);const tc=el&&el.closest('.spot-card');if(tc&&tc!==src)tc.classList.add('drag-over');},{passive:false});
-    card.addEventListener('touchend',ev=>{clearTimeout(tmr);if(!active){active=false;return;}active=false;if(!clone)return;clone.remove();clone=null;src.classList.remove('dragging');document.querySelectorAll('.spot-card').forEach(c=>c.classList.remove('drag-over'));const pt=ev.changedTouches[0];const el=document.elementFromPoint(pt.clientX,pt.clientY);const tc=el&&el.closest('.spot-card');if(tc&&+tc.dataset.di===S.ddi&&+tc.dataset.si!==S.dsi){const arr=S.days[S.ddi].spots;const[mv]=arr.splice(S.dsi,1);arr.splice(+tc.dataset.si,0,mv);renderList(S.ddi);showToast('已重新排序 ✓');}});
-  });
+function formatShortDate(ymd) {
+  if (!ymd) return '';
+  const [,m,day] = ymd.split('-');
+  return `${parseInt(m)}/${parseInt(day)}`;
 }
 
-/* ── SPOT ACTIONS ── */
-function toggleDet(id){const s=findSpot(id);if(!s)return;s.detail=!s.detail;const el=document.getElementById(`det-${id}`);el&&el.classList.toggle('open',s.detail);}
-function updF(id,f,v){const s=findSpot(id);if(s)s[f]=v;}
-function recard(id){
-  const di=findDi(id);if(di<0)return;const s=findSpot(id);const si=S.days[di].spots.indexOf(s);
-  const el=document.getElementById(`sc-${id}`);if(!el)return;
-  const wasOpen=s.detail;
-  el.outerHTML=cardHTML(s,di,si);
-  if(wasOpen){const d=document.getElementById(`det-${id}`);d&&d.classList.add('open');}
-  bindDrag(di);
-  ['dur','tr'].forEach(f=>{const t=getTmr(id,f);if(t.running){const b=document.getElementById(f==='dur'?`swDur-${id}`:`swTr-${id}`);if(b)b.classList.add('running');}});
-}
-function saveSpot(id){
-  const det=document.getElementById(`det-${id}`);if(!det)return;
-  const s=findSpot(id);if(!s)return;
-  const inputs=det.querySelectorAll('input.det-input,textarea.det-ta');
-  ['durText','tr','addr','phone','note'].forEach((f,i)=>{if(inputs[i])s[f]=inputs[i].value;});
-  s.detail=false;renderList(findDi(id));showToast('已儲存 ✓');
-}
-function quickDel(id){for(const d of S.days){const i=d.spots.findIndex(x=>x.id===id);if(i>=0){d.spots.splice(i,1);break;}}renderList(S.activeDay);showToast('已刪除');}
-function goNav(a){if(!a){showToast('請先填入地址');return;}window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a)}`,'_blank');}
-function goCall(p){if(!p){showToast('請先填入電話');return;}window.location.href=`tel:${p}`;}
-
-/* ── ADD/EDIT SPOT ── */
-function handleImgUpload(ev){
-  const file=ev.target.files[0]; if(!file)return;
-  S._tmpFile = file;  // 存 File 物件，不轉 base64
-  const url = URL.createObjectURL(file);
-  const area=document.getElementById('imgUploadArea');
-  const prev=document.getElementById('imgPreview');
-  prev.src=url; area.classList.add('has-img');
-  S._tmpPreviewUrl = url;
-}
-function clearImg(ev){
-  ev.stopPropagation();
-  document.getElementById('imgUploadArea').classList.remove('has-img');
-  document.getElementById('imgPreview').src='';
-  document.getElementById('sImgInput').value='';
-  S._tmpImg=null;
-}
-function _resetImgUI(src){
-  const area=document.getElementById('imgUploadArea');
-  const prev=document.getElementById('imgPreview');
-  if(src){prev.src=src;area.classList.add('has-img');}
-  else{prev.src='';area.classList.remove('has-img');}
-  document.getElementById('sImgInput').value='';
-  S._tmpImg=src||null;   // src is now a Storage URL (or null)
-  S._tmpFile=null;
-  S._tmpPreviewUrl=null;
-}
-function addSpot(){
-  S.editSpotId=null;
-  document.getElementById('spotModalTitle').textContent='新增景點';
-  ['sName','sAddr','sPhone','sNote','sDur','sTr'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('sDelBtn').style.display='none';
-  _resetImgUI(null);
-  S.selCat='sight';document.querySelectorAll('.c-chip').forEach(c=>c.classList.toggle('sel',c.dataset.cat==='sight'));
-  openO('spotModal');
-}
-function openEditSpot(id){
-  const s=findSpot(id);if(!s)return;S.editSpotId=id;
-  document.getElementById('spotModalTitle').textContent='編輯景點';
-  document.getElementById('sName').value=s.name;document.getElementById('sAddr').value=s.addr;
-  document.getElementById('sPhone').value=s.phone;document.getElementById('sNote').value=s.note||'';
-  document.getElementById('sDur').value=s.durText||'';document.getElementById('sTr').value=s.tr||'';
-  document.getElementById('sDelBtn').style.display='block';
-  _resetImgUI(s.img||null);
-  S.selCat=s.cat;document.querySelectorAll('.c-chip').forEach(c=>c.classList.toggle('sel',c.dataset.cat===s.cat));
-  openO('spotModal');
-}
-function pickCat(el){S.selCat=el.dataset.cat;document.querySelectorAll('.c-chip').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');}
-async function confirmSpot(){
-  const name=document.getElementById('sName').value.trim();if(!name){showToast('請輸入名稱');return;}
-  const addr=document.getElementById('sAddr').value.trim(),phone=document.getElementById('sPhone').value.trim(),
-        note=document.getElementById('sNote').value.trim(),durText=document.getElementById('sDur').value.trim(),
-        tr=document.getElementById('sTr').value.trim();
-
-  // 上傳圖片到 Firebase Storage（如有新選圖）
-  let imgUrl = S._tmpImg || null;  // 預設用現有 URL
-  if (S._tmpFile) {
-    showToast('上傳圖片中…');
-    try {
-      const ext = S._tmpFile.name.split('.').pop() || 'jpg';
-      const path = `itinerary/spots/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      imgUrl = await window._fbUpload(S._tmpFile, path);
-    } catch(e) { showToast('圖片上傳失敗，以繼續儲存'); imgUrl = null; }
+function renderTimeline() {
+  const container = document.getElementById('timeline');
+  const day = days.find(d => d.id === activeDay);
+  if (!day || day.stops.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🗺</div><p>點擊右上角 ＋<br>新增今天的第一個景點</p></div>`;
+    return;
   }
 
-  if(S.editSpotId){
-    const s=findSpot(S.editSpotId);
-    s.name=name;s.cat=S.selCat;s.addr=addr;s.phone=phone;s.note=note;s.durText=durText;s.tr=tr;s.img=imgUrl;
-    showToast('已更新 ✓');
-  } else {
-    const day=S.days[S.activeDay];
-    const last=day.spots.length?day.spots[day.spots.length-1].time:'09:00';
-    const[lh,lm]=last.split(':').map(Number);
-    day.spots.push({id:S.nid++,name,cat:S.selCat,
-      time:`${String(Math.min(23,lh+1)).padStart(2,'0')}:${String(lm).padStart(2,'0')}`,
-      dur:60,durText,addr,phone,note,detail:false,tr,img:imgUrl});
-    showToast('已新增 ✓');
+  let html = '';
+  day.stops.forEach((stop, idx) => {
+    const isLast = idx === day.stops.length - 1;
+    html += renderStop(stop, idx, isLast);
+    if (!isLast) {
+      html += renderTransitConnector(stop, idx);
+    }
+  });
+  container.innerHTML = html;
+
+  // animate
+  container.querySelectorAll('.stop-row').forEach((el, i) => {
+    el.style.animationDelay = (i * 0.07) + 's';
+  });
+}
+
+function renderStop(stop, idx, isLast) {
+  const photoHtml = stop.photo
+    ? `<img class="stop-photo" src="${stop.photo}" alt="照片">`
+    : '';
+
+  const addressHtml = stop.address ? `
+    <div class="info-row">
+      <span class="info-icon">📍</span>
+      <div class="info-text">
+        <span class="info-text-label">${esc(stop.address)}</span>
+        <div class="info-actions">
+          <a class="mini-btn" href="https://maps.google.com/?q=${encodeURIComponent(stop.address)}" target="_blank">🗺 導航</a>
+        </div>
+      </div>
+    </div>
+  ` : '';
+
+  const phoneHtml = stop.phone ? `
+    <div class="info-row">
+      <span class="info-icon">📞</span>
+      <div class="info-text">
+        <span class="info-text-label">${esc(stop.phone)}</span>
+        <div class="info-actions">
+          <a class="mini-btn" href="tel:${stop.phone.replace(/\s|-/g,'')}">📲 撥打</a>
+        </div>
+      </div>
+    </div>
+  ` : '';
+
+  const noteHtml = stop.note
+    ? `<div class="stop-note">✍ ${esc(stop.note)}</div>`
+    : '';
+
+  const stayHtml = stop.stay
+    ? `<span class="stop-duration">⏱ ${esc(stop.stay)}</span>`
+    : '';
+
+  const catEmoji = CAT_EMOJI[stop.category] || '✦';
+
+  return `
+    <div class="stop-row" style="animation-delay:${idx*0.07}s">
+      <div class="stop-left">
+        <div class="stop-time">
+          ${stop.time
+            ? `<span class="time-full">${stop.time.slice(0,5)}</span>`
+            : `<span class="no-time">——</span>`}
+        </div>
+        <div class="stop-dot"></div>
+      </div>
+      <div class="stop-card" id="card-${stop.id}" onclick="toggleCard(${stop.id}, event)">
+        <div class="card-top">
+          <span class="stop-category"><span class="cat-emoji">${catEmoji}</span><span class="cat-text">${esc(stop.category)}</span></span>
+          ${stayHtml}
+        </div>
+        <div class="stop-name">${esc(stop.name)}</div>
+        ${photoHtml}
+        ${addressHtml}
+        ${phoneHtml}
+        ${noteHtml}
+        <div class="card-actions" id="acts-${stop.id}">
+          <button class="action-btn" onclick="openStopModal(${stop.id});event.stopPropagation()">✎ 編輯</button>
+          <button class="action-btn del" onclick="deleteStop(${stop.id});event.stopPropagation()">✕ 刪除</button>
+        </div>
+      </div>
+    </div>
+    <div class="stop-spacer"></div>
+  `;
+}
+
+function renderTransitConnector(stop, idx) {
+  const t = stop.transit;
+  if (!t) {
+    return `
+      <div class="transit-row">
+        <div class="transit-gutter"></div>
+        <div class="transit-body">
+          <div class="transit-chip" style="opacity:0.55;cursor:pointer;" onclick="openTransitModal(${stop.id})">
+            <span class="transit-chip-icon" style="opacity:0.4">＋</span>
+            <span class="transit-chip-text" style="color:var(--fog);font-weight:400;font-size:10px;">設定交通</span>
+          </div>
+        </div>
+      </div>
+    `;
   }
-  closeO('spotModal');
-  renderList(S.activeDay);
+
+  const icon = TRANSPORT_ICONS[t.mode] || '🚌';
+  const durLabel = formatDuration(t.hours, t.mins);
+  return `
+    <div class="transit-row">
+      <div class="transit-gutter"></div>
+      <div class="transit-body">
+        <div class="transit-chip">
+          <span class="transit-chip-icon">${icon}</span>
+          <span class="transit-chip-text">${esc(t.mode)}</span>
+          ${durLabel ? `<span class="transit-chip-time">· ${durLabel}</span>` : ''}
+          <button class="transit-chip-edit" onclick="openTransitModal(${stop.id})" title="編輯">✎</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function formatDuration(h, m) {
+  const hours = parseInt(h) || 0;
+  const mins = parseInt(m) || 0;
+  if (!hours && !mins) return '';
+  if (hours && mins) return `${hours}h ${mins}m`;
+  if (hours) return `${hours}h`;
+  return `${mins}m`;
+}
+
+function toggleCard(id, e) {
+  const acts = document.getElementById('acts-' + id);
+  const open = acts.style.display === 'flex';
+  document.querySelectorAll('[id^="acts-"]').forEach(a => a.style.display = 'none');
+  if (!open) acts.style.display = 'flex';
+}
+
+// ─── DAY MANAGEMENT ───
+function switchDay(id) {
+  activeDay = id;
+  render();
+}
+
+function addDay() {
+  const newId = Date.now();
+  days.push({ id: newId, label: `第${days.length + 1}天`, date: '', stops: [] });
+  activeDay = newId;
+  render();
   window._fbSave && window._fbSave();
 }
-function confirmDeleteSpot(){if(!S.editSpotId)return;quickDel(S.editSpotId);closeO('spotModal');}
 
-/* ── TIME PICKER ── */
-function openTimePicker(id){S.editTimeId=id;const s=findSpot(id);if(!s)return;const[h,m]=s.time.split(':').map(Number);S.tmpH=h;S.tmpM=m;updTP();openO('timeModal');}
-function adj(p,d){if(p==='h')S.tmpH=(S.tmpH+d+24)%24;else S.tmpM=((S.tmpM+d)+60)%60;updTP();}
-function updTP(){document.getElementById('tH').textContent=String(S.tmpH).padStart(2,'0');document.getElementById('tM').textContent=String(S.tmpM).padStart(2,'0');}
-function confirmTime(){const s=findSpot(S.editTimeId);if(!s)return;s.time=`${String(S.tmpH).padStart(2,'0')}:${String(S.tmpM).padStart(2,'0')}`;closeO('timeModal');recard(S.editTimeId);showToast('時間已更新 ✓');}
+// ─── CATEGORY PICKER ───
+function selectCat(el) {
+  document.querySelectorAll('#catPicker .cat-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('iCategory').value = el.dataset.cat;
+}
 
-/* ── DAY MANAGEMENT ── */
-function toggleTabEditMode(){S.tabEditMode=!S.tabEditMode;renderTabs();}
-function tabDelDay(di,ev){ev.stopPropagation();if(S.days.length<=1){showToast('至少保留一天');return;}S.days.splice(di,1);S.activeDay=Math.min(S.activeDay,S.days.length-1);render();showToast('已刪除此天');}
-function addDay(){const n=S.days.length+1;const wk=['日','一','二','三','四','五','六'];S.days.push({id:Date.now(),label:`Day ${n}`,date:`06/${9+n} 週${wk[n%7]}`,isoDate:'',note:'',noteOpen:false,spots:[]});S.activeDay=S.days.length-1;render();showToast(`Day ${n} 已新增 ✓`);}
-function openDayEdit(di){S.editDayIdx=di;document.getElementById('dLabel').value=S.days[di].label;document.getElementById('dDatePicker').value=S.days[di].isoDate||'';updateDayPreview();openO('dayModal');}
-function updateDayPreview(){const v=document.getElementById('dDatePicker').value;const el=document.getElementById('dDatePreview');if(!v){el.textContent='';return;}const d=new Date(v+'T00:00:00');const wk=['日','一','二','三','四','五','六'];el.textContent=`${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} 週${wk[d.getDay()]}`;}
-function confirmDayEdit(){const di=S.editDayIdx;const l=document.getElementById('dLabel').value;const iso=document.getElementById('dDatePicker').value;if(l)S.days[di].label=l;if(iso){S.days[di].isoDate=iso;const d=new Date(iso+'T00:00:00');const wk=['日','一','二','三','四','五','六'];S.days[di].date=`${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} 週${wk[d.getDay()]}`;}closeO('dayModal');render();showToast('已更新 ✓');}
-function confirmDeleteDay(){if(S.days.length<=1){showToast('至少保留一天');return;}S.days.splice(S.editDayIdx,1);S.activeDay=Math.min(S.activeDay,S.days.length-1);closeO('dayModal');render();showToast('已刪除此天');}
-function toggleDayNote(di){S.days[di].noteOpen=!S.days[di].noteOpen;const el=document.getElementById(`dnp-${di}`);if(el)el.classList.toggle('open',S.days[di].noteOpen||!!S.days[di].note);}
-function editTripTitle(){document.getElementById('tripTitleInput').value=S.title;openO('titleModal');}
-function confirmTripTitle(){const v=document.getElementById('tripTitleInput').value.trim();if(v){S.title=v;document.getElementById('tripTitleText').textContent=v;}closeO('titleModal');}
-function sortByTime(){S.days[S.activeDay].spots.sort((a,b)=>a.time.localeCompare(b.time));renderList(S.activeDay);showToast('已排序 ✓');}
+function setCatPicker(cat) {
+  document.getElementById('iCategory').value = cat;
+  document.querySelectorAll('#catPicker .cat-option').forEach(o => {
+    o.classList.toggle('selected', o.dataset.cat === cat);
+  });
+}
 
-/* ── STOPWATCHES ── */
-const TIMERS={};let swCtx=null;
-function getTmr(spotId,field){const k=`${spotId}_${field}`;if(!TIMERS[k])TIMERS[k]={running:false,elapsed:0,startTs:null,startWall:null,endWall:null,interval:null};return TIMERS[k];}
-function swFmt(ms){const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000),cs=Math.floor((ms%1000)/10);return{h,m,s,cs,mStr:h?String(m).padStart(2,'0'):String(m)};}
-function fmtClock(d){return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');}
-function minsLabel(ms){const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);const p=[];if(h)p.push(h+'小時');if(m)p.push(m+'分');if(s||(!h&&!m))p.push(s+'秒');return p.join('');}
-function swTickModal(){if(!swCtx)return;const t=getTmr(swCtx.spotId,swCtx.field);const ms=t.elapsed+(t.running?Date.now()-t.startTs:0);const f=swFmt(ms);document.getElementById('swH').textContent=f.h?f.h+':':'';document.getElementById('swH').style.display=f.h?'':'none';document.getElementById('swM').textContent=f.mStr;document.getElementById('swS').textContent=String(f.s).padStart(2,'0');document.getElementById('swCs').textContent=String(f.cs).padStart(2,'0');}
-function swTickBtn(){if(!swCtx)return;const{spotId,field}=swCtx;const t=getTmr(spotId,field);const btn=document.getElementById(field==='dur'?`swDur-${spotId}`:`swTr-${spotId}`);if(btn)btn.classList.toggle('running',t.running);}
-function swToggle(){if(!swCtx)return;const t=getTmr(swCtx.spotId,swCtx.field);if(t.running)swStop();else swGo();}
-function swGo(){if(!swCtx)return;const t=getTmr(swCtx.spotId,swCtx.field);if(t.running)return;t.running=true;t.startTs=Date.now();if(!t.startWall)t.startWall=new Date();t.interval=setInterval(()=>{swTickModal();swTickBtn();},50);swUpdateUI();}
-function swStop(){if(!swCtx)return;const t=getTmr(swCtx.spotId,swCtx.field);if(!t.running)return;clearInterval(t.interval);t.interval=null;t.elapsed+=Date.now()-t.startTs;t.endWall=new Date();t.running=false;swTickModal();swTickBtn();swUpdateUI();swShowResult();}
-function swReset(){if(!swCtx)return;const t=getTmr(swCtx.spotId,swCtx.field);clearInterval(t.interval);t.interval=null;t.running=false;t.elapsed=0;t.startTs=null;t.startWall=null;t.endWall=null;swTickModal();swTickBtn();swUpdateUI();document.getElementById('swResultArea').classList.remove('show');document.getElementById('swUseBtn').classList.remove('show');}
-function swShowResult(){if(!swCtx)return;const t=getTmr(swCtx.spotId,swCtx.field);if(!t.endWall)return;document.getElementById('swResTotal').textContent=minsLabel(t.elapsed);document.getElementById('swResStart').textContent=fmtClock(t.startWall);document.getElementById('swResEnd').textContent=fmtClock(t.endWall);document.getElementById('swResultArea').classList.add('show');document.getElementById('swUseBtn').classList.add('show');}
-function swUpdateUI(){if(!swCtx)return;const t=getTmr(swCtx.spotId,swCtx.field);const btn=document.getElementById('swStartBtn');if(!btn)return;if(t.running){btn.className='sw-ctrl-btn sw-stop';btn.textContent='⏹ 停止';document.getElementById('swResultArea').classList.remove('show');document.getElementById('swUseBtn').classList.remove('show');}else{btn.className='sw-ctrl-btn sw-start';btn.textContent=t.elapsed>0?'▶ 繼續':'▶ 開始';if(t.elapsed>0&&t.endWall)swShowResult();}}
-function swApply(){if(!swCtx)return;const{spotId,field}=swCtx;const t=getTmr(spotId,field);const s=findSpot(spotId);if(s){if(field==='dur')s.durText=minsLabel(t.elapsed);else s.tr=`${minsLabel(t.elapsed)}（${fmtClock(t.startWall)}－${fmtClock(t.endWall)}）`;}closeO('swModal');recard(spotId);showToast('已套用 ✓');}
-function openSw(spotId,field){swCtx={spotId,field};document.getElementById('swTypeLabel').textContent=field==='dur'?'Duration Stopwatch':'Transit Stopwatch';swTickModal();swUpdateUI();openO('swModal');}
+// ─── STOP MODAL ───
+function openStopModal(id = null) {
+  editStopId = id;
+  currentPhotoData = null;
+  document.getElementById('photoUploadArea').style.display = 'block';
+  document.getElementById('photoPreviewWrap').style.display = 'none';
+  document.getElementById('iPhoto').value = '';
 
-/* ── UTILS ── */
-function openO(id){const o=document.getElementById(id);o.classList.add('open');o.onclick=ev=>{if(ev.target===o)closeO(id);};}
-function closeO(id){document.getElementById(id).classList.remove('open');}
-let _tt;
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),2200);}
+  if (id !== null) {
+    const stop = findStop(id);
+    document.getElementById('iName').value = stop.name;
+    document.getElementById('iTime').value = stop.time || '';
+    document.getElementById('iStay').value = stop.stay || '';
+    setCatPicker(stop.category || '景點');
+    document.getElementById('iAddress').value = stop.address || '';
+    document.getElementById('iPhone').value = stop.phone || '';
+    document.getElementById('iNote').value = stop.note || '';
+    document.getElementById('stopModalLabel').textContent = '編輯景點';
+    if (stop.photo) {
+      currentPhotoData = stop.photo;
+      document.getElementById('photoPreviewImg').src = stop.photo;
+      document.getElementById('photoUploadArea').style.display = 'none';
+      document.getElementById('photoPreviewWrap').style.display = 'block';
+    }
+  } else {
+    document.getElementById('iName').value = '';
+    document.getElementById('iTime').value = '';
+    document.getElementById('iStay').value = '';
+    setCatPicker('景點');
+    document.getElementById('iAddress').value = '';
+    document.getElementById('iPhone').value = '';
+    document.getElementById('iNote').value = '';
+    document.getElementById('stopModalLabel').textContent = '新增景點';
+  }
+
+  document.getElementById('stopModal').classList.add('open');
+}
+
+function closeStopModal() {
+  document.getElementById('stopModal').classList.remove('open');
+  editStopId = null;
+}
+
+function handleStopBackdrop(e) {
+  if (e.target === document.getElementById('stopModal')) closeStopModal();
+}
+
+function handlePhotoSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  window._pendingPhotoFile = file;
+  currentPhotoData = URL.createObjectURL(file);
+  document.getElementById('photoPreviewImg').src = currentPhotoData;
+  document.getElementById('photoUploadArea').style.display = 'none';
+  document.getElementById('photoPreviewWrap').style.display = 'block';
+}
+
+function removePhoto() {
+  currentPhotoData = null;
+  window._pendingPhotoFile = null;
+  document.getElementById('iPhoto').value = '';
+  document.getElementById('photoPreviewWrap').style.display = 'none';
+  document.getElementById('photoUploadArea').style.display = 'block';
+}
+
+async function saveStop() {
+  const name = document.getElementById('iName').value.trim();
+  if (!name) { document.getElementById('iName').style.borderColor = '#b05050'; return; }
+  document.getElementById('iName').style.borderColor = '';
+
+  // Upload photo to Firebase Storage if new file selected
+  let photoUrl = currentPhotoData;
+  if (window._pendingPhotoFile && window._fbUpload) {
+    try {
+      const ext = window._pendingPhotoFile.name.split('.').pop() || 'jpg';
+      const path = `itinerary/stops/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      photoUrl = await window._fbUpload(window._pendingPhotoFile, path);
+      window._pendingPhotoFile = null;
+    } catch(e) { console.warn('Photo upload failed', e); photoUrl = null; }
+  }
+
+  const stop = {
+    name,
+    time: document.getElementById('iTime').value,
+    stay: document.getElementById('iStay').value.trim(),
+    category: document.getElementById('iCategory').value,
+    address: document.getElementById('iAddress').value.trim(),
+    phone: document.getElementById('iPhone').value.trim(),
+    note: document.getElementById('iNote').value.trim(),
+    photo: photoUrl || null,
+  };
+
+  const day = days.find(d => d.id === activeDay);
+  if (editStopId !== null) {
+    const i = day.stops.findIndex(s => s.id === editStopId);
+    day.stops[i] = { ...day.stops[i], ...stop };
+  } else {
+    day.stops.push({ id: Date.now(), transit: null, ...stop });
+  }
+  closeStopModal();
+  render();
+  window._fbSave && window._fbSave();
+}
+
+function deleteStop(id) {
+  const day = days.find(d => d.id === activeDay);
+  day.stops = day.stops.filter(s => s.id !== id);
+  render();
+  window._fbSave && window._fbSave();
+}
+
+function findStop(id) {
+  for (const d of days) {
+    const s = d.stops.find(x => x.id === id);
+    if (s) return s;
+  }
+  return null;
+}
+
+function deleteDay(id, e) {
+  e.stopPropagation();
+  if (days.length <= 1) return;
+  days = days.filter(d => d.id !== id);
+  if (activeDay === id) activeDay = days[0].id;
+  render();
+}
+
+let editDayId = null;
+
+function openDayModal(id, e) {
+  e.stopPropagation();
+  editDayId = id;
+  const d = days.find(x => x.id === id);
+  document.getElementById('iDayDate').value = d.date || '';
+  document.getElementById('dayModal').classList.add('open');
+}
+
+function closeDayModal() {
+  document.getElementById('dayModal').classList.remove('open');
+  editDayId = null;
+}
+
+function handleDayBackdrop(e) {
+  if (e.target === document.getElementById('dayModal')) closeDayModal();
+}
+
+function saveDayDate() {
+  const d = days.find(x => x.id === editDayId);
+  if (d) d.date = document.getElementById('iDayDate').value;
+  closeDayModal();
+  render();
+}
+
+// ─── TRANSIT MODAL ───
+function openTransitModal(stopId) {
+  editTransitAfterStopId = stopId;
+  const stop = findStop(stopId);
+  const t = stop.transit;
+
+  document.querySelectorAll('.transport-option').forEach(el => el.classList.remove('selected'));
+  const mode = t ? t.mode : '步行';
+  selectedTransportMode = mode;
+  const matched = Array.from(document.querySelectorAll('.transport-option')).find(el => el.dataset.mode === mode);
+  if (matched) matched.classList.add('selected');
+  else document.querySelectorAll('.transport-option')[0].classList.add('selected');
+
+  document.getElementById('transitHours').value = t ? (t.hours || '') : '';
+  document.getElementById('transitMins').value = t ? (t.mins || '') : '';
+  document.getElementById('transitModal').classList.add('open');
+}
+
+function closeTransitModal() {
+  document.getElementById('transitModal').classList.remove('open');
+  editTransitAfterStopId = null;
+}
+
+function handleTransitBackdrop(e) {
+  if (e.target === document.getElementById('transitModal')) closeTransitModal();
+}
+
+function selectTransport(el) {
+  document.querySelectorAll('.transport-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTransportMode = el.dataset.mode;
+}
+
+function saveTransit() {
+  const stop = findStop(editTransitAfterStopId);
+  if (!stop) return;
+  stop.transit = {
+    mode: selectedTransportMode,
+    hours: document.getElementById('transitHours').value,
+    mins: document.getElementById('transitMins').value
+  };
+  closeTransitModal();
+  render();
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 
 render();
 
-// ── Firebase 同步 ──────────────────────────────────────
+// ── Firebase 同步 ──
 (async () => {
   try {
-    // Lazy-load Firebase config
     const fb = await import('./firebase-config.js');
-    // Read uid from localStorage (set by index.html after Google login)
+
+    // Get uid from localStorage (set by index.html after Google login)
     let uid = null;
     try { uid = localStorage.getItem('tripApp_uid'); } catch(e) {}
     if (!uid) throw new Error('未登入，跳過 Firebase 同步');
-    const DOC_PATH = `users/${uid}/data/itinerary`;
 
-    // Upload helper exposed globally for confirmSpot
+    const DOC = `users/${uid}/data/itinerary`;
     window._fbUpload = fb.uploadImage;
 
-    // Save entire S (strip runtime-only fields)
     window._fbSave = async () => {
-      const data = {
-        title: S.title,
-        days: S.days.map(d => ({
-          ...d,
-          spots: d.spots.map(s => ({
-            id:s.id, name:s.name, cat:s.cat, time:s.time,
-            dur:s.dur, durText:s.durText||'', addr:s.addr||'',
-            phone:s.phone||'', note:s.note||'', tr:s.tr||'',
-            img:s.img||null, detail:false
+      await fb.fsSet(DOC, {
+        days: days.map(d => ({
+          id: d.id, label: d.label, date: d.date || '',
+          stops: d.stops.map(s => ({
+            id: s.id, name: s.name, time: s.time || '',
+            stay: s.stay || '', category: s.category || '',
+            address: s.address || '', phone: s.phone || '',
+            note: s.note || '', photo: s.photo || null,
+            transit: s.transit || null,
           }))
         })),
-        nid: S.nid
-      };
-      await fb.fsSet(DOC_PATH, data);
+        activeDay
+      });
     };
 
     // Load from Firestore
-    const snap = await fb.fsGet(DOC_PATH);
+    const snap = await fb.fsGet(DOC);
     if (snap.exists()) {
       const d = snap.data();
-      S.title = d.title || S.title;
-      S.days  = d.days  || S.days;
-      S.nid   = d.nid   || S.nid;
-      render();
-      document.getElementById('tripTitleText').textContent = S.title;
+      if (d.days && d.days.length) {
+        days = d.days;
+        activeDay = d.activeDay || days[0].id;
+        render();
+      }
     }
 
-    // Auto-save on every state-changing action
-    // Patch key mutating functions to auto-save
-    const origRender = window.render;
-    let _saveTimer;
+    // Auto-save on render
+    const origRender = window.render || render;
+    let _t;
     window.render = function() {
       origRender();
-      clearTimeout(_saveTimer);
-      _saveTimer = setTimeout(() => window._fbSave && window._fbSave(), 800);
+      clearTimeout(_t);
+      _t = setTimeout(() => window._fbSave && window._fbSave(), 800);
     };
 
-    // Show sync badge
+    // Sync badge
     const badge = document.createElement('div');
-    badge.id = 'sync-badge';
     badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;background:rgba(255,255,255,.9);border:1px solid #DDD4C6;border-radius:20px;padding:4px 10px;font-size:10px;font-family:sans-serif;color:#8B5E3C;font-weight:700;backdrop-filter:blur(8px);';
     badge.textContent = '☁ 已連線';
     document.body.appendChild(badge);
