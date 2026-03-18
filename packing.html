@@ -550,8 +550,7 @@ function renderContent() {
             <span class="check-icon">✓</span>
           </div>
           <span class="item-name${st[stKey]?' checked':''}">${escHtml(item)}</span>
-          <button class="del-btn" onclick="removeItem('${cat.id}','${escHtml(sec.name)}','${escHtml(item)}')">×</button>`}).join('')
-        </div>`).join('')}
+          <button class="del-btn" onclick="removeItem('${cat.id}','${escHtml(sec.name)}','${escHtml(item)}')">×</button>`}).join('')}
       ${editMode?`<div class="add-item-row"><input id="inp-${cat.id}-${escHtml(sec.name)}" placeholder="新增項目..." onkeydown="if(event.key==='Enter')addItem('${cat.id}','${escHtml(sec.name)}')"><button onclick="addItem('${cat.id}','${escHtml(sec.name)}')">加入</button></div>`:''}
       </div>
     </div>`;
