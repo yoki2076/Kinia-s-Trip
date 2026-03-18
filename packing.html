@@ -678,9 +678,15 @@ render();
   try {
     const fb = await import('./firebase-config.js');
     // Read uid from localStorage (set by index.html after Google login)
+    var user = await fb.getCurrentUser();
+    if (!user) await new Promise(function(r){ setTimeout(r, 2000); });
+    user = await fb.getCurrentUser();
+    if (!user) throw new Error('未登入');
+
     let uid = null;
     try { uid = localStorage.getItem('tripApp_uid'); } catch(e) {}
-    if (!uid) throw new Error('未登入，跳過 Firebase 同步');
+    if (!uid) uid = user.uid;
+    if (!uid) throw new Error('未登入');
     const DOC = `users/${uid}/data/packing`;
 
     window._fbSave = async () => {

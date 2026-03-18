@@ -1727,6 +1727,19 @@ render();
 (async function() {
   try {
     var fb = await import('./firebase-config.js');
+
+    // Wait for Firebase Auth to be ready (with retry)
+    var user = await fb.getCurrentUser();
+    if (!user) {
+      // Auth might not have loaded yet - wait 2s and retry once
+      await new Promise(function(r){ setTimeout(r, 2000); });
+      user = await fb.getCurrentUser();
+    }
+    if (!user) {
+      console.warn('itinerary: not logged in after retry, skipping sync');
+      return;
+    }
+
     var INVITE_CODE = window._inviteCode || 'kinia2026';
     var SHARED_DOC = 'trips/invite_' + INVITE_CODE + '/data/itinerary';
     window._fbUpload = fb.uploadImage;

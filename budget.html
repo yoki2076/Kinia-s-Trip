@@ -1041,8 +1041,15 @@ updateHeader();
 (async function() {
   try {
     var fb = await import('./firebase-config.js');
+    // Wait for Firebase Auth state
+    var user = await fb.getCurrentUser();
+    if (!user) await new Promise(function(r){ setTimeout(r, 2000); });
+    user = await fb.getCurrentUser();
+    if (!user) return;
+
     var uid = null;
     try { uid = localStorage.getItem('tripApp_uid'); } catch(e) {}
+    if (!uid) uid = user.uid; // fallback to auth uid
     if (!uid) return;
     var DOC = 'users/' + uid + '/data/budget';
     window._fbSave = async function() {

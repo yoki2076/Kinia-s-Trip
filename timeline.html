@@ -1131,8 +1131,14 @@
 (async function() {
   try {
     var fb = await import('./firebase-config.js');
+    var user = await fb.getCurrentUser();
+    if (!user) await new Promise(function(r){ setTimeout(r, 2000); });
+    user = await fb.getCurrentUser();
+    if (!user) { entries = entries || []; render(); return; }
+
     var uid = null;
     try { uid = localStorage.getItem('tripApp_uid'); } catch(e) {}
+    if (!uid) uid = user.uid;
     if (!uid) { entries = entries || []; render(); return; }
     var DOC = 'users/' + uid + '/data/timeline';
     window._fbUpload = fb.uploadImage;
