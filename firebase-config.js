@@ -1,5 +1,12 @@
-// firebase-config.js — 共用 Firebase 初始化 + 工具函式（Compat SDK 版）
-// 注意：此檔案需配合各頁面 <head> 內載入的 firebase-*-compat.js 使用
+// firebase-config.js — 共用 Firebase 初始化 + 工具函式
+
+import { initializeApp }            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot }
+                                    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
+                                    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut }
+                                    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // ── 你的 Firebase 設定 ──────────────────────────────────
 const firebaseConfig = {
@@ -12,83 +19,89 @@ const firebaseConfig = {
 };
 // ────────────────────────────────────────────────────────
 
-// 避免重複初始化（子頁面與 index.html 都會載入此檔）
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
-
-const _auth    = firebase.auth();
-const _db      = firebase.firestore();
-const _storage = firebase.storage();
+const app      = initializeApp(firebaseConfig);
+const db       = getFirestore(app);
+const storage  = getStorage(app);
+const auth     = getAuth(app);
+const provider = new GoogleAuthProvider();
 
 // ── Google 登入 ──
-function signInWithGoogle() {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  return _auth.signInWithPopup(provider).then(result => result.user);
+export async function signInWithGoogle() {
+  const result = await signInWithPopup(auth, provider);
+  return result.user;
 }
 
 // ── 登出 ──
-function logOut() {
-  return _auth.signOut();
+export async function logOut() {
+  await signOut(auth);
 }
 
 // ── 等待登入狀態，回傳 user（null = 未登入）──
-function getCurrentUser() {
-  return new Promise(resolve => {
-    const unsubscribe = _auth.onAuthStateChanged(user => {
-      unsubscribe();
-      resolve(user);
-    });
+export const getCurrentUser = () => new Promise(resolve => {
+  const unsubscribe = onAuthStateChanged(auth, user => {
+    unsubscribe();
+    resolve(user);
   });
-}
+});
 
 // ── 監聽登入狀態變化 ──
-function onAuthChange(cb) {
-  return _auth.onAuthStateChanged(cb);
-}
-
-// ── Firestore path → ref helper ──
-function _docRef(path) {
-  const parts = path.split('/');
-  let ref = _db;
-  for (let i = 0; i < parts.length; i++) {
-    ref = i % 2 === 0 ? ref.collection(parts[i]) : ref.doc(parts[i]);
-  }
-  return ref;
-}
+export const onAuthChange = (cb) => onAuthStateChanged(auth, cb);
 
 // ── Firestore helpers ──
-function fsSet(path, data)  { return _docRef(path).set(data); }
-function fsGet(path)        { return _docRef(path).get(); }
-function fsLive(path, cb)   { return _docRef(path).onSnapshot(cb); }
+export const fsSet  = (path, data) => setDoc(doc(db, ...path.split('/')), data);
+export const fsGet  = (path)       => getDoc(doc(db, ...path.split('/')));
+export const fsLive = (path, cb)   => onSnapshot(doc(db, ...path.split('/')), cb);
 
-// ── 圖片壓縮 ──
-async function compressImage(file, { maxWidth=1280, maxSizeKB=300, minQuality=0.45 } = {}) {
+// ── 圖片壓縮：上傳前先縮小 + 壓縮，控制在 300KB 以內 ──
+async function compressImage(file, {
+  maxWidth  = 1280,   // 最長邊不超過 1280px
+  maxSizeKB = 300,    // 目標壓縮後 ≤ 300 KB
+  minQuality = 0.45,  // 最低品質（避免過度壓縮）
+} = {}) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
       URL.revokeObjectURL(url);
       let w = img.width, h = img.height;
+
+      // 縮放長邊
       if (w > maxWidth || h > maxWidth) {
         if (w >= h) { h = Math.round(h * maxWidth / w); w = maxWidth; }
         else        { w = Math.round(w * maxWidth / h); h = maxWidth; }
       }
+
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+      // 二分搜尋最佳 quality
       let lo = minQuality, hi = 0.92, best = null;
+      const tryQ = (q) => canvas.toDataURL('image/jpeg', q);
+
       for (let i = 0; i < 6; i++) {
         const mid = (lo + hi) / 2;
-        const dataUrl = canvas.toDataURL('image/jpeg', mid);
+        const dataUrl = tryQ(mid);
         const kb = Math.round((dataUrl.length * 3) / 4 / 1024);
         if (kb <= maxSizeKB) { best = { dataUrl, q: mid }; lo = mid; }
         else                 { hi = mid; }
       }
-      if (!best) { const dataUrl = canvas.toDataURL('image/jpeg', minQuality); best = { dataUrl, q: minQuality }; }
+
+      // 若最低品質還超標，直接用最低品質
+      if (!best) {
+        const dataUrl = tryQ(minQuality);
+        best = { dataUrl, q: minQuality };
+      }
+
       const kb = Math.round((best.dataUrl.length * 3) / 4 / 1024);
       console.log(`[compress] ${file.name}: ${Math.round(file.size/1024)}KB → ${kb}KB (q=${best.q.toFixed(2)}, ${w}×${h})`);
-      canvas.toBlob(blob => resolve(blob), 'image/jpeg', best.q);
+
+      // 轉回 Blob
+      canvas.toBlob(
+        blob => resolve(blob),
+        'image/jpeg',
+        best.q
+      );
     };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('圖片載入失敗')); };
     img.src = url;
@@ -96,33 +109,39 @@ async function compressImage(file, { maxWidth=1280, maxSizeKB=300, minQuality=0.
 }
 
 // ── Storage: 壓縮後上傳，回傳下載 URL ──
-async function uploadImage(file, storagePath) {
+export async function uploadImage(file, storagePath) {
+  // 只壓縮圖片（跳過 GIF/SVG 等）
   let uploadFile = file;
   if (file.type.startsWith('image/') && file.type !== 'image/gif' && file.type !== 'image/svg+xml') {
     try {
       const compressed = await compressImage(file);
+      // 將壓縮後的 blob 包成 File，保留副檔名改為 .jpg
       const baseName = storagePath.split('/').pop().replace(/\.[^.]+$/, '');
       uploadFile = new File([compressed], baseName + '.jpg', { type: 'image/jpeg' });
+      // 更新 storagePath 副檔名
       storagePath = storagePath.replace(/\.[^.]+$/, '.jpg');
-    } catch (e) { console.warn('[compress] 壓縮失敗，使用原檔:', e.message); }
+    } catch (e) {
+      console.warn('[compress] 壓縮失敗，使用原檔:', e.message);
+    }
   }
-  const storageRef = _storage.ref(storagePath);
-  await storageRef.put(uploadFile);
-  return await storageRef.getDownloadURL();
+
+  const storageRef = ref(storage, storagePath);
+  await uploadBytes(storageRef, uploadFile);
+  return await getDownloadURL(storageRef);
 }
 
 // ── Storage: 刪除圖片 ──
-async function deleteImage(urlOrPath) {
+export async function deleteImage(urlOrPath) {
   try {
     const storageRef = urlOrPath.startsWith('http')
-      ? _storage.ref(decodeURIComponent(urlOrPath.split('/o/')[1].split('?')[0]))
-      : _storage.ref(urlOrPath);
-    await storageRef.delete();
+      ? ref(storage, decodeURIComponent(urlOrPath.split('/o/')[1].split('?')[0]))
+      : ref(storage, urlOrPath);
+    await deleteObject(storageRef);
   } catch(e) {}
 }
 
 // ── base64 → File（舊資料相容）──
-function dataURLtoFile(dataUrl, filename) {
+export function dataURLtoFile(dataUrl, filename) {
   const [header, data] = dataUrl.split(',');
   const mime = header.match(/:(.*?);/)[1];
   const binary = atob(data);
@@ -131,5 +150,4 @@ function dataURLtoFile(dataUrl, filename) {
   return new File([arr], filename, { type: mime });
 }
 
-// ── 掛到 window，讓各子頁面直接用 window._fb.xxx() ──
-window._fb = { signInWithGoogle, logOut, getCurrentUser, onAuthChange, fsSet, fsGet, fsLive, uploadImage, deleteImage, dataURLtoFile };
+export { db, storage, auth };
