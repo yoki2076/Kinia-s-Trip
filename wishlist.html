@@ -387,6 +387,11 @@
   .emoji-opt:active { background: var(--surface2); }
   .emoji-cancel { display: block; width: 100%; margin-top: 12px; padding: 10px; background: none; border: 1px solid var(--border); border-radius: 12px; color: var(--text2); font-family: 'Noto Sans TC', sans-serif; font-size: 13px; cursor: pointer; }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script src="firebase-config.js"></script>
 </head>
 <body>
 
@@ -1263,7 +1268,7 @@ P.render(); // render but don't show (page 1 is hidden)
 // ── Firebase 同步 ──
 (async function() {
   try {
-    var fb = await import('./firebase-config.js');
+    var fb = window._fb;
     // Wait for Firebase Auth state
     var user = await fb.getCurrentUser();
     if (!user) await new Promise(function(r){ setTimeout(r, 2000); });

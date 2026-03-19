@@ -198,6 +198,11 @@
   .exp-items-badge { font-size: 10px; color: #6B5744; background: #ebebec; border-radius: 6px; padding: 1px 6px; margin-left: 4px; }
 </style>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script src="firebase-config.js"></script>
 </head>
 <body>
 <div id="app">
@@ -1040,7 +1045,7 @@ updateHeader();
 // ── Firebase 同步 ──
 (async function() {
   try {
-    var fb = await import('./firebase-config.js');
+    var fb = window._fb;
     // Wait for Firebase Auth state
     var user = await fb.getCurrentUser();
     if (!user) await new Promise(function(r){ setTimeout(r, 2000); });
