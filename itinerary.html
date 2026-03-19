@@ -1708,7 +1708,7 @@ function openStopModal(id = null) {
     const iDayElN = document.getElementById('iDay');
     iDayElN.innerHTML = days.map(d => {
       const lbl = d.date ? d.label + ' (' + d.date.slice(5).replace('-','/') + ')' : d.label;
-      return '<option value="' + d.id + '"' + (d.id === activeDay ? ' selected' : '') + '>' + lbl + '</option>';
+      return '<option value="' + d.id + '"' + (d.id == activeDay ? ' selected' : '') + '>' + lbl + '</option>';
     }).join('');
     document.getElementById('modalShopsSection').style.display = 'none';
   }
@@ -1761,7 +1761,7 @@ async function saveStop() {
   }
 
   const selectedDayId = parseInt(document.getElementById('iDay').value) || activeDay;
-  const targetDay = days.find(d => d.id === selectedDayId) || days.find(d => d.id === activeDay);
+  const targetDay = days.find(d => d.id === selectedDayId) || days.find(d => d.id == activeDay);
 
   const stop = {
     name,
@@ -1795,7 +1795,7 @@ async function saveStop() {
 }
 
 function deleteStop(id) {
-  const day = days.find(d => d.id === activeDay);
+  const day = days.find(d => d.id == activeDay);
   day.stops = day.stops.filter(s => s.id !== id);
   render();
   window._fbSave && window._fbSave();
@@ -1814,7 +1814,7 @@ function deleteDay(id, e) {
   e.stopPropagation();
   if (days.length <= 1) return;
   days = days.filter(d => d.id !== id);
-  if (activeDay === id) activeDay = days[0].id;
+  if (activeDay == id) activeDay = days[0].id;
   render();
 }
 
@@ -2137,9 +2137,10 @@ function openShopExpand(stopId, shopId) {
       if (!ld.days || !ld.days.length) return;
       _remoteRendering = true;
       days = ld.days;
+      // 不覆蓋 activeDay，各自看各自的天
       if (!days.find(function(d){ return d.id == activeDay; })) activeDay = days[0].id;
       render();
-      setTimeout(function(){ _remoteRendering = false; }, 2000);
+      setTimeout(function(){ _remoteRendering = false; }, 3000);
     });
 
     // Wrap save to block listener during own save
@@ -2147,11 +2148,11 @@ function openShopExpand(stopId, shopId) {
     window._fbSave = async function() {
       _isSaving = true;
       try { await _rawSave(); } catch(e) { console.warn('fbSave error', e); }
+      // Block live listener 5s after save to prevent race condition
       setTimeout(function(){ _isSaving = false; }, 5000);
     };
 
-    // Auto-save disabled — explicit saves in each action prevent race conditions
-    var _dataLoaded = true;
+    // No MutationObserver — explicit saves in each action are safer
 
     var badge = document.getElementById('collab-badge');
     if (badge) badge.textContent = '☁ 共用行程（已連線）';
