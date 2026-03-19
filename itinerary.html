@@ -1199,6 +1199,11 @@
     </div>
 
     <div class="form-group">
+      <label class="form-label">所屬日期</label>
+      <select class="form-input" id="iDay"></select>
+    </div>
+
+    <div class="form-group">
       <div class="form-row">
         <div style="flex:1">
           <label class="form-label">到達時間</label>
@@ -1691,6 +1696,14 @@ function openStopModal(id = null) {
     const stop = findStop(id);
     document.getElementById('iName').value = stop.name;
     document.getElementById('iTime').value = stop.time || '';
+    // Populate day selector
+    const iDaySel = document.getElementById('iDay');
+    iDaySel.innerHTML = days.map(d => {
+      const label = d.date ? d.label + ' (' + d.date.slice(5).replace('-','/') + ')' : d.label;
+      const ownerDay = days.find(dd => dd.stops.some(s => s.id === id));
+      const selected = ownerDay && d.id === ownerDay.id ? 'selected' : '';
+      return `<option value="${d.id}" ${selected}>${label}</option>`;
+    }).join('');
     document.getElementById('iStay').value = stop.stay || '';
     setCatPicker(stop.category || '景點');
     document.getElementById('iAddress').value = stop.address || '';
@@ -1710,6 +1723,13 @@ function openStopModal(id = null) {
   } else {
     document.getElementById('iName').value = '';
     document.getElementById('iTime').value = '';
+    // Populate day selector, default to activeDay
+    const iDaySelNew = document.getElementById('iDay');
+    iDaySelNew.innerHTML = days.map(d => {
+      const label = d.date ? d.label + ' (' + d.date.slice(5).replace('-','/') + ')' : d.label;
+      const selected = d.id === activeDay ? 'selected' : '';
+      return `<option value="${d.id}" ${selected}>${label}</option>`;
+    }).join('');
     document.getElementById('iStay').value = '';
     setCatPicker('景點');
     document.getElementById('iAddress').value = '';
@@ -1924,12 +1944,23 @@ async function saveStop() {
     photo: photoUrl || null,
   };
 
-  const day = days.find(d => d.id === activeDay);
+  const selectedDayId = parseInt(document.getElementById('iDay').value) || activeDay;
+  const targetDay = days.find(d => d.id === selectedDayId) || days.find(d => d.id === activeDay);
+
   if (editStopId !== null) {
-    const i = day.stops.findIndex(s => s.id === editStopId);
-    day.stops[i] = { ...day.stops[i], ...stop };
+    // Find which day currently owns this stop
+    const currentDay = days.find(d => d.stops.some(s => s.id === editStopId));
+    if (currentDay && currentDay.id !== targetDay.id) {
+      // Move to different day: remove from current, add to target
+      const existing = currentDay.stops.find(s => s.id === editStopId);
+      currentDay.stops = currentDay.stops.filter(s => s.id !== editStopId);
+      targetDay.stops.push({ ...existing, ...stop });
+    } else {
+      const i = (currentDay || targetDay).stops.findIndex(s => s.id === editStopId);
+      (currentDay || targetDay).stops[i] = { ...(currentDay || targetDay).stops[i], ...stop };
+    }
   } else {
-    day.stops.push({ id: Date.now(), transit: null, shops: [], ...stop });
+    targetDay.stops.push({ id: Date.now(), transit: null, shops: [], ...stop });
   }
   closeStopModal();
   render();
