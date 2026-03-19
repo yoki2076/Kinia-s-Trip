@@ -1439,7 +1439,7 @@ function renderDayTabs() {
     const isOnly = days.length === 1;
     const showDel = dayEditMode && !isOnly;
     return `
-      <div class="day-tab ${d.id === activeDay ? 'active' : ''}" onclick="switchDay(${d.id})">
+      <div class="day-tab ${d.id == activeDay ? 'active' : ''}" onclick="switchDay(${d.id})">
         <span class="day-tab-num">Day ${i + 1}</span>
         <span class="day-tab-date" onclick="openDayModal(${d.id},event)">${dateLabel}</span>
         ${showDel ? `<button class="day-tab-delete visible" onclick="deleteDay(${d.id},event)" title="刪除">✕</button>` : ''}
@@ -1451,7 +1451,7 @@ function renderDayTabs() {
       <span class="day-tab-date">新增</span>
     </div>
   `;
-  const d = days.find(x => x.id === activeDay);
+  const d = days.find(x => x.id == activeDay);
   document.getElementById('toolbarTitle').textContent = d ? `Day ${days.indexOf(d)+1}${d.date ? ' · '+formatShortDate(d.date) : ''}` : '';
 }
 
@@ -1463,7 +1463,7 @@ function formatShortDate(ymd) {
 
 function renderTimeline() {
   const container = document.getElementById('timeline');
-  const day = days.find(d => d.id === activeDay);
+  const day = days.find(d => d.id == activeDay);
   if (!day || day.stops.length === 0) {
     container.innerHTML = `<div class="empty-state"><div class="empty-icon">🗺</div><p>點擊右上角 ＋<br>新增今天的第一個景點</p></div>`;
     return;
@@ -2123,7 +2123,7 @@ function openShopExpand(stopId, shopId) {
       if (d.days && d.days.length) {
         days = d.days;
         // 不覆蓋 activeDay，各自保留自己在看的那天
-        if (!days.find(function(d){ return d.id === activeDay; })) activeDay = days[0].id;
+        if (!days.find(function(d){ return d.id == activeDay; })) activeDay = days[0].id;
         render();
       }
     }
@@ -2137,33 +2137,21 @@ function openShopExpand(stopId, shopId) {
       if (!ld.days || !ld.days.length) return;
       _remoteRendering = true;
       days = ld.days;
-      // 不覆蓋 activeDay，各自看各自的天
-      if (!days.find(function(d){ return d.id === activeDay; })) activeDay = days[0].id;
+      if (!days.find(function(d){ return d.id == activeDay; })) activeDay = days[0].id;
       render();
-      setTimeout(function(){ _remoteRendering = false; }, 1500);
+      setTimeout(function(){ _remoteRendering = false; }, 2000);
     });
 
     // Wrap save to block listener during own save
     var _rawSave = window._fbSave;
     window._fbSave = async function() {
       _isSaving = true;
-      await _rawSave();
-      setTimeout(function(){ _isSaving = false; }, 3000);
+      try { await _rawSave(); } catch(e) { console.warn('fbSave error', e); }
+      setTimeout(function(){ _isSaving = false; }, 5000);
     };
 
-    // Auto-save via MutationObserver (only after data loaded)
-    var _dataLoaded = false;
-    var _t;
-    new MutationObserver(function() {
-      if (!_dataLoaded || _remoteRendering) return;
-      clearTimeout(_t);
-      _t = setTimeout(function(){
-        if (_remoteRendering) return;
-        var hasData = days.some(function(d){ return d.stops && d.stops.length > 0; });
-        if (hasData && window._fbSave) window._fbSave();
-      }, 1200);
-    }).observe(document.body, { childList: true, subtree: true });
-    _dataLoaded = true;
+    // Auto-save disabled — explicit saves in each action prevent race conditions
+    var _dataLoaded = true;
 
     var badge = document.getElementById('collab-badge');
     if (badge) badge.textContent = '☁ 共用行程（已連線）';
