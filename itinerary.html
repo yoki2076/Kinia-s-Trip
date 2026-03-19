@@ -517,7 +517,8 @@
     font-size: 11.5px;
     color: var(--fog);
     line-height: 1.65;
-    font-style: italic;
+    white-space: pre-wrap;
+    word-break: break-word;
   }
 
   /* Card edit/delete actions */
@@ -1002,6 +1003,158 @@
   ::-webkit-scrollbar { width: 3px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--sand); border-radius: 4px; }
+
+  /* ─── SUB-SHOPS (card — read-only horizontal scroll) ─── */
+  .subshops-section {
+    margin-top: 10px;
+    border-top: 1px solid var(--cream-dark);
+    padding-top: 9px;
+  }
+  .subshops-label-row {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--fog);
+    margin-bottom: 7px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .subshops-scroll {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: visible;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .subshops-scroll::-webkit-scrollbar { display: none; }
+
+  .shop-card {
+    flex-shrink: 0;
+    width: 150px;
+    background: var(--butter);
+    border: 1px solid var(--sand);
+    border-radius: 11px;
+    overflow: hidden;
+  }
+  .shop-card-img {
+    width: 100%; height: 72px;
+    object-fit: cover; display: block;
+  }
+  .shop-card-img-placeholder {
+    width: 100%; height: 72px;
+    background: var(--sand-light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; opacity: 0.4;
+  }
+  .shop-card-body { padding: 7px 9px 9px; }
+  .shop-card-name {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 11.5px; font-weight: 600;
+    color: var(--ink); margin-bottom: 4px; line-height: 1.4;
+  }
+  .shop-card-row {
+    display: flex; align-items: flex-start; gap: 4px;
+    font-size: 9.5px; color: var(--caramel);
+    line-height: 1.45; margin-bottom: 2px;
+  }
+  .shop-card-icon { font-size: 10px; flex-shrink: 0; opacity: 0.7; margin-top: 1px; }
+  .shop-card-text { flex: 1; min-width: 0; word-break: break-all; }
+  .shop-card-note {
+    font-size: 9px; color: var(--fog); font-style: italic;
+    border-left: 2px solid var(--sand); padding-left: 5px;
+    margin-top: 4px; line-height: 1.5;
+  }
+
+  /* ─── SUB-SHOPS (inside edit modal) ─── */
+  .modal-shops-section {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--cream-dark);
+  }
+  .modal-shops-header {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 10px;
+  }
+  .modal-shops-label {
+    font-size: 11px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--fog);
+  }
+  .modal-shops-add-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; color: var(--caramel-light);
+    background: none;
+    border: 1px solid rgba(168,120,80,0.3);
+    padding: 4px 12px; border-radius: 20px; cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif; transition: all 0.15s;
+  }
+  .modal-shops-add-btn:active { background: var(--caramel); color: var(--cream); }
+
+  .modal-shops-scroll {
+    display: flex; gap: 8px;
+    overflow-x: auto; overflow-y: visible;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .modal-shops-scroll::-webkit-scrollbar { display: none; }
+
+  /* editable shop card (inside modal) */
+  .shop-card-edit {
+    flex-shrink: 0; width: 150px;
+    background: var(--cream);
+    border: 1px solid var(--sand);
+    border-radius: 11px; overflow: hidden;
+  }
+  .shop-card-edit-actions {
+    display: flex; gap: 4px; padding: 0 8px 8px;
+  }
+  .shop-edit-btn {
+    flex: 1; font-size: 10px; letter-spacing: 0.5px;
+    color: var(--caramel-light); background: none;
+    border: 1px solid rgba(168,120,80,0.25);
+    padding: 4px 0; border-radius: 20px; cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    text-align: center; transition: all 0.15s;
+  }
+  .shop-edit-btn:active { background: var(--caramel); color: var(--cream); }
+  .shop-edit-btn.del { color: #9e4e4e; border-color: rgba(158,78,78,0.2); }
+  .shop-edit-btn.del:active { background: #9e4e4e; color: white; }
+
+  .shop-add-placeholder {
+    flex-shrink: 0; width: 110px;
+    min-height: 110px;
+    background: var(--butter);
+    border: 1.5px dashed var(--sand);
+    border-radius: 11px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 6px;
+    cursor: pointer; transition: all 0.18s;
+  }
+  .shop-add-placeholder:active { border-color: var(--caramel-light); background: rgba(139,94,60,0.04); }
+  .shop-add-placeholder-icon { font-size: 22px; opacity: 0.35; }
+  .shop-add-placeholder-label { font-size: 9px; color: var(--fog); letter-spacing: 1px; }
+
+  /* ─── SHOP MODAL ─── */
+  .shop-modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(44,26,14,0.6);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    z-index: 350;
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  .shop-modal-backdrop.open { display: flex; animation: bIn 0.22s ease; }
+  .shop-modal {
+    width: 100%; max-width: 430px;
+    background: var(--butter);
+    border-radius: 28px 28px 0 0;
+    padding: 10px 26px 52px;
+    animation: mUp 0.32s cubic-bezier(0.22,0.9,0.36,1);
+    max-height: 88vh; overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 </style>
 </head>
 <body>
@@ -1129,6 +1282,56 @@
     <div class="modal-footer">
       <button class="modal-cancel" onclick="closeStopModal()">取消</button>
       <button class="modal-submit" onclick="saveStop()">— 儲存景點 —</button>
+    </div>
+
+    <!-- 店家資訊（僅編輯既有景點時顯示） -->
+    <div class="modal-shops-section" id="modalShopsSection" style="display:none;">
+      <div class="modal-shops-header">
+        <span class="modal-shops-label">🏪 店家資訊</span>
+        <button class="modal-shops-add-btn" id="modalShopsAddBtn">＋ 新增店家</button>
+      </div>
+      <div class="modal-shops-scroll" id="modalShopsScroll"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SHOP MODAL -->
+<div class="shop-modal-backdrop" id="shopModal" onclick="handleShopBackdrop(event)">
+  <div class="shop-modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="shopModalLabel">新增店家</div>
+
+    <div class="form-group">
+      <label class="form-label">店家名稱</label>
+      <input class="form-input" id="sName" type="text" placeholder="店名…">
+    </div>
+    <div class="form-group">
+      <label class="form-label">地址</label>
+      <input class="form-input" id="sAddress" type="text" placeholder="輸入地址…">
+    </div>
+    <div class="form-group">
+      <label class="form-label">電話</label>
+      <input class="form-input" id="sPhone" type="tel" placeholder="+81-xx-xxxx-xxxx">
+    </div>
+    <div class="form-group">
+      <label class="form-label">備註</label>
+      <textarea class="form-textarea" id="sNote" placeholder="營業時間、推薦品項…"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">照片</label>
+      <div id="shopPhotoUploadArea" class="photo-upload-area">
+        <input type="file" id="sPhoto" accept="image/*" onchange="handleShopPhotoSelect(event)">
+        <div class="photo-upload-icon">📷</div>
+        <div class="photo-upload-text">點擊上傳照片</div>
+      </div>
+      <div id="shopPhotoPreviewWrap" class="photo-preview-wrap" style="display:none;margin-top:10px;">
+        <img id="shopPhotoPreviewImg" class="photo-preview-img" src="" alt="preview">
+        <button class="photo-preview-remove" onclick="removeShopPhoto()">✕</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeShopModal()">取消</button>
+      <button class="modal-submit" onclick="saveShop()">— 儲存店家 —</button>
     </div>
   </div>
 </div>
@@ -1337,7 +1540,7 @@ function renderStop(stop, idx, isLast) {
   ` : '';
 
   const noteHtml = stop.note
-    ? `<div class="stop-note">✍ ${esc(stop.note)}</div>`
+    ? `<div class="stop-note">${esc(stop.note)}</div>`
     : '';
 
   const stayHtml = stop.stay
@@ -1345,6 +1548,27 @@ function renderStop(stop, idx, isLast) {
     : '';
 
   const catEmoji = CAT_EMOJI[stop.category] || '✦';
+
+  // ── Sub-shops (read-only horizontal scroll) ──
+  const shops = stop.shops || [];
+  const subshopsHtml = shops.length > 0 ? `
+    <div class="subshops-section" onclick="event.stopPropagation()">
+      <div class="subshops-label-row">🏪 <span>${shops.length} 間店家</span></div>
+      <div class="subshops-scroll">
+        ${shops.map(sh => `
+          <div class="shop-card">
+            ${sh.photo
+              ? `<img class="shop-card-img" src="${sh.photo}" alt="">`
+              : `<div class="shop-card-img-placeholder">🏪</div>`}
+            <div class="shop-card-body">
+              <div class="shop-card-name">${esc(sh.name)}</div>
+              ${sh.address ? `<div class="shop-card-row"><span class="shop-card-icon">📍</span><span class="shop-card-text">${esc(sh.address)}</span></div>` : ''}
+              ${sh.phone ? `<div class="shop-card-row"><span class="shop-card-icon">📞</span><span class="shop-card-text">${esc(sh.phone)}</span></div>` : ''}
+              ${sh.note ? `<div class="shop-card-note">${esc(sh.note)}</div>` : ''}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>` : '';
 
   return `
     <div class="stop-row" style="animation-delay:${idx*0.07}s">
@@ -1366,6 +1590,7 @@ function renderStop(stop, idx, isLast) {
         ${addressHtml}
         ${phoneHtml}
         ${noteHtml}
+        ${subshopsHtml}
         <div class="card-actions" id="acts-${stop.id}">
           <button class="action-btn" onclick="openStopModal(${stop.id});event.stopPropagation()">✎ 編輯</button>
           <button class="action-btn del" onclick="deleteStop(${stop.id});event.stopPropagation()">✕ 刪除</button>
@@ -1461,6 +1686,8 @@ function openStopModal(id = null) {
   document.getElementById('photoPreviewWrap').style.display = 'none';
   document.getElementById('iPhoto').value = '';
 
+  const shopsSection = document.getElementById('modalShopsSection');
+
   if (id !== null) {
     const stop = findStop(id);
     document.getElementById('iName').value = stop.name;
@@ -1477,6 +1704,10 @@ function openStopModal(id = null) {
       document.getElementById('photoUploadArea').style.display = 'none';
       document.getElementById('photoPreviewWrap').style.display = 'block';
     }
+    // Show shops section
+    shopsSection.style.display = 'block';
+    document.getElementById('modalShopsAddBtn').onclick = () => openShopModal(id, null);
+    renderModalShops(id);
   } else {
     document.getElementById('iName').value = '';
     document.getElementById('iTime').value = '';
@@ -1486,9 +1717,158 @@ function openStopModal(id = null) {
     document.getElementById('iPhone').value = '';
     document.getElementById('iNote').value = '';
     document.getElementById('stopModalLabel').textContent = '新增景點';
+    shopsSection.style.display = 'none';
   }
 
   document.getElementById('stopModal').classList.add('open');
+}
+
+// ─── MODAL SHOPS RENDER ───
+function renderModalShops(stopId) {
+  const stop = findStop(stopId);
+  if (!stop) return;
+  const shops = stop.shops || [];
+  const scroll = document.getElementById('modalShopsScroll');
+
+  const cardsHtml = shops.map(sh => `
+    <div class="shop-card-edit">
+      ${sh.photo
+        ? `<img class="shop-card-img" src="${sh.photo}" alt="">`
+        : `<div class="shop-card-img-placeholder">🏪</div>`}
+      <div class="shop-card-body">
+        <div class="shop-card-name">${esc(sh.name)}</div>
+        ${sh.address ? `<div class="shop-card-row"><span class="shop-card-icon">📍</span><span class="shop-card-text">${esc(sh.address)}</span></div>` : ''}
+        ${sh.phone ? `<div class="shop-card-row"><span class="shop-card-icon">📞</span><span class="shop-card-text">${esc(sh.phone)}</span></div>` : ''}
+        ${sh.note ? `<div class="shop-card-note">${esc(sh.note)}</div>` : ''}
+      </div>
+      <div class="shop-card-edit-actions">
+        <button class="shop-edit-btn" onclick="openShopModal(${stopId},${sh.id})">✎</button>
+        <button class="shop-edit-btn del" onclick="deleteShopInModal(${stopId},${sh.id})">✕</button>
+      </div>
+    </div>`).join('');
+
+  scroll.innerHTML = cardsHtml + `
+    <div class="shop-add-placeholder" onclick="openShopModal(${stopId},null)">
+      <div class="shop-add-placeholder-icon">＋</div>
+      <div class="shop-add-placeholder-label">新增店家</div>
+    </div>`;
+}
+
+function deleteShopInModal(stopId, shopId) {
+  const stop = findStop(stopId);
+  if (stop && stop.shops) stop.shops = stop.shops.filter(s => s.id !== shopId);
+  renderModalShops(stopId);
+  renderTimeline(); // refresh card badges
+  window._fbSave && window._fbSave();
+}
+
+// ─── SHOP MODAL ───
+let editShopStopId = null;
+let editShopId = null;
+let currentShopPhotoData = null;
+
+function openShopModal(stopId, shopId) {
+  editShopStopId = stopId;
+  editShopId = shopId;
+  currentShopPhotoData = null;
+  document.getElementById('sPhoto').value = '';
+  document.getElementById('shopPhotoUploadArea').style.display = 'block';
+  document.getElementById('shopPhotoPreviewWrap').style.display = 'none';
+
+  if (shopId !== null) {
+    const stop = findStop(stopId);
+    const sh = (stop.shops || []).find(s => s.id === shopId);
+    if (sh) {
+      document.getElementById('sName').value = sh.name || '';
+      document.getElementById('sAddress').value = sh.address || '';
+      document.getElementById('sPhone').value = sh.phone || '';
+      document.getElementById('sNote').value = sh.note || '';
+      if (sh.photo) {
+        currentShopPhotoData = sh.photo;
+        document.getElementById('shopPhotoPreviewImg').src = sh.photo;
+        document.getElementById('shopPhotoUploadArea').style.display = 'none';
+        document.getElementById('shopPhotoPreviewWrap').style.display = 'block';
+      }
+    }
+    document.getElementById('shopModalLabel').textContent = '編輯店家';
+  } else {
+    document.getElementById('sName').value = '';
+    document.getElementById('sAddress').value = '';
+    document.getElementById('sPhone').value = '';
+    document.getElementById('sNote').value = '';
+    document.getElementById('shopModalLabel').textContent = '新增店家';
+  }
+  document.getElementById('shopModal').classList.add('open');
+}
+
+function closeShopModal() {
+  document.getElementById('shopModal').classList.remove('open');
+  editShopId = null;
+}
+
+function handleShopBackdrop(e) {
+  if (e.target === document.getElementById('shopModal')) closeShopModal();
+}
+
+function handleShopPhotoSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    currentShopPhotoData = e.target.result;
+    document.getElementById('shopPhotoPreviewImg').src = currentShopPhotoData;
+    document.getElementById('shopPhotoUploadArea').style.display = 'none';
+    document.getElementById('shopPhotoPreviewWrap').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeShopPhoto() {
+  currentShopPhotoData = null;
+  document.getElementById('sPhoto').value = '';
+  document.getElementById('shopPhotoPreviewWrap').style.display = 'none';
+  document.getElementById('shopPhotoUploadArea').style.display = 'block';
+}
+
+async function saveShop() {
+  const name = document.getElementById('sName').value.trim();
+  if (!name) { document.getElementById('sName').style.borderColor = '#b05050'; return; }
+  document.getElementById('sName').style.borderColor = '';
+
+  let photoUrl = currentShopPhotoData;
+  if (window._pendingShopPhotoFile && window._fbUpload) {
+    try {
+      const ext = window._pendingShopPhotoFile.name.split('.').pop() || 'jpg';
+      const path = `itinerary/shops/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      photoUrl = await window._fbUpload(window._pendingShopPhotoFile, path);
+      window._pendingShopPhotoFile = null;
+    } catch(e) { console.warn('Shop photo upload failed', e); }
+  }
+
+  const shop = {
+    name,
+    address: document.getElementById('sAddress').value.trim(),
+    phone: document.getElementById('sPhone').value.trim(),
+    note: document.getElementById('sNote').value.trim(),
+    photo: photoUrl || null,
+  };
+
+  const stop = findStop(editShopStopId);
+  if (!stop) return;
+  if (!stop.shops) stop.shops = [];
+
+  if (editShopId !== null) {
+    const i = stop.shops.findIndex(s => s.id === editShopId);
+    if (i >= 0) stop.shops[i] = { ...stop.shops[i], ...shop };
+  } else {
+    stop.shops.push({ id: Date.now(), ...shop });
+  }
+
+  const savedStopId = editShopStopId;
+  closeShopModal();
+  renderModalShops(savedStopId); // refresh in edit modal
+  renderTimeline();              // refresh card
+  window._fbSave && window._fbSave();
 }
 
 function closeStopModal() {
@@ -1550,7 +1930,7 @@ async function saveStop() {
     const i = day.stops.findIndex(s => s.id === editStopId);
     day.stops[i] = { ...day.stops[i], ...stop };
   } else {
-    day.stops.push({ id: Date.now(), transit: null, ...stop });
+    day.stops.push({ id: Date.now(), transit: null, shops: [], ...stop });
   }
   closeStopModal();
   render();
