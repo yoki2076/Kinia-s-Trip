@@ -2000,15 +2000,23 @@ async function saveShop() {
   }
   const shop = { name, address: document.getElementById('sAddress').value.trim(), phone: document.getElementById('sPhone').value.trim(), note: document.getElementById('sNote').value.trim(), content: document.getElementById('sContent').value.trim(), photo: photoUrl };
   const stop = findStop(editShopStopId);
-  if (!stop) return;
+  console.log('[saveShop] editShopStopId=', editShopStopId, 'stop=', stop, 'shop=', shop);
+  if (!stop) { console.error('[saveShop] stop not found!'); return; }
   if (!stop.shops) stop.shops = [];
   if (editShopId !== null) { const i = stop.shops.findIndex(s => s.id == editShopId); if (i >= 0) stop.shops[i] = { ...stop.shops[i], ...shop }; }
   else stop.shops.push({ id: Date.now(), ...shop });
+  console.log('[saveShop] stop.shops after push=', JSON.stringify(stop.shops));
   const sid = editShopStopId;
   closeShopModal();
   renderModalShops(sid);
   renderTimeline();
-  window._fbSave && window._fbSave();
+  if (window._fbSave) {
+    console.log('[saveShop] calling _fbSave...');
+    await window._fbSave();
+    console.log('[saveShop] _fbSave done');
+  } else {
+    console.warn('[saveShop] _fbSave not available!');
+  }
 }
 
 // ─── EXPAND ─────────────────────────────────────────────────
@@ -2113,7 +2121,10 @@ function openShopExpand(stopId, shopId) {
           };
         }),
       };
+      var totalShops = data.days.reduce(function(acc,d){ return acc + d.stops.reduce(function(a,s){ return a+(s.shops||[]).length; },0); },0);
+      console.log('[_fbSave] saving... total shops in data:', totalShops);
       await fb.fsSet(SHARED_DOC, data);
+      console.log('[_fbSave] saved to Firestore OK');
     };
 
     // Initial load
@@ -2132,12 +2143,16 @@ function openShopExpand(stopId, shopId) {
     var _isSaving = false;
     var _remoteRendering = false;
     fb.fsLive(SHARED_DOC, function(liveSnap) {
-      if (_isSaving || !liveSnap.exists()) return;
+      if (_isSaving || !liveSnap.exists()) {
+        console.log('[fsLive] skipped, _isSaving=', _isSaving);
+        return;
+      }
       var ld = liveSnap.data();
       if (!ld.days || !ld.days.length) return;
+      var totalShops = ld.days.reduce(function(acc,d){ return acc + d.stops.reduce(function(a,s){ return a+(s.shops||[]).length; },0); },0);
+      console.log('[fsLive] received update, total shops:', totalShops);
       _remoteRendering = true;
       days = ld.days;
-      // 不覆蓋 activeDay，各自看各自的天
       if (!days.find(function(d){ return d.id == activeDay; })) activeDay = days[0].id;
       render();
       setTimeout(function(){ _remoteRendering = false; }, 3000);
