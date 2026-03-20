@@ -1,5 +1,5 @@
 // sw.js — Service Worker for 旅遊手帳 PWA
-const CACHE_NAME = 'trip-app-v5';
+const CACHE_NAME = 'trip-app-v6';
 
 // Firebase / Google 走網路，不快取
 const BYPASS_HOSTS = ['firebase', 'googleapis', 'gstatic', 'firebaseio', 'firebaseapp'];
