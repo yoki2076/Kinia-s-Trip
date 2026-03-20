@@ -386,6 +386,51 @@
   .emoji-opt { font-size: 24px; text-align: center; cursor: pointer; padding: 7px; border-radius: 10px; background: none; border: none; }
   .emoji-opt:active { background: var(--surface2); }
   .emoji-cancel { display: block; width: 100%; margin-top: 12px; padding: 10px; background: none; border: 1px solid var(--border); border-radius: 12px; color: var(--text2); font-family: 'Noto Sans TC', sans-serif; font-size: 13px; cursor: pointer; }
+
+  /* ── Category picker (行程風格) ── */
+  .cat-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 7px;
+  }
+  .cat-pick-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 10px 4px 8px;
+    border-radius: 12px;
+    border: 1.5px solid #F0E8DC;
+    background: #F7F3EE;
+    cursor: pointer;
+    transition: all 0.18s;
+    -webkit-tap-highlight-color: transparent;
+    font-family: inherit;
+  }
+  .cat-pick-btn.selected {
+    border-color: #8B5E3C;
+    background: rgba(139,94,60,0.1);
+  }
+  .cat-pick-btn:active { transform: scale(0.95); }
+  .cat-pick-btn-emoji {
+    font-size: 20px;
+    line-height: 1;
+    display: block;
+    text-align: center;
+  }
+  .cat-pick-btn-label {
+    font-size: 10px;
+    color: #A8917A;
+    letter-spacing: 0.5px;
+    text-align: center;
+    line-height: 1.2;
+  }
+  .cat-pick-btn.selected .cat-pick-btn-label {
+    color: #8B5E3C;
+    font-weight: 600;
+  }
+
 </style>
 </head>
 <body>
@@ -393,7 +438,7 @@
 <!-- ══ TOP PAGE SWITCHER ══ -->
 <div class="page-switcher">
   <div class="page-tabs">
-    <button class="page-tab active" onclick="switchPage(0)">✦ 待買清單</button>
+    <button class="page-tab active" onclick="switchPage(0)">✦ 商品清單</button>
     <button class="page-tab" onclick="switchPage(1)">✦ 店家清單</button>
   </div>
 </div>
@@ -403,7 +448,7 @@
 <div class="pages-inner" id="pagesInner">
 
   <!-- ════════════════════════════
-       PAGE 0 : 待買清單
+       PAGE 0 : 商品清單
   ════════════════════════════ -->
   <div class="page" id="pageWish">
     <div class="sub-header">
@@ -564,11 +609,16 @@
         <span class="img-upload-icon">📷</span><span>點擊上傳照片</span>
         <input type="file" id="pImgFileInput" accept="image/*" onchange="P.handleImgUpload(event)">
       </div></div>
+    <div class="form-group">
+      <label class="form-label">分類</label>
+      <input type="hidden" id="pfCategory">
+      <div class="cat-picker-grid" id="pCatPicker"></div>
+    </div>
     <div class="form-row">
-      <div class="form-group"><label class="form-label">分類</label>
-        <select class="form-select" id="pfCategory"></select></div>
       <div class="form-group"><label class="form-label">地區</label>
         <input class="form-input" id="pfArea" placeholder="例：台北・九份" maxlength="20"></div>
+      <div class="form-group"><label class="form-label">成員</label>
+        <input class="form-input" id="pfMembers" placeholder="誰想去？" maxlength="30"></div>
     </div>
     <div class="form-group"><label class="form-label">地址 / Google Maps 連結</label>
       <input class="form-input" id="pfAddress" placeholder="地址或貼上地圖連結"></div>
@@ -1059,7 +1109,7 @@ const P = (() => {
           </div>
         </div>
         <div class="place-meta">
-          ${place.area?`<span class="place-area">📍 ${esc(place.area)}</span>`:''}
+          ${place.area?`<span class="place-area">📍 ${esc(place.area)}</span>`:''}${place.members?`<span class="place-area" style="background:rgba(139,94,60,.08);">👥 ${esc(place.members)}</span>`:''}
           <span class="place-type-badge" style="background:${tagColor}22;color:${tagColor}">${catIcon} ${esc(place.category)}</span>
           ${place.rating?`<div class="place-rating">${starsHTML(place.rating)}</div>`:''}
         </div>
@@ -1125,13 +1175,26 @@ const P = (() => {
 
   // ── Modal ──
   function populateCatSelect(sel){
-    document.getElementById('pfCategory').innerHTML=categories.map(c=>
-      `<option value="${esc(c.name)}" ${c.name===sel?'selected':''}>${c.icon} ${esc(c.name)}</option>`).join('');
+    var val = sel || (categories[0] && categories[0].name) || '';
+    document.getElementById('pfCategory').value = val;
+    var picker = document.getElementById('pCatPicker');
+    if (!picker) return;
+    picker.innerHTML = categories.map(function(c) {
+      return '<button type="button" class="cat-pick-btn' + (c.name===val?' selected':'') + '"'
+           + ' onclick="P._pickCat(\'' + esc(c.name) + '\')">' 
+           + '<span class="cat-pick-btn-emoji">' + c.icon + '</span>'
+           + '<span class="cat-pick-btn-label">' + esc(c.name) + '</span>'
+           + '</button>';
+    }).join('');
+  }
+  function _pickCat(name){
+    document.getElementById('pfCategory').value = name;
+    populateCatSelect(name);
   }
   function openAddModal(){
     editingId=null;uploadedImgData=null;pendingRating=0;
     document.getElementById('pModalTitle').textContent='新增店家';
-    ['pfName','pfArea','pfAddress','pfSource','pfNote'].forEach(id=>document.getElementById(id).value='');
+    ['pfName','pfArea','pfAddress','pfSource','pfNote','pfMembers'].forEach(id=>document.getElementById(id).value='');
     populateCatSelect(categories[0]?.name||'');
     document.getElementById('pImgUpload').innerHTML=`<span class="img-upload-icon">📷</span><span>點擊上傳照片</span><input type="file" id="pImgFileInput" accept="image/*" onchange="P.handleImgUpload(event)">`;
     document.querySelectorAll('#pStarPicker .star-pick').forEach(el=>el.classList.remove('filled'));
@@ -1147,6 +1210,7 @@ const P = (() => {
     document.getElementById('pfAddress').value=place.address||'';
     document.getElementById('pfSource').value=place.source||'';
     document.getElementById('pfNote').value=place.note||'';
+    document.getElementById('pfMembers').value=place.members||'';
     populateCatSelect(place.category);
     const imgEl=document.getElementById('pImgUpload');
     imgEl.innerHTML=`<input type="file" id="pImgFileInput" accept="image/*" onchange="P.handleImgUpload(event)">`;
@@ -1159,34 +1223,28 @@ const P = (() => {
   function closeModal(){document.getElementById('pModalOverlay').classList.remove('open');}
   function handleImgUpload(e){
     const file=e.target.files[0];if(!file)return;
-    window._wPendingPlaceFile = file;
-    const previewUrl = URL.createObjectURL(file);
-    uploadedImgData = previewUrl;
-    const el=document.getElementById('pImgUpload');
-    el.innerHTML=`<input type="file" id="pImgFileInput" accept="image/*" onchange="P.handleImgUpload(event)">`;
-    const img=document.createElement('img');img.src=previewUrl;el.appendChild(img);
+    if(file.size>2*1024*1024){alert('圖片請小於 2MB');return;}
+    const r=new FileReader();
+    r.onload=ev=>{
+      uploadedImgData=ev.target.result;
+      const el=document.getElementById('pImgUpload');
+      el.innerHTML=`<input type="file" id="pImgFileInput" accept="image/*" onchange="P.handleImgUpload(event)">`;
+      const img=document.createElement('img');img.src=uploadedImgData;el.appendChild(img);
+    };
+    r.readAsDataURL(file);
   }
-  async function savePlace(){
+  function savePlace(){
     const name=document.getElementById('pfName').value.trim();
     if(!name){alert('請輸入店家名稱');return;}
-    // Upload image to Firebase Storage if new file selected
-    let imgUrl = uploadedImgData;
-    if (window._wPendingPlaceFile && window._fbUpload) {
-      try {
-        const ext = window._wPendingPlaceFile.name.split('.').pop()||'jpg';
-        const path = 'wishlist/places/'+Date.now()+'_'+Math.random().toString(36).slice(2)+'.'+ext;
-        imgUrl = await window._fbUpload(window._wPendingPlaceFile, path);
-        window._wPendingPlaceFile = null;
-      } catch(e) { console.warn('Place image upload failed', e); }
-    }
     const data={name,category:document.getElementById('pfCategory').value,
       area:document.getElementById('pfArea').value.trim(),
       address:document.getElementById('pfAddress').value.trim(),
       source:document.getElementById('pfSource').value.trim(),
       note:document.getElementById('pfNote').value.trim(),
+      members:document.getElementById('pfMembers').value.trim(),
       rating:pendingRating||null,
       tagColor:getSelectedColor('pTagColorsList'),
-      img:imgUrl||null,
+      img:uploadedImgData,
     };
     if(editingId){const idx=places.findIndex(x=>x.id===editingId);places[idx]={...places[idx],...data};}
     else places.unshift({id:genId(),createdAt:Date.now(),visited:false,fav:false,...data});
@@ -1264,7 +1322,7 @@ const P = (() => {
   return {render,setView,setCat,toggleFav,toggleVisited,deletePlace,toggleArchive,setRating,
     openAddModal,openEditModal,closeModal,handleImgUpload,savePlace,
     openCatManager,closeCatModal,addCategory,removeCat,saveCats,openEmojiPicker,
-    dragStart,dragOver,dragLeave,dragDrop,_editingCats,init,reload};
+    dragStart,dragOver,dragLeave,dragDrop,_editingCats,init,reload,_pickCat};
 })();
 
 // ── Boot ──
