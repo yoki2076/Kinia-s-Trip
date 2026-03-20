@@ -712,7 +712,7 @@ const W = (() => {
     if(!all.includes(currentCat)) currentCat='全部';
     el.innerHTML=all.map(name=>{
       const cat=categories.find(c=>c.name===name);
-      return `<div class="cat-chip ${name===currentCat?'active':''}" onclick="W.setCat(`${esc(name)}`)">${cat?cat.icon:'✦'} ${esc(name)}</div>`;
+      return `<div class="cat-chip ${name===currentCat?'active':''}" onclick="W.setCat('${esc(name)}')">${cat?cat.icon:'✦'} ${esc(name)}</div>`;
     }).join('');
   }
   function renderStats() {
@@ -1013,7 +1013,7 @@ const P = (() => {
     if(!all.includes(currentCat)) currentCat='全部';
     el.innerHTML=all.map(name=>{
       const cat=categories.find(c=>c.name===name);
-      return `<div class="cat-chip ${name===currentCat?'active':''}" onclick="P.setCat(`${esc(name)}`)">${cat?cat.icon:'✦'} ${esc(name)}</div>`;
+      return `<div class="cat-chip ${name===currentCat?'active':''}" onclick="P.setCat('${esc(name)}')">${cat?cat.icon:'✦'} ${esc(name)}</div>`;
     }).join('');
   }
   function renderStats() {
@@ -1159,19 +1159,26 @@ const P = (() => {
   function closeModal(){document.getElementById('pModalOverlay').classList.remove('open');}
   function handleImgUpload(e){
     const file=e.target.files[0];if(!file)return;
-    if(file.size>2*1024*1024){alert('圖片請小於 2MB');return;}
-    const r=new FileReader();
-    r.onload=ev=>{
-      uploadedImgData=ev.target.result;
-      const el=document.getElementById('pImgUpload');
-      el.innerHTML=`<input type="file" id="pImgFileInput" accept="image/*" onchange="P.handleImgUpload(event)">`;
-      const img=document.createElement('img');img.src=uploadedImgData;el.appendChild(img);
-    };
-    r.readAsDataURL(file);
+    window._wPendingPlaceFile = file;
+    const previewUrl = URL.createObjectURL(file);
+    uploadedImgData = previewUrl;
+    const el=document.getElementById('pImgUpload');
+    el.innerHTML=`<input type="file" id="pImgFileInput" accept="image/*" onchange="P.handleImgUpload(event)">`;
+    const img=document.createElement('img');img.src=previewUrl;el.appendChild(img);
   }
-  function savePlace(){
+  async function savePlace(){
     const name=document.getElementById('pfName').value.trim();
     if(!name){alert('請輸入店家名稱');return;}
+    // Upload image to Firebase Storage if new file selected
+    let imgUrl = uploadedImgData;
+    if (window._wPendingPlaceFile && window._fbUpload) {
+      try {
+        const ext = window._wPendingPlaceFile.name.split('.').pop()||'jpg';
+        const path = 'wishlist/places/'+Date.now()+'_'+Math.random().toString(36).slice(2)+'.'+ext;
+        imgUrl = await window._fbUpload(window._wPendingPlaceFile, path);
+        window._wPendingPlaceFile = null;
+      } catch(e) { console.warn('Place image upload failed', e); }
+    }
     const data={name,category:document.getElementById('pfCategory').value,
       area:document.getElementById('pfArea').value.trim(),
       address:document.getElementById('pfAddress').value.trim(),
@@ -1179,7 +1186,7 @@ const P = (() => {
       note:document.getElementById('pfNote').value.trim(),
       rating:pendingRating||null,
       tagColor:getSelectedColor('pTagColorsList'),
-      img:uploadedImgData,
+      img:imgUrl||null,
     };
     if(editingId){const idx=places.findIndex(x=>x.id===editingId);places[idx]={...places[idx],...data};}
     else places.unshift({id:genId(),createdAt:Date.now(),visited:false,fav:false,...data});
