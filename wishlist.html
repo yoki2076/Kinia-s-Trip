@@ -1327,7 +1327,8 @@ P.render(); // render but don't show (page 1 is hidden)
 (async function() {
   try {
     var fb = await import('./firebase-config.js');
-    // Wait for Firebase Auth state
+
+    // 等待 Auth
     var user = await fb.getCurrentUser();
     if (!user) await new Promise(function(r){ setTimeout(r, 2000); });
     user = await fb.getCurrentUser();
@@ -1335,21 +1336,18 @@ P.render(); // render but don't show (page 1 is hidden)
 
     var uid = null;
     try { uid = localStorage.getItem('tripApp_uid'); } catch(e) {}
-    if (!uid) uid = user.uid; // fallback to auth uid
+    if (!uid) uid = user.uid;
     if (!uid) return;
-    var W_DOC = 'users/' + uid + '/data/wishlist';
-    var P_DOC = 'users/' + uid + '/data/placelist';
+
     window._fbUpload = fb.uploadImage;
+
+    // ── 商品清單：個人路徑 ──
+    var W_DOC = 'users/' + uid + '/data/wishlist';
     window._fbSave = async function() {
       var wItems = JSON.parse(localStorage.getItem('wishlist_items')||'[]');
       var wCats  = JSON.parse(localStorage.getItem('wishlist_cats')||'[]');
       var wCur   = localStorage.getItem('wishlist_cur')||'TWD';
       await fb.fsSet(W_DOC, { items: wItems, cats: wCats, currency: wCur });
-    };
-    window._fbSavePlaces = async function() {
-      var pItems = JSON.parse(localStorage.getItem('placelist_items')||'[]');
-      var pCats  = JSON.parse(localStorage.getItem('placelist_cats')||'[]');
-      await fb.fsSet(P_DOC, { items: pItems, cats: pCats });
     };
     var wSnap = await fb.fsGet(W_DOC);
     if (wSnap.exists()) {
@@ -1359,6 +1357,14 @@ P.render(); // render but don't show (page 1 is hidden)
       if (wd.currency) localStorage.setItem('wishlist_cur', wd.currency);
       if (window.W && window.W.reload) window.W.reload();
     }
+
+    // ── 店家清單：共用路徑（所有人共享）──
+    var P_DOC = 'trips/shared/placelist/v1';
+    window._fbSavePlaces = async function() {
+      var pItems = JSON.parse(localStorage.getItem('placelist_items')||'[]');
+      var pCats  = JSON.parse(localStorage.getItem('placelist_cats')||'[]');
+      await fb.fsSet(P_DOC, { items: pItems, cats: pCats });
+    };
     var pSnap = await fb.fsGet(P_DOC);
     if (pSnap.exists()) {
       var pd = pSnap.data();
@@ -1367,19 +1373,15 @@ P.render(); // render but don't show (page 1 is hidden)
       if (window.P && window.P.reload) window.P.reload();
     }
 
-    // Real-time listeners
+    // ── 即時監聽 ──
     var _wSaving = false, _pSaving = false;
+
+    // 商品清單（個人）
     var _rawFbSave = window._fbSave;
     window._fbSave = async function() {
       _wSaving = true;
       try { await _rawFbSave(); } catch(e) { console.warn('_fbSave error', e); }
       setTimeout(function(){ _wSaving = false; }, 4000);
-    };
-    var _rawFbSavePlaces = window._fbSavePlaces;
-    window._fbSavePlaces = async function() {
-      _pSaving = true;
-      try { await _rawFbSavePlaces(); } catch(e) { console.warn('_fbSavePlaces error', e); }
-      setTimeout(function(){ _pSaving = false; }, 4000);
     };
     fb.fsLive(W_DOC, function(snap) {
       if (_wSaving || !snap.exists()) return;
@@ -1389,6 +1391,14 @@ P.render(); // render but don't show (page 1 is hidden)
       if (d.currency) localStorage.setItem('wishlist_cur', d.currency);
       if (window.W && window.W.reload) window.W.reload();
     });
+
+    // 店家清單（共用）—— 即時同步給所有人
+    var _rawFbSavePlaces = window._fbSavePlaces;
+    window._fbSavePlaces = async function() {
+      _pSaving = true;
+      try { await _rawFbSavePlaces(); } catch(e) { console.warn('_fbSavePlaces error', e); }
+      setTimeout(function(){ _pSaving = false; }, 4000);
+    };
     fb.fsLive(P_DOC, function(snap) {
       if (_pSaving || !snap.exists()) return;
       var d = snap.data();
@@ -1396,11 +1406,14 @@ P.render(); // render but don't show (page 1 is hidden)
       if (d.cats)  localStorage.setItem('placelist_cats',  JSON.stringify(d.cats));
       if (window.P && window.P.reload) window.P.reload();
     });
+
     var badge = document.createElement('div');
     badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;background:rgba(255,255,255,.9);border:1px solid #DDD4C6;border-radius:20px;padding:4px 10px;font-size:10px;font-family:sans-serif;color:#8B5E3C;font-weight:700;';
     badge.textContent = '☁ 已連線';
     document.body.appendChild(badge);
+
   } catch(e) {
+    console.warn('Firebase boot failed:', e.message);
     window._fbSave = null; window._fbSavePlaces = null; window._fbUpload = null;
   }
 })();
