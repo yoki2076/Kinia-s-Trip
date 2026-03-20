@@ -1407,7 +1407,7 @@ P.render(); // render but don't show (page 1 is hidden)
     if (!uid) uid = user.uid; // fallback to auth uid
     if (!uid) return;
     var W_DOC = 'users/' + uid + '/data/wishlist';
-    var P_DOC = 'users/' + uid + '/data/placelist';
+    var P_DOC = 'trips/shared/placelist/v1'; // 共用路徑
     window._fbUpload = fb.uploadImage;
     window._fbSave = async function() {
       var wItems = JSON.parse(localStorage.getItem('wishlist_items')||'[]');
