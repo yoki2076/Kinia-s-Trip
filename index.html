@@ -398,10 +398,9 @@ window._googleLogin = async function() {
   btn.textContent = '登入中…';
   errEl.classList.remove('show');
   try {
-    const { signInWithGoogle } = await import('./firebase-config.js');
-    const user = await signInWithGoogle();
-    // user is null when redirect is triggered (iOS PWA) — page will reload
-    if (!user) return;
+    // Use pre-loaded firebase module (loaded at startup to avoid async gap on iOS)
+    const fb = window._fbModule || await import('./firebase-config.js');
+    const user = await fb.signInWithGoogle();
     try { localStorage.setItem('tripApp_uid', user.uid); } catch(e) {}
     showApp(user);
   } catch(e) {
@@ -429,29 +428,18 @@ window.handleLogout = async function() {
   location.reload();
 };
 
-// ── Auto-login: restore existing session or handle redirect result ──
+// ── Auto-login: pre-load firebase + restore existing session ──
 (async function init() {
   try {
-    const { getCurrentUser, handleRedirectResult } = await import('./firebase-config.js');
+    // Pre-load firebase-config so the module is cached.
+    // This ensures signInWithGoogle() fires within the same user-gesture
+    // context on iOS, preventing popup from being blocked.
+    const fb = await import('./firebase-config.js');
+    window._fbModule = fb; // cache for use in _googleLogin
 
-    // 1. Check if returning from Google redirect (iOS PWA flow)
-    const btn = document.getElementById('btn-google');
-    const wasPending = sessionStorage.getItem('pendingGoogleLogin');
-    if (wasPending) {
-      sessionStorage.removeItem('pendingGoogleLogin');
-      if (btn) { btn.classList.add('loading'); btn.textContent = '登入中…'; }
-      const redirectUser = await handleRedirectResult();
-      if (redirectUser) {
-        try { localStorage.setItem('tripApp_uid', redirectUser.uid); } catch(e) {}
-        showApp(redirectUser);
-        return;
-      }
-      if (btn) { btn.classList.remove('loading'); btn.innerHTML = btn.innerHTML; }
-    }
-
-    // 2. Try to restore existing session (normal flow)
+    // Try to restore existing session
     const user = await Promise.race([
-      getCurrentUser(),
+      fb.getCurrentUser(),
       new Promise(resolve => setTimeout(() => resolve(null), 3000))
     ]);
     if (user && !user.isAnonymous) {
