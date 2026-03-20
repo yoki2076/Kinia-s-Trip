@@ -456,13 +456,56 @@ window._guestLogin = function() {
 };
 
 // ── Auth 狀態監聽：登入後自動顯示 app ────────────────
-// （與 Kinia's Planner 的 auth.onAuthStateChanged 相同模式）
+// 核心邏輯：
+//   1. 先檢查 localStorage 有沒有上次登入的 uid cache
+//   2. 有的話「立刻」先顯示 app（不等 Firebase，解決 PWA 卡登入畫面問題）
+//   3. onAuthStateChanged 確認後更新使用者資訊；若 Firebase 回報未登入則登出退回
+let appShown = false;
+
+// 步驟 1：localStorage 快速恢復（頁面一開啟就執行）
+try {
+  const cachedUid = localStorage.getItem('tripApp_uid');
+  if (cachedUid) {
+    // 有 cache → 直接先開 app，顯示暫時的佔位資訊
+    appShown = true;
+    showApp({ displayName: '', email: '', photoURL: null, uid: cachedUid, _cached: true });
+  }
+} catch(e) {}
+
+// 步驟 2：Firebase 確認登入狀態
 auth.onAuthStateChanged(function(user) {
   if (user) {
+    // 登入成功：存 cache，更新使用者資訊
     try { localStorage.setItem('tripApp_uid', user.uid); } catch(e) {}
-    showApp(user);
+    if (!appShown) {
+      appShown = true;
+      showApp(user);
+    } else {
+      // 已先顯示 app，只需更新 drawer 使用者資訊
+      const nameEl   = document.getElementById('drawer-name');
+      const modeEl   = document.getElementById('drawer-mode');
+      const avatarEl = document.getElementById('drawer-avatar');
+      if (nameEl) nameEl.textContent = user.displayName || user.email || '使用者';
+      if (modeEl) modeEl.textContent = '☁ 雲端同步';
+      if (avatarEl) {
+        if (user.photoURL) {
+          avatarEl.innerHTML = `<img src="${user.photoURL}" alt="">`;
+        } else {
+          avatarEl.textContent = (user.displayName || user.email || 'U')[0].toUpperCase();
+        }
+      }
+    }
+  } else {
+    // Firebase 確認未登入：清除 cache，若已因 cache 開了 app 則退回登入畫面
+    try { localStorage.removeItem('tripApp_uid'); } catch(e) {}
+    if (appShown) {
+      appShown = false;
+      const ma = document.getElementById('main-area');
+      const ls = document.getElementById('login-screen');
+      if (ma) { ma.classList.remove('visible'); ma.style.display = 'none'; }
+      if (ls) { ls.classList.remove('hiding'); ls.classList.remove('hidden'); }
+    }
   }
-  // 未登入時保持登入畫面，不做任何動作
 });
 
 // ── Network status ────────────────────────────────────
