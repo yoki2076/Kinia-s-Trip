@@ -332,7 +332,7 @@
 // ══════════════════════════════════════════
 const firebaseConfig = {
   apiKey:            "AIzaSyBtyJygjNYtDVV5wybC14subUh0teleH7k",
-  authDomain:        "kinia-s-trip.firebaseapp.com",
+  authDomain:        "yoki2076.github.io",
   projectId:         "kinia-s-trip",
   storageBucket:     "kinia-s-trip.firebasestorage.app",
   messagingSenderId: "881218070648",
@@ -441,8 +441,16 @@ window._googleLogin = function() {
 
 // ── Redirect 回來後接收登入結果 ───────────────────────
 // 頁面載入時檢查是否從 Google 登入跳回來
-auth.getRedirectResult().catch(function(e) {
-  // redirect 失敗（極少見）：顯示錯誤
+// 直接在這裡處理顯示 app，不等 onAuthStateChanged（iOS PWA 時序不可靠）
+auth.getRedirectResult().then(function(result) {
+  if (result && result.user) {
+    try { localStorage.setItem('tripApp_uid', result.user.uid); } catch(e) {}
+    if (!appShown) {
+      appShown = true;
+      showApp(result.user);
+    }
+  }
+}).catch(function(e) {
   const errEl = document.getElementById('login-error');
   if (!errEl) return;
   let msg = '登入失敗，請再試一次';
@@ -468,48 +476,77 @@ window._guestLogin = function() {
   showApp(null);
 };
 
-// ── Auth 狀態監聽：登入後自動顯示 app ────────────────
-// 核心邏輯：
-//   1. 先檢查 localStorage 有沒有上次登入的 uid cache
-//   2. 有的話「立刻」先顯示 app（不等 Firebase，解決 PWA 卡登入畫面問題）
-//   3. onAuthStateChanged 確認後更新使用者資訊；若 Firebase 回報未登入則登出退回
+// ── Auth 核心：整合 localStorage cache + getRedirectResult + onAuthStateChanged ──
+// iOS PWA 三道防線，確保任一方式成功都能進入 app
 let appShown = false;
 
-// 步驟 1：localStorage 快速恢復（頁面一開啟就執行）
+function updateDrawerUser(user) {
+  const nameEl   = document.getElementById('drawer-name');
+  const modeEl   = document.getElementById('drawer-mode');
+  const avatarEl = document.getElementById('drawer-avatar');
+  if (nameEl) nameEl.textContent = user.displayName || user.email || '使用者';
+  if (modeEl) modeEl.textContent = '☁ 雲端同步';
+  if (avatarEl) {
+    if (user.photoURL) {
+      avatarEl.innerHTML = `<img src="${user.photoURL}" alt="">`;
+    } else {
+      avatarEl.textContent = (user.displayName || user.email || 'U')[0].toUpperCase();
+    }
+  }
+}
+
+function tryShowApp(user) {
+  if (appShown) {
+    // app 已顯示（可能由 localStorage cache 先開），只更新使用者資訊
+    if (user && !user._cached) updateDrawerUser(user);
+    return;
+  }
+  appShown = true;
+  showApp(user);
+}
+
+// 【防線 1】localStorage cache：頁面一開啟就執行，不等任何非同步
 try {
   const cachedUid = localStorage.getItem('tripApp_uid');
   if (cachedUid) {
-    // 有 cache → 直接先開 app，顯示暫時的佔位資訊
-    appShown = true;
-    showApp({ displayName: '', email: '', photoURL: null, uid: cachedUid, _cached: true });
+    tryShowApp({ displayName: '', email: '', photoURL: null, uid: cachedUid, _cached: true });
   }
 } catch(e) {}
 
-// 步驟 2：Firebase 確認登入狀態
+// 【防線 2】getRedirectResult：從 Google 登入跳回來時觸發
+// 必須在 onAuthStateChanged 之前呼叫，確保 redirect session 被正確接收
+auth.getRedirectResult().then(function(result) {
+  if (result && result.user) {
+    try { localStorage.setItem('tripApp_uid', result.user.uid); } catch(e) {}
+    tryShowApp(result.user);
+  }
+}).catch(function(e) {
+  // redirect 結果失敗時（ITP 擋住等），清掉 cache 避免之後一直進不來
+  if (e.code && e.code.startsWith('auth/')) {
+    try { localStorage.removeItem('tripApp_uid'); } catch(e2) {}
+    if (appShown) {
+      // 強制退回登入畫面
+      appShown = false;
+      const ma = document.getElementById('main-area');
+      const ls = document.getElementById('login-screen');
+      if (ma) { ma.classList.remove('visible'); ma.style.display = 'none'; }
+      if (ls) { ls.classList.remove('hiding'); ls.classList.remove('hidden'); }
+    }
+    const errEl = document.getElementById('login-error');
+    if (errEl) {
+      errEl.textContent = '登入失敗，請再試一次（' + e.code + '）';
+      errEl.classList.add('show');
+    }
+  }
+});
+
+// 【防線 3】onAuthStateChanged：正常 session 恢復（含二次之後開啟 app）
 auth.onAuthStateChanged(function(user) {
   if (user) {
-    // 登入成功：存 cache，更新使用者資訊
     try { localStorage.setItem('tripApp_uid', user.uid); } catch(e) {}
-    if (!appShown) {
-      appShown = true;
-      showApp(user);
-    } else {
-      // 已先顯示 app，只需更新 drawer 使用者資訊
-      const nameEl   = document.getElementById('drawer-name');
-      const modeEl   = document.getElementById('drawer-mode');
-      const avatarEl = document.getElementById('drawer-avatar');
-      if (nameEl) nameEl.textContent = user.displayName || user.email || '使用者';
-      if (modeEl) modeEl.textContent = '☁ 雲端同步';
-      if (avatarEl) {
-        if (user.photoURL) {
-          avatarEl.innerHTML = `<img src="${user.photoURL}" alt="">`;
-        } else {
-          avatarEl.textContent = (user.displayName || user.email || 'U')[0].toUpperCase();
-        }
-      }
-    }
+    tryShowApp(user);
   } else {
-    // Firebase 確認未登入：清除 cache，若已因 cache 開了 app 則退回登入畫面
+    // Firebase 明確回報未登入
     try { localStorage.removeItem('tripApp_uid'); } catch(e) {}
     if (appShown) {
       appShown = false;
