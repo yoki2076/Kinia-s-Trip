@@ -425,6 +425,46 @@
     font-weight: 600;
   }
 
+
+  /* ── Place expand overlay ── */
+  #placeExpandOverlay {
+    position: fixed; inset: 0; z-index: 800;
+    background: rgba(30,18,8,.55); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  #placeExpandOverlay.open { display: flex; }
+  #placeExpandCard {
+    background: var(--surface); border-radius: 20px;
+    width: 100%; max-width: 460px; max-height: 88dvh;
+    overflow-y: auto; padding: 22px 20px 32px; position: relative;
+  }
+  .pexp-close {
+    position: absolute; top: 14px; right: 14px;
+    background: none; border: none; font-size: 22px;
+    cursor: pointer; color: var(--text2); line-height: 1;
+  }
+  .pexp-banner {
+    width: 100%; height: 180px; object-fit: cover;
+    border-radius: 12px; margin-bottom: 14px; display: block;
+  }
+  .pexp-cat   { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+  .pexp-name  { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 10px; line-height: 1.3; }
+  .pexp-content {
+    font-size: 14px; color: var(--text); line-height: 1.85;
+    white-space: pre-wrap; word-break: break-word; margin-bottom: 14px;
+  }
+  .pexp-meta  { font-size: 13px; color: var(--text2); margin-bottom: 6px; display: flex; gap: 8px; align-items: flex-start; }
+  .pexp-note  {
+    font-size: 12px; color: var(--text2);
+    background: var(--surface2); border-radius: 8px;
+    padding: 8px 12px; line-height: 1.65;
+    white-space: pre-wrap; margin-top: 10px;
+  }
+  .pexp-section { font-size: 10px; font-weight: 700; color: var(--text2);
+    letter-spacing: 1.5px; text-transform: uppercase; margin: 14px 0 8px; }
+  /* banner area is clickable */
+  .place-banner { cursor: pointer; }
+
 </style>
 </head>
 <body>
@@ -620,6 +660,8 @@
       <input class="form-input" id="pfSource" placeholder="例：IG @帳號、朋友推薦、Dcard"></div>
     <div class="form-group"><label class="form-label">備註</label>
       <textarea class="form-textarea" id="pfNote" placeholder="為什麼想去？必點什麼？注意事項..."></textarea></div>
+    <div class="form-group"><label class="form-label">故事 / 內容</label>
+      <textarea class="form-textarea" id="pfContent" placeholder="關於這個地方的故事、旅遊感受、特色介紹…" rows="4" style="min-height:90px;resize:vertical;"></textarea></div>
     <div class="form-group"><label class="form-label">評分（去過後再填）</label>
       <div class="star-picker" id="pStarPicker">
         <span class="star-pick" onclick="P.setRating(1)">★</span>
@@ -1089,7 +1131,7 @@ const P = (() => {
     const catIcon=cat?cat.icon:'📍';
     const tagColor=place.tagColor||COLORS[0];
     return `<div class="place-card ${place.visited?'visited':''}">
-      <div class="place-banner">
+      <div class="place-banner" onclick="P.openExpand('${place.id}');event.stopPropagation()" title="點擊放大">
         ${place.img?`<img src="${place.img}" alt="">`:''}
         ${!place.img ? '<span class="place-banner-emoji">' + catIcon + '</span>' : ''}
       </div>
@@ -1188,7 +1230,7 @@ const P = (() => {
   function openAddModal(){
     editingId=null;uploadedImgData=null;pendingRating=0;
     document.getElementById('pModalTitle').textContent='新增店家';
-    ['pfName','pfArea','pfAddress','pfSource','pfNote','pfMembers'].forEach(id=>document.getElementById(id).value='');
+    ['pfName','pfArea','pfAddress','pfSource','pfNote','pfContent','pfMembers'].forEach(id=>document.getElementById(id).value='');
     populateCatSelect(categories[0]?.name||'');
     document.getElementById('pImgUpload').innerHTML=`<span class="img-upload-icon">📷</span><span>點擊上傳照片</span><input type="file" id="pImgFileInput" accept="image/*" onchange="P.handleImgUpload(event)">`;
     document.querySelectorAll('#pStarPicker .star-pick').forEach(el=>el.classList.remove('filled'));
@@ -1204,6 +1246,7 @@ const P = (() => {
     document.getElementById('pfAddress').value=place.address||'';
     document.getElementById('pfSource').value=place.source||'';
     document.getElementById('pfNote').value=place.note||'';
+    document.getElementById('pfContent').value=place.content||'';
     document.getElementById('pfMembers').value=place.members||'';
     populateCatSelect(place.category);
     const imgEl=document.getElementById('pImgUpload');
@@ -1235,6 +1278,7 @@ const P = (() => {
       address:document.getElementById('pfAddress').value.trim(),
       source:document.getElementById('pfSource').value.trim(),
       note:document.getElementById('pfNote').value.trim(),
+      content:document.getElementById('pfContent').value.trim(),
       members:document.getElementById('pfMembers').value.trim(),
       rating:pendingRating||null,
       tagColor:getSelectedColor('pTagColorsList'),
@@ -1243,6 +1287,31 @@ const P = (() => {
     if(editingId){const idx=places.findIndex(x=>x.id===editingId);places[idx]={...places[idx],...data};}
     else places.unshift({id:genId(),createdAt:Date.now(),visited:false,fav:false,...data});
     savePlaces();closeModal();render();
+  }
+
+  // ── Expand overlay ──
+  function openExpand(id) {
+    const place = places.find(x => x.id === id);
+    if (!place) return;
+    const cat = categories.find(c => c.name === place.category);
+    const catIcon = cat ? cat.icon : '📍';
+    const tagColor = place.tagColor || COLORS[0];
+    document.getElementById('placeExpandContent').innerHTML =
+      (place.img ? '<img class="pexp-banner" src="' + esc(place.img) + '" alt="">' : '') +
+      '<div class="pexp-cat">' + catIcon + ' ' + esc(place.category || '') + '</div>' +
+      '<div class="pexp-name">' + esc(place.name) + '</div>' +
+      (place.content ? '<div class="pexp-content">' + esc(place.content) + '</div>' : '') +
+      (place.area    ? '<div class="pexp-meta">📍 ' + esc(place.area) + '</div>' : '') +
+      (place.address ? '<div class="pexp-meta">🗺 ' + esc(place.address) + '</div>' : '') +
+      (place.phone   ? '<div class="pexp-meta">📞 ' + esc(place.phone) + '</div>' : '') +
+      (place.members ? '<div class="pexp-meta">👥 ' + esc(place.members) + '</div>' : '') +
+      (place.source  ? '<div class="pexp-meta">🔗 ' + esc(place.source) + '</div>' : '') +
+      (place.rating  ? '<div class="pexp-meta">' + starsHTML(place.rating) + '</div>' : '') +
+      (place.note    ? '<div class="pexp-note">' + esc(place.note) + '</div>' : '');
+    document.getElementById('placeExpandOverlay').classList.add('open');
+  }
+  function closeExpand() {
+    document.getElementById('placeExpandOverlay').classList.remove('open');
   }
 
   // ── Cat Manager ──
@@ -1316,7 +1385,7 @@ const P = (() => {
   return {render,setView,setCat,toggleFav,toggleVisited,deletePlace,toggleArchive,setRating,
     openAddModal,openEditModal,closeModal,handleImgUpload,savePlace,
     openCatManager,closeCatModal,addCategory,removeCat,saveCats,openEmojiPicker,
-    dragStart,dragOver,dragLeave,dragDrop,_editingCats,init,reload,_pickCat};
+    dragStart,dragOver,dragLeave,dragDrop,_editingCats,init,reload,_pickCat,openExpand,closeExpand};
 })();
 
 // ── Boot ──
@@ -1327,8 +1396,7 @@ P.render(); // render but don't show (page 1 is hidden)
 (async function() {
   try {
     var fb = await import('./firebase-config.js');
-
-    // 等待 Auth
+    // Wait for Firebase Auth state
     var user = await fb.getCurrentUser();
     if (!user) await new Promise(function(r){ setTimeout(r, 2000); });
     user = await fb.getCurrentUser();
@@ -1336,18 +1404,21 @@ P.render(); // render but don't show (page 1 is hidden)
 
     var uid = null;
     try { uid = localStorage.getItem('tripApp_uid'); } catch(e) {}
-    if (!uid) uid = user.uid;
+    if (!uid) uid = user.uid; // fallback to auth uid
     if (!uid) return;
-
-    window._fbUpload = fb.uploadImage;
-
-    // ── 商品清單：個人路徑 ──
     var W_DOC = 'users/' + uid + '/data/wishlist';
+    var P_DOC = 'users/' + uid + '/data/placelist';
+    window._fbUpload = fb.uploadImage;
     window._fbSave = async function() {
       var wItems = JSON.parse(localStorage.getItem('wishlist_items')||'[]');
       var wCats  = JSON.parse(localStorage.getItem('wishlist_cats')||'[]');
       var wCur   = localStorage.getItem('wishlist_cur')||'TWD';
       await fb.fsSet(W_DOC, { items: wItems, cats: wCats, currency: wCur });
+    };
+    window._fbSavePlaces = async function() {
+      var pItems = JSON.parse(localStorage.getItem('placelist_items')||'[]');
+      var pCats  = JSON.parse(localStorage.getItem('placelist_cats')||'[]');
+      await fb.fsSet(P_DOC, { items: pItems, cats: pCats });
     };
     var wSnap = await fb.fsGet(W_DOC);
     if (wSnap.exists()) {
@@ -1357,14 +1428,6 @@ P.render(); // render but don't show (page 1 is hidden)
       if (wd.currency) localStorage.setItem('wishlist_cur', wd.currency);
       if (window.W && window.W.reload) window.W.reload();
     }
-
-    // ── 店家清單：共用路徑（所有人共享）──
-    var P_DOC = 'trips/shared/placelist/v1';
-    window._fbSavePlaces = async function() {
-      var pItems = JSON.parse(localStorage.getItem('placelist_items')||'[]');
-      var pCats  = JSON.parse(localStorage.getItem('placelist_cats')||'[]');
-      await fb.fsSet(P_DOC, { items: pItems, cats: pCats });
-    };
     var pSnap = await fb.fsGet(P_DOC);
     if (pSnap.exists()) {
       var pd = pSnap.data();
@@ -1373,15 +1436,19 @@ P.render(); // render but don't show (page 1 is hidden)
       if (window.P && window.P.reload) window.P.reload();
     }
 
-    // ── 即時監聽 ──
+    // Real-time listeners
     var _wSaving = false, _pSaving = false;
-
-    // 商品清單（個人）
     var _rawFbSave = window._fbSave;
     window._fbSave = async function() {
       _wSaving = true;
       try { await _rawFbSave(); } catch(e) { console.warn('_fbSave error', e); }
       setTimeout(function(){ _wSaving = false; }, 4000);
+    };
+    var _rawFbSavePlaces = window._fbSavePlaces;
+    window._fbSavePlaces = async function() {
+      _pSaving = true;
+      try { await _rawFbSavePlaces(); } catch(e) { console.warn('_fbSavePlaces error', e); }
+      setTimeout(function(){ _pSaving = false; }, 4000);
     };
     fb.fsLive(W_DOC, function(snap) {
       if (_wSaving || !snap.exists()) return;
@@ -1391,14 +1458,6 @@ P.render(); // render but don't show (page 1 is hidden)
       if (d.currency) localStorage.setItem('wishlist_cur', d.currency);
       if (window.W && window.W.reload) window.W.reload();
     });
-
-    // 店家清單（共用）—— 即時同步給所有人
-    var _rawFbSavePlaces = window._fbSavePlaces;
-    window._fbSavePlaces = async function() {
-      _pSaving = true;
-      try { await _rawFbSavePlaces(); } catch(e) { console.warn('_fbSavePlaces error', e); }
-      setTimeout(function(){ _pSaving = false; }, 4000);
-    };
     fb.fsLive(P_DOC, function(snap) {
       if (_pSaving || !snap.exists()) return;
       var d = snap.data();
@@ -1406,17 +1465,22 @@ P.render(); // render but don't show (page 1 is hidden)
       if (d.cats)  localStorage.setItem('placelist_cats',  JSON.stringify(d.cats));
       if (window.P && window.P.reload) window.P.reload();
     });
-
     var badge = document.createElement('div');
     badge.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9999;background:rgba(255,255,255,.9);border:1px solid #DDD4C6;border-radius:20px;padding:4px 10px;font-size:10px;font-family:sans-serif;color:#8B5E3C;font-weight:700;';
     badge.textContent = '☁ 已連線';
     document.body.appendChild(badge);
-
   } catch(e) {
-    console.warn('Firebase boot failed:', e.message);
     window._fbSave = null; window._fbSavePlaces = null; window._fbUpload = null;
   }
 })();
 </script>
+
+<!-- ── Place Expand Overlay ── -->
+<div id="placeExpandOverlay" onclick="if(event.target===this)P.closeExpand()">
+  <div id="placeExpandCard">
+    <button class="pexp-close" onclick="P.closeExpand()">✕</button>
+    <div id="placeExpandContent"></div>
+  </div>
+</div>
 </body>
 </html>
