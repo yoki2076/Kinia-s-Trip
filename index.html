@@ -233,6 +233,19 @@
         </svg>
         使用 Google 帳號登入
       </button>
+      <button onclick="window._guestLogin()" style="
+        background: none;
+        border: 1px solid rgba(139,94,60,0.3);
+        color: var(--fog, #A8917A);
+        border-radius: 12px;
+        padding: 13px 24px;
+        font-size: 14px;
+        cursor: pointer;
+        font-family: inherit;
+        width: 100%;
+        margin-top: 8px;
+        transition: background 0.15s;
+      ">訪客模式（不同步）</button>
     </div>
   </div>
 
@@ -387,6 +400,8 @@ window._googleLogin = async function() {
   try {
     const { signInWithGoogle } = await import('./firebase-config.js');
     const user = await signInWithGoogle();
+    // user is null when redirect is triggered (iOS PWA) — page will reload
+    if (!user) return;
     try { localStorage.setItem('tripApp_uid', user.uid); } catch(e) {}
     showApp(user);
   } catch(e) {
@@ -414,10 +429,27 @@ window.handleLogout = async function() {
   location.reload();
 };
 
-// ── Auto-login: restore existing Google session ───────
+// ── Auto-login: restore existing session or handle redirect result ──
 (async function init() {
   try {
-    const { getCurrentUser } = await import('./firebase-config.js');
+    const { getCurrentUser, handleRedirectResult } = await import('./firebase-config.js');
+
+    // 1. Check if returning from Google redirect (iOS PWA flow)
+    const btn = document.getElementById('btn-google');
+    const wasPending = sessionStorage.getItem('pendingGoogleLogin');
+    if (wasPending) {
+      sessionStorage.removeItem('pendingGoogleLogin');
+      if (btn) { btn.classList.add('loading'); btn.textContent = '登入中…'; }
+      const redirectUser = await handleRedirectResult();
+      if (redirectUser) {
+        try { localStorage.setItem('tripApp_uid', redirectUser.uid); } catch(e) {}
+        showApp(redirectUser);
+        return;
+      }
+      if (btn) { btn.classList.remove('loading'); btn.innerHTML = btn.innerHTML; }
+    }
+
+    // 2. Try to restore existing session (normal flow)
     const user = await Promise.race([
       getCurrentUser(),
       new Promise(resolve => setTimeout(() => resolve(null), 3000))
@@ -432,6 +464,17 @@ window.handleLogout = async function() {
   }
 })();
 
+
+// ── Guest mode (no sync) ──────────────────────────────
+window._guestLogin = function() {
+  const ls = document.getElementById('login-screen');
+  ls.classList.add('hiding');
+  setTimeout(function() {
+    ls.classList.add('hidden');
+    const ma = document.getElementById('main-area');
+    if (ma) { ma.style.display = 'flex'; ma.style.opacity = '1'; }
+  }, 500);
+};
 // ── Network status ────────────────────────────────────
 window.addEventListener('offline', () => {
   document.getElementById('offline-banner').classList.add('show');

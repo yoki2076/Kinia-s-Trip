@@ -5,7 +5,7 @@ import { getFirestore, doc, setDoc, getDoc, onSnapshot }
                                     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
                                     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut }
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut }
                                     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // ── 你的 Firebase 設定 ──────────────────────────────────
@@ -27,8 +27,31 @@ const provider = new GoogleAuthProvider();
 
 // ── Google 登入 ──
 export async function signInWithGoogle() {
-  const result = await signInWithPopup(auth, provider);
-  return result.user;
+  // iOS PWA standalone mode doesn't support popup — use redirect instead
+  const isIOSPWA = window.navigator.standalone === true ||
+                   (window.matchMedia('(display-mode: standalone)').matches &&
+                    /iPad|iPhone|iPod/.test(navigator.userAgent));
+
+  if (isIOSPWA) {
+    // Redirect flow: save intent and redirect to Google
+    try { sessionStorage.setItem('pendingGoogleLogin', '1'); } catch(e) {}
+    await signInWithRedirect(auth, provider);
+    return null; // page will reload after redirect
+  } else {
+    const result = await signInWithPopup(auth, provider);
+    return result.user;
+  }
+}
+
+// ── Handle redirect result after returning from Google ──
+export async function handleRedirectResult() {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result && result.user) return result.user;
+  } catch(e) {
+    console.warn('getRedirectResult error:', e.message);
+  }
+  return null;
 }
 
 // ── 登出 ──
