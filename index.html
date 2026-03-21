@@ -514,19 +514,22 @@ function tryShowApp(user) {
 }
 
 // 【防線 0】getRedirectResult：iOS PWA redirect 登入後回來，接收結果
-auth.getRedirectResult().then(function(result) {
+// 用 Promise 讓 onAuthStateChanged 知道 redirect 處理完了沒
+let redirectResultDone = false;
+const redirectResultPromise = auth.getRedirectResult().then(function(result) {
   if (result && result.user) {
     try { localStorage.setItem('tripApp_uid', result.user.uid); } catch(e) {}
     tryShowApp(result.user);
   }
 }).catch(function(e) {
-  // redirect 失敗時顯示錯誤（如帳號已被停用等）
   if (e.code && e.code !== 'auth/no-auth-event') {
     const errEl = document.getElementById('login-error');
     const btn   = document.getElementById('btn-google');
     if (errEl) { errEl.textContent = '登入失敗：' + (e.message || e.code); errEl.classList.add('show'); }
     if (btn)   { btn.classList.remove('loading'); btn.innerHTML = _googleBtnHTML(); }
   }
+}).finally(function() {
+  redirectResultDone = true;
 });
 
 // 【防線 1】localStorage cache：頁面一開啟就執行，不等任何非同步
@@ -537,20 +540,33 @@ try {
   }
 } catch(e) {}
 
-// 【防線 2】onAuthStateChanged：popup 登入成功 + 之後每次開啟 app 的 session 恢復
+// 【防線 2】onAuthStateChanged：popup/redirect 登入成功 + 之後每次開啟 app 的 session 恢復
 auth.onAuthStateChanged(function(user) {
   if (user) {
     try { localStorage.setItem('tripApp_uid', user.uid); } catch(e) {}
     tryShowApp(user);
   } else {
-    // Firebase 明確回報未登入
-    try { localStorage.removeItem('tripApp_uid'); } catch(e) {}
-    if (appShown) {
-      appShown = false;
-      const ma = document.getElementById('main-area');
-      const ls = document.getElementById('login-screen');
-      if (ma) { ma.classList.remove('visible'); ma.style.display = 'none'; }
-      if (ls) { ls.classList.remove('hiding'); ls.classList.remove('hidden'); }
+    // Firebase 回報未登入 — 必須等 getRedirectResult 跑完才能確定真的沒登入
+    // （redirect 回來時 onAuthStateChanged null 會比 getRedirectResult 早觸發）
+    function handleSignedOut() {
+      if (appShown) {
+        try { localStorage.removeItem('tripApp_uid'); } catch(e) {}
+        appShown = false;
+        const ma = document.getElementById('main-area');
+        const ls = document.getElementById('login-screen');
+        if (ma) { ma.classList.remove('visible'); ma.style.display = 'none'; }
+        if (ls) { ls.classList.remove('hiding'); ls.classList.remove('hidden'); }
+      }
+    }
+    if (redirectResultDone) {
+      // redirect 已處理完，這次 null 是真的未登入（例如登出後）
+      handleSignedOut();
+    } else {
+      // redirect 還沒處理完，先等它完成再判斷
+      redirectResultPromise.then(function() {
+        // 如果 redirect 成功登入，appShown 已是 true，不會執行 handleSignedOut
+        if (!appShown) handleSignedOut();
+      });
     }
   }
 });
