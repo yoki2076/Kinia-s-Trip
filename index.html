@@ -27,7 +27,6 @@
     overflow: hidden; position: relative;
   }
 
-  /* ══ LOGIN SCREEN ════════════════════════════════════ */
   #login-screen {
     position: absolute; inset: 0; z-index: 200;
     background: #F7F3EE;
@@ -238,17 +237,10 @@
         使用 Google 帳號登入
       </button>
       <button onclick="window._guestLogin()" style="
-        background: none;
-        border: 1px solid rgba(139,94,60,0.3);
-        color: var(--fog, #A8917A);
-        border-radius: 12px;
-        padding: 13px 24px;
-        font-size: 14px;
-        cursor: pointer;
-        font-family: inherit;
-        width: 100%;
-        margin-top: 8px;
-        transition: background 0.15s;
+        background: none; border: 1px solid rgba(139,94,60,0.3);
+        color: var(--fog, #A8917A); border-radius: 12px; padding: 13px 24px;
+        font-size: 14px; cursor: pointer; font-family: inherit;
+        width: 100%; margin-top: 8px; transition: background 0.15s;
       ">訪客模式（不同步）</button>
     </div>
   </div>
@@ -332,7 +324,7 @@
 // ══════════════════════════════════════════
 const firebaseConfig = {
   apiKey:            "AIzaSyBtyJygjNYtDVV5wybC14subUh0teleH7k",
-  authDomain:        "kinia-s-trip.firebaseapp.com",
+  authDomain:        "yoki2076.github.io",
   projectId:         "kinia-s-trip",
   storageBucket:     "kinia-s-trip.firebasestorage.app",
   messagingSenderId: "881218070648",
@@ -425,12 +417,6 @@ function showApp(user) {
 }
 
 // ── Google Login ──────────────────────────────────────
-// iOS PWA (加入主畫面) 不支援 signInWithPopup，必須用 signInWithRedirect
-function isIOSPWA() {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent) &&
-    (window.navigator.standalone === true ||
-     window.matchMedia('(display-mode: standalone)').matches);
-}
 function _googleBtnHTML() {
   return `<svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.6 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.9 18.9 13 24 13c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.3 35.2 26.8 36 24 36c-5.3 0-9.6-3.1-11.3-7.5l-6.5 5C9.5 39.5 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.4-2.5 4.5-4.5 5.9l.1-.1 6.2 5.2C36.9 38.2 44 33 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>使用 Google 帳號登入`;
 }
@@ -438,33 +424,19 @@ function _googleBtnHTML() {
 window._googleLogin = function() {
   const btn   = document.getElementById('btn-google');
   const errEl = document.getElementById('login-error');
-  btn.classList.add('loading');
+  if (btn) { btn.classList.add('loading'); btn.textContent = '登入中…'; }
   errEl.classList.remove('show');
 
   const provider = new firebase.auth.GoogleAuthProvider();
-
-  if (isIOSPWA()) {
-    // iOS PWA：跳轉到 Google 登入頁，回來後由 getRedirectResult 接收結果
-    btn.textContent = '跳轉至 Google 登入…';
-    auth.signInWithRedirect(provider).catch(function(e) {
-      btn.classList.remove('loading');
-      btn.innerHTML = _googleBtnHTML();
-      errEl.textContent = '跳轉登入失敗，請再試一次';
-      errEl.classList.add('show');
-    });
-  } else {
-    btn.textContent = '登入中…';
-    auth.signInWithPopup(provider).catch(function(e) {
-      btn.classList.remove('loading');
-      btn.innerHTML = _googleBtnHTML();
-      let msg = '登入失敗，請再試一次';
-      if (e.code === 'auth/popup-closed-by-user') msg = '登入視窗已關閉，請再試';
-      if (e.code === 'auth/popup-blocked')         msg = '彈出視窗被封鎖，請允許後再試';
-      if (e.code === 'auth/network-request-failed') msg = '網路異常，請檢查連線';
-      errEl.textContent = msg;
-      errEl.classList.add('show');
-    });
-  }
+  auth.signInWithPopup(provider).catch(function(e) {
+    if (btn) { btn.classList.remove('loading'); btn.innerHTML = _googleBtnHTML(); }
+    let msg = '登入失敗，請再試一次';
+    if (e.code === 'auth/popup-closed-by-user') msg = '登入視窗已關閉，請再試';
+    if (e.code === 'auth/popup-blocked')         msg = '彈出視窗被封鎖，請允許後再試';
+    if (e.code === 'auth/network-request-failed') msg = '網路異常，請檢查連線';
+    errEl.textContent = msg;
+    errEl.classList.add('show');
+  });
 };
 
 // ── Logout ────────────────────────────────────────────
@@ -484,8 +456,7 @@ window._guestLogin = function() {
   showApp(null);
 };
 
-// ── Auth 核心：整合 localStorage cache + getRedirectResult + onAuthStateChanged ──
-// iOS PWA 三道防線，確保任一方式成功都能進入 app
+// ── Auth 核心：localStorage cache + onAuthStateChanged 兩道防線 ──
 let appShown = false;
 
 function updateDrawerUser(user) {
@@ -505,7 +476,6 @@ function updateDrawerUser(user) {
 
 function tryShowApp(user) {
   if (appShown) {
-    // app 已顯示（可能由 localStorage cache 先開），只更新使用者資訊
     if (user && !user._cached) updateDrawerUser(user);
     return;
   }
@@ -513,26 +483,7 @@ function tryShowApp(user) {
   showApp(user);
 }
 
-// 【防線 0】getRedirectResult：iOS PWA redirect 登入後回來，接收結果
-// 用 Promise 讓 onAuthStateChanged 知道 redirect 處理完了沒
-let redirectResultDone = false;
-const redirectResultPromise = auth.getRedirectResult().then(function(result) {
-  if (result && result.user) {
-    try { localStorage.setItem('tripApp_uid', result.user.uid); } catch(e) {}
-    tryShowApp(result.user);
-  }
-}).catch(function(e) {
-  if (e.code && e.code !== 'auth/no-auth-event') {
-    const errEl = document.getElementById('login-error');
-    const btn   = document.getElementById('btn-google');
-    if (errEl) { errEl.textContent = '登入失敗：' + (e.message || e.code); errEl.classList.add('show'); }
-    if (btn)   { btn.classList.remove('loading'); btn.innerHTML = _googleBtnHTML(); }
-  }
-}).finally(function() {
-  redirectResultDone = true;
-});
-
-// 【防線 1】localStorage cache：頁面一開啟就執行，不等任何非同步
+// 【防線 1】localStorage cache：頁面一開啟立刻執行
 try {
   const cachedUid = localStorage.getItem('tripApp_uid');
   if (cachedUid) {
@@ -540,33 +491,20 @@ try {
   }
 } catch(e) {}
 
-// 【防線 2】onAuthStateChanged：popup/redirect 登入成功 + 之後每次開啟 app 的 session 恢復
+// 【防線 2】onAuthStateChanged：登入成功後每次開啟都能恢復 session
 auth.onAuthStateChanged(function(user) {
   if (user) {
     try { localStorage.setItem('tripApp_uid', user.uid); } catch(e) {}
     tryShowApp(user);
   } else {
-    // Firebase 回報未登入 — 必須等 getRedirectResult 跑完才能確定真的沒登入
-    // （redirect 回來時 onAuthStateChanged null 會比 getRedirectResult 早觸發）
-    function handleSignedOut() {
-      if (appShown) {
-        try { localStorage.removeItem('tripApp_uid'); } catch(e) {}
-        appShown = false;
-        const ma = document.getElementById('main-area');
-        const ls = document.getElementById('login-screen');
-        if (ma) { ma.classList.remove('visible'); ma.style.display = 'none'; }
-        if (ls) { ls.classList.remove('hiding'); ls.classList.remove('hidden'); }
-      }
-    }
-    if (redirectResultDone) {
-      // redirect 已處理完，這次 null 是真的未登入（例如登出後）
-      handleSignedOut();
-    } else {
-      // redirect 還沒處理完，先等它完成再判斷
-      redirectResultPromise.then(function() {
-        // 如果 redirect 成功登入，appShown 已是 true，不會執行 handleSignedOut
-        if (!appShown) handleSignedOut();
-      });
+    // 確定未登入（logout 或 session 過期）
+    try { localStorage.removeItem('tripApp_uid'); } catch(e) {}
+    if (appShown) {
+      appShown = false;
+      const ma = document.getElementById('main-area');
+      const ls = document.getElementById('login-screen');
+      if (ma) { ma.classList.remove('visible'); ma.style.display = 'none'; }
+      if (ls) { ls.classList.remove('hiding'); ls.classList.remove('hidden'); }
     }
   }
 });
