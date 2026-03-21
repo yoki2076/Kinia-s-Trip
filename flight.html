@@ -794,82 +794,64 @@ html, body {
 <script>
 // ══ Tab switch ══
 function switchTab(id) {
-  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+  document.querySelectorAll('.tab-btn').forEach(function(b, i) {
     b.classList.toggle('active', ['outbound','return','entry'][i] === id);
   });
-  document.querySelectorAll('.section').forEach(s => {
-    s.classList.toggle('active', s.id === 'tab-'+id);
+  document.querySelectorAll('.section').forEach(function(s) {
+    s.classList.toggle('active', s.id === 'tab-' + id);
   });
 }
 
-// ══ Edit toggle (flight card + route display fields) ══
-const editState = { out: false, ret: false };
-
-// Fields that map display IDs to their editable data
-const DISPLAY_FIELDS = {
-  out: ['display-out-airline','display-out-class','display-out-flightnum',
-        'display-out-dep','display-out-deptime','display-out-depdate',
-        'display-out-arr','display-out-arrtime','display-out-arrdate',
-        'display-out-duration'],
-  ret: ['display-ret-airline','display-ret-class','display-ret-flightnum',
-        'display-ret-dep','display-ret-deptime','display-ret-depdate',
-        'display-ret-arr','display-ret-arrtime','display-ret-arrdate',
-        'display-ret-duration']
-};
+// ══ Edit toggle ══
+var editState = { out: false, ret: false };
+var DISPLAY_IDS = ['airline','class','flightnum','dep','deptime','depdate','arr','arrtime','arrdate','duration'];
 
 function toggleEdit(dir) {
   editState[dir] = !editState[dir];
-  const card = document.getElementById('card-' + dir);
-  const btn  = document.getElementById('btn-edit-' + dir);
+  var card = document.getElementById('card-' + dir);
+  var btn  = document.getElementById('btn-edit-' + dir);
+  var editing = editState[dir];
 
-  // Toggle form inputs (gate, seat, etc.)
-  card.querySelectorAll('input').forEach(inp => {
-    inp.readOnly = !editState[dir];
-    inp.style.background = editState[dir] ? 'rgba(139,94,60,0.06)' : 'transparent';
-    inp.style.borderRadius = editState[dir] ? '6px' : '0';
-    inp.style.padding = editState[dir] ? '3px 6px' : '0';
+  // Form inputs
+  card.querySelectorAll('input').forEach(function(inp) {
+    inp.readOnly = !editing;
+    inp.style.background   = editing ? 'rgba(139,94,60,0.06)' : 'transparent';
+    inp.style.borderRadius = editing ? '6px' : '0';
+    inp.style.padding      = editing ? '3px 6px' : '0';
   });
 
-  // Toggle display fields (route codes, times, airline)
-  DISPLAY_FIELDS[dir].forEach(id => {
-    const el = document.getElementById(id);
+  // Contenteditable display fields
+  DISPLAY_IDS.forEach(function(key) {
+    var el = document.getElementById('display-' + dir + '-' + key);
     if (!el) return;
-    if (editState[dir]) {
-      el.contentEditable = 'true';
-      el.style.background = 'rgba(139,94,60,0.06)';
-      el.style.borderRadius = '6px';
-      el.style.padding = '2px 5px';
-      el.style.outline = 'none';
-      el.style.minWidth = '40px';
-      el.style.display = 'inline-block';
-    } else {
-      el.contentEditable = 'false';
-      el.style.background = '';
-      el.style.borderRadius = '';
-      el.style.padding = '';
-      el.style.outline = '';
-    }
+    el.contentEditable = editing ? 'true' : 'false';
+    el.style.background   = editing ? 'rgba(139,94,60,0.06)' : '';
+    el.style.borderRadius = editing ? '6px' : '';
+    el.style.padding      = editing ? '2px 5px' : '';
+    el.style.outline      = editing ? 'none' : '';
   });
 
-  if (editState[dir]) {
+  if (editing) {
     btn.textContent = '💾 儲存';
     btn.classList.add('editing');
   } else {
     btn.textContent = '✏️ 編輯';
     btn.classList.remove('editing');
-    const now = new Date();
-    document.getElementById('saved-'+dir).textContent =
-      '已儲存 ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+    var now = new Date();
+    document.getElementById('saved-' + dir).textContent =
+      '已儲存 ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
     saveAll();
     showToast('已儲存 ✓');
   }
 }
 
-// Init: inputs read-only by default
-document.querySelectorAll('.flight-card input').forEach(i => { i.readOnly = true; });
+// Init: read-only
+document.querySelectorAll('.flight-card input').forEach(function(inp) {
+  inp.readOnly = true;
+});
 
 // ══ Checklists ══
-const checklistsData = {
+var checklistsData = {
   out: [
     { text: '護照有效期 6 個月以上', done: false },
     { text: 'Visit Japan Web 入境申報完成', done: false },
@@ -878,7 +860,7 @@ const checklistsData = {
     { text: '旅遊保險文件', done: false },
     { text: '日圓現金準備', done: false },
     { text: '行動電源充飽電（不可託運）', done: false },
-    { text: '液體 <100ml 裝入夾鏈袋', done: false },
+    { text: '液體 <100ml 裝入夾鏈袋', done: false }
   ],
   ret: [
     { text: '退稅單備妥（蓋章後帶上機）', done: false },
@@ -887,30 +869,33 @@ const checklistsData = {
     { text: '飯店鑰匙/卡歸還', done: false },
     { text: '充電線、變壓器收回', done: false },
     { text: 'SIM卡/Wi-Fi分享器歸還', done: false },
-    { text: '行動電源帶上手提（勿託運）', done: false },
+    { text: '行動電源帶上手提（勿託運）', done: false }
   ]
 };
 
 function renderChecklist(dir) {
-  const el = document.getElementById('checklist-' + dir);
-  const addRow = document.getElementById('checklist-' + dir + '-addrow');
-  const isEdit = el.classList.contains('edit-mode');
+  var el = document.getElementById('checklist-' + dir);
+  var addRow = document.getElementById('checklist-' + dir + '-addrow');
+  var isEdit = el.classList.contains('edit-mode');
 
-  // Rebuild items before the addrow
-  const items = checklistsData[dir].map((item, i) => `
-    <div class="check-item" onclick="${isEdit ? '' : "toggleCheck('" + dir + "'," + i + ")"}">
-      <div class="check-box${item.done ? ' checked' : ''}"></div>
-      <div class="check-text${item.done ? ' checked' : ''}">${item.text}</div>
-      <button class="check-del-btn" onclick="event.stopPropagation();delCheckItem('${dir}',${i})">×</button>
-    </div>`).join('');
+  var html = checklistsData[dir].map(function(item, i) {
+    var delBtn = isEdit
+      ? '<button class="check-del-btn" onclick="event.stopPropagation();delCheckItem(\'' + dir + '\',' + i + ')">×</button>'
+      : '';
+    var onclick = isEdit ? '' : ' onclick="toggleCheck(\'' + dir + '\',' + i + ')"';
+    return '<div class="check-item"' + onclick + '>'
+      + '<div class="check-box' + (item.done ? ' checked' : '') + '"></div>'
+      + '<div class="check-text' + (item.done ? ' checked' : '') + '">' + item.text + '</div>'
+      + delBtn
+      + '</div>';
+  }).join('');
 
-  // Insert items before addrow
-  addRow.insertAdjacentHTML('beforebegin', items);
-  // Remove old items (keep addrow)
-  [...el.querySelectorAll('.check-item')].slice(0, el.querySelectorAll('.check-item').length - checklistsData[dir].length).forEach(n => n.remove());
-
-  // Re-render cleanly
-  el.innerHTML = items + addRow.outerHTML;
+  if (addRow) {
+    el.innerHTML = html;
+    el.appendChild(addRow);
+  } else {
+    el.innerHTML = html;
+  }
 }
 
 function toggleCheck(dir, idx) {
@@ -920,22 +905,22 @@ function toggleCheck(dir, idx) {
 }
 
 function toggleChecklistEdit(dir) {
-  const el = document.getElementById('checklist-' + dir);
-  const btn = document.getElementById('checklist-' + dir + '-editbtn');
-  const addRow = document.getElementById('checklist-' + dir + '-addrow');
+  var el     = document.getElementById('checklist-' + dir);
+  var btn    = document.getElementById('checklist-' + dir + '-editbtn');
+  var addRow = document.getElementById('checklist-' + dir + '-addrow');
   el.classList.toggle('edit-mode');
-  const isEdit = el.classList.contains('edit-mode');
-  addRow.style.display = isEdit ? 'flex' : 'none';
+  var isEdit = el.classList.contains('edit-mode');
+  if (addRow) addRow.style.display = isEdit ? 'flex' : 'none';
   btn.textContent = isEdit ? '✅ 完成編輯' : '✏️ 編輯清單';
   btn.classList.toggle('active', isEdit);
   renderChecklist(dir);
 }
 
 function addCheckItem(dir) {
-  const inp = document.getElementById('checklist-' + dir + '-input');
-  const text = inp.value.trim();
+  var inp  = document.getElementById('checklist-' + dir + '-input');
+  var text = inp.value.trim();
   if (!text) return;
-  checklistsData[dir].push({ text, done: false });
+  checklistsData[dir].push({ text: text, done: false });
   inp.value = '';
   renderChecklist(dir);
   saveAll();
@@ -947,10 +932,11 @@ function delCheckItem(dir, idx) {
   saveAll();
 }
 
-// Enter key to add
-['out','ret'].forEach(dir => {
-  document.getElementById('checklist-' + dir + '-input')
-    .addEventListener('keydown', e => { if (e.key === 'Enter') addCheckItem(dir); });
+['out','ret'].forEach(function(dir) {
+  var inp = document.getElementById('checklist-' + dir + '-input');
+  if (inp) inp.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') addCheckItem(dir);
+  });
 });
 
 renderChecklist('out');
@@ -958,66 +944,55 @@ renderChecklist('ret');
 
 // ══ Save / Load ══
 function saveAll() {
-  const data = {};
-  // Display fields
-  ['out','ret'].forEach(dir => {
-    DISPLAY_FIELDS[dir].forEach(id => {
-      const el = document.getElementById(id);
+  var data = {};
+  ['out','ret'].forEach(function(dir) {
+    DISPLAY_IDS.forEach(function(key) {
+      var id = 'display-' + dir + '-' + key;
+      var el = document.getElementById(id);
       if (el) data[id] = el.textContent;
     });
-    // Form inputs
-    document.querySelectorAll('#card-' + dir + ' input').forEach(inp => {
+    document.querySelectorAll('#card-' + dir + ' input').forEach(function(inp) {
       if (inp.id) data[inp.id] = inp.value;
     });
   });
-  // Checklists
   data['_chk_out'] = JSON.stringify(checklistsData.out);
   data['_chk_ret'] = JSON.stringify(checklistsData.ret);
-  // Hotel
-  const hotel = document.getElementById('hotel-address');
-  if (hotel) data['hotel-address'] = hotel.value;
-  // QR
-  const qrImg = document.getElementById('qr-preview');
+  ['hotel-name','hotel-address','hotel-phone','hotel-note'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) data[id] = el.value;
+  });
+  var qrImg = document.getElementById('qr-preview');
   if (qrImg && qrImg.src && qrImg.src.startsWith('data:')) data['_qr'] = qrImg.src;
-
-  try { localStorage.setItem('flight_v2', JSON.stringify(data)); } catch(e) {}
+  try { localStorage.setItem('flight_v3', JSON.stringify(data)); } catch(e) {}
 }
 
 function loadAll() {
   try {
-    const raw = localStorage.getItem('flight_v2');
+    var raw = localStorage.getItem('flight_v3');
     if (!raw) return;
-    const data = JSON.parse(raw);
-
-    // Display fields
-    ['out','ret'].forEach(dir => {
-      DISPLAY_FIELDS[dir].forEach(id => {
-        const el = document.getElementById(id);
-        if (el && data[id] !== undefined) el.textContent = data[id];
+    var data = JSON.parse(raw);
+    ['out','ret'].forEach(function(dir) {
+      DISPLAY_IDS.forEach(function(key) {
+        var id = 'display-' + dir + '-' + key;
+        var el = document.getElementById(id);
+        if (el && data[id]) el.textContent = data[id];
       });
-      // Form inputs
-      document.querySelectorAll('#card-' + dir + ' input').forEach(inp => {
+      document.querySelectorAll('#card-' + dir + ' input').forEach(function(inp) {
         if (inp.id && data[inp.id] !== undefined) inp.value = data[inp.id];
       });
     });
-
-    // Checklists
-    if (data['_chk_out']) checklistsData.out = JSON.parse(data['_chk_out']);
-    if (data['_chk_ret']) checklistsData.ret = JSON.parse(data['_chk_ret']);
+    if (data['_chk_out']) { checklistsData.out = JSON.parse(data['_chk_out']); }
+    if (data['_chk_ret']) { checklistsData.ret = JSON.parse(data['_chk_ret']); }
     renderChecklist('out');
     renderChecklist('ret');
-
-    // Hotel
-    if (data['hotel-address']) {
-      const h = document.getElementById('hotel-address');
-      if (h) h.value = data['hotel-address'];
-    }
-    // QR
+    ['hotel-name','hotel-address','hotel-phone','hotel-note'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el && data[id] !== undefined) el.value = data[id];
+    });
     if (data['_qr']) {
-      const img = document.getElementById('qr-preview');
-      const zone = document.getElementById('qr-zone');
-      img.src = data['_qr'];
-      img.classList.add('show');
+      var img  = document.getElementById('qr-preview');
+      var zone = document.getElementById('qr-zone');
+      if (img)  { img.src = data['_qr']; img.classList.add('show'); }
       if (zone) zone.classList.add('has-image');
     }
   } catch(e) {}
@@ -1025,12 +1000,12 @@ function loadAll() {
 
 // ══ QR Upload ══
 document.getElementById('qr-file-input').addEventListener('change', function(e) {
-  const file = e.target.files[0];
+  var file = e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
+  var reader = new FileReader();
   reader.onload = function(ev) {
-    const img = document.getElementById('qr-preview');
-    const zone = document.getElementById('qr-zone');
+    var img  = document.getElementById('qr-preview');
+    var zone = document.getElementById('qr-zone');
     img.src = ev.target.result;
     img.classList.add('show');
     if (zone) zone.classList.add('has-image');
@@ -1042,10 +1017,10 @@ document.getElementById('qr-file-input').addEventListener('change', function(e) 
 
 // ══ Toast ══
 function showToast(msg) {
-  const t = document.getElementById('toast');
+  var t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
+  setTimeout(function() { t.classList.remove('show'); }, 2200);
 }
 
 // ══ Boot ══
