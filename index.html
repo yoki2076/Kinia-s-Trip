@@ -344,9 +344,12 @@ function hideLoading() { document.getElementById('loading').classList.remove('sh
 
 window.switchPage = function(pageId) {
   if (pageId === currentPage) return;
-  document.getElementById('nav-' + currentPage).classList.remove('active');
+  // Guard: nav element may not exist (e.g. flight is drawer-only)
+  var prevNav = document.getElementById('nav-' + currentPage);
+  if (prevNav) prevNav.classList.remove('active');
   document.getElementById('frame-' + currentPage).classList.remove('active');
-  document.getElementById('nav-' + pageId).classList.add('active');
+  var nextNav = document.getElementById('nav-' + pageId);
+  if (nextNav) nextNav.classList.add('active');
   const frame = document.getElementById('frame-' + pageId);
   frame.classList.add('active');
   if (!loaded.has(pageId)) {
