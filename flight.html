@@ -394,12 +394,12 @@ html, body {
   gap: 8px; margin-top: 12px;
 }
 .entry-info-item {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
   border-radius: 10px; padding: 10px 12px;
 }
-.entry-info-label { font-size: 9px; color: rgba(255,255,255,0.4); font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
-.entry-info-value { font-size: 13px; font-weight: 700; color: #fff; }
+.entry-info-label { font-size: 9px; color: var(--fog); font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+.entry-info-value { font-size: 13px; font-weight: 700; color: var(--text); }
 .entry-info-item.full { grid-column: 1 / -1; }
 
 /* ══ SAVE TOAST ══ */
@@ -411,6 +411,41 @@ html, body {
   pointer-events: none;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+
+/* ══ CHECKLIST EDIT ══ */
+.checklist-add-row {
+  display: flex; gap: 8px; padding: 10px 14px;
+  border-top: 1px solid var(--border);
+}
+.checklist-add-input {
+  flex: 1; background: rgba(139,94,60,0.06); border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 7px 10px; font-size: 13px;
+  color: var(--text); font-family: 'Noto Sans TC', sans-serif; outline: none;
+}
+.checklist-add-input:focus { border-color: var(--brown); }
+.checklist-add-btn {
+  background: var(--brown); color: #fff; border: none;
+  border-radius: 8px; padding: 7px 14px; font-size: 13px;
+  font-weight: 700; cursor: pointer; font-family: inherit;
+}
+.check-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid rgba(221,212,198,0.5); position: relative; }
+.check-item:last-child { border-bottom: none; }
+.check-del-btn {
+  display: none; position: absolute; right: 10px;
+  background: none; border: none; color: var(--fog);
+  font-size: 16px; cursor: pointer; padding: 2px 6px; line-height: 1;
+}
+.checklist-card.edit-mode .check-del-btn { display: block; }
+.checklist-card.edit-mode .check-item { padding-right: 36px; }
+.checklist-edit-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: none; border: 1px solid var(--border);
+  border-radius: 8px; padding: 5px 12px; font-size: 11px;
+  color: var(--fog); cursor: pointer; font-family: inherit;
+  margin: 8px 14px 0; transition: all 0.15s;
+}
+.checklist-edit-btn.active { border-color: var(--brown); color: var(--brown); background: rgba(139,94,60,0.06); }
 
 </style>
 </head>
@@ -495,7 +530,7 @@ html, body {
         <div class="info-value"><input id="out-boarding" value="07:50" placeholder="—"></div>
       </div>
       <div class="info-cell">
-        <div class="info-label">確認碼</div>
+        <div class="info-label">訂位代碼</div>
         <div class="info-value"><input id="out-pnr" value="ABC123" placeholder="—"></div>
       </div>
       <div class="info-cell full">
@@ -535,7 +570,13 @@ html, body {
 
   <!-- Pre-flight checklist -->
   <div class="section-label">✅ 出發前確認</div>
-  <div class="checklist-card" id="checklist-out"></div>
+  <div class="checklist-card" id="checklist-out">
+    <div class="checklist-add-row" id="checklist-out-addrow" style="display:none">
+      <input class="checklist-add-input" id="checklist-out-input" placeholder="新增確認項目…">
+      <button class="checklist-add-btn" onclick="addCheckItem('out')">新增</button>
+    </div>
+  </div>
+  <button class="checklist-edit-btn" id="checklist-out-editbtn" onclick="toggleChecklistEdit('out')">✏️ 編輯清單</button>
 
 </div>
 
@@ -601,7 +642,7 @@ html, body {
         <div class="info-value"><input id="ret-boarding" value="12:30" placeholder="—"></div>
       </div>
       <div class="info-cell">
-        <div class="info-label">確認碼</div>
+        <div class="info-label">訂位代碼</div>
         <div class="info-value"><input id="ret-pnr" value="ABC123" placeholder="—"></div>
       </div>
       <div class="info-cell full">
@@ -639,7 +680,13 @@ html, body {
   </div>
 
   <div class="section-label">✅ 回程前確認</div>
-  <div class="checklist-card" id="checklist-ret"></div>
+  <div class="checklist-card" id="checklist-ret">
+    <div class="checklist-add-row" id="checklist-ret-addrow" style="display:none">
+      <input class="checklist-add-input" id="checklist-ret-input" placeholder="新增確認項目…">
+      <button class="checklist-add-btn" onclick="addCheckItem('ret')">新增</button>
+    </div>
+  </div>
+  <button class="checklist-edit-btn" id="checklist-ret-editbtn" onclick="toggleChecklistEdit('ret')">✏️ 編輯清單</button>
 
 </div>
 
@@ -668,7 +715,7 @@ html, body {
     <div class="entry-info-item full">
       <div class="entry-info-label">住宿地址（日文）</div>
       <div class="entry-info-value" style="font-size:12px;margin-top:2px">
-        <input id="hotel-address" value="〒904-0401 沖縄県国頭郡恩納村名嘉真 ヤーシ原2591-1" style="background:transparent;border:none;outline:none;color:#fff;font-family:'Noto Sans TC',sans-serif;font-size:12px;width:100%;" placeholder="請填入住宿地址…">
+        <input id="hotel-address" value="〒904-0401 沖縄県国頭郡恩納村名嘉真 ヤーシ原2591-1" style="background:transparent;border:none;outline:none;color:var(--text);font-family:'Noto Sans TC',sans-serif;font-size:12px;width:100%;" placeholder="請填入住宿地址…">
       </div>
     </div>
   </div>
@@ -755,19 +802,55 @@ function switchTab(id) {
   });
 }
 
-// ══ Edit toggle ══
+// ══ Edit toggle (flight card + route display fields) ══
 const editState = { out: false, ret: false };
+
+// Fields that map display IDs to their editable data
+const DISPLAY_FIELDS = {
+  out: ['display-out-airline','display-out-class','display-out-flightnum',
+        'display-out-dep','display-out-deptime','display-out-depdate',
+        'display-out-arr','display-out-arrtime','display-out-arrdate',
+        'display-out-duration'],
+  ret: ['display-ret-airline','display-ret-class','display-ret-flightnum',
+        'display-ret-dep','display-ret-deptime','display-ret-depdate',
+        'display-ret-arr','display-ret-arrtime','display-ret-arrdate',
+        'display-ret-duration']
+};
+
 function toggleEdit(dir) {
   editState[dir] = !editState[dir];
   const card = document.getElementById('card-' + dir);
   const btn  = document.getElementById('btn-edit-' + dir);
-  const inputs = card.querySelectorAll('input');
-  inputs.forEach(inp => {
+
+  // Toggle form inputs (gate, seat, etc.)
+  card.querySelectorAll('input').forEach(inp => {
     inp.readOnly = !editState[dir];
     inp.style.background = editState[dir] ? 'rgba(139,94,60,0.06)' : 'transparent';
     inp.style.borderRadius = editState[dir] ? '6px' : '0';
     inp.style.padding = editState[dir] ? '3px 6px' : '0';
   });
+
+  // Toggle display fields (route codes, times, airline)
+  DISPLAY_FIELDS[dir].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (editState[dir]) {
+      el.contentEditable = 'true';
+      el.style.background = 'rgba(139,94,60,0.06)';
+      el.style.borderRadius = '6px';
+      el.style.padding = '2px 5px';
+      el.style.outline = 'none';
+      el.style.minWidth = '40px';
+      el.style.display = 'inline-block';
+    } else {
+      el.contentEditable = 'false';
+      el.style.background = '';
+      el.style.borderRadius = '';
+      el.style.padding = '';
+      el.style.outline = '';
+    }
+  });
+
   if (editState[dir]) {
     btn.textContent = '💾 儲存';
     btn.classList.add('editing');
@@ -775,12 +858,14 @@ function toggleEdit(dir) {
     btn.textContent = '✏️ 編輯';
     btn.classList.remove('editing');
     const now = new Date();
-    document.getElementById('saved-'+dir).textContent = '已儲存 ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+    document.getElementById('saved-'+dir).textContent =
+      '已儲存 ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+    saveAll();
     showToast('已儲存 ✓');
   }
 }
 
-// Init: make inputs read-only by default
+// Init: inputs read-only by default
 document.querySelectorAll('.flight-card input').forEach(i => { i.readOnly = true; });
 
 // ══ Checklists ══
@@ -808,19 +893,135 @@ const checklistsData = {
 
 function renderChecklist(dir) {
   const el = document.getElementById('checklist-' + dir);
-  el.innerHTML = checklistsData[dir].map((item, i) => `
-    <div class="check-item" onclick="toggleCheck('${dir}', ${i})">
+  const addRow = document.getElementById('checklist-' + dir + '-addrow');
+  const isEdit = el.classList.contains('edit-mode');
+
+  // Rebuild items before the addrow
+  const items = checklistsData[dir].map((item, i) => `
+    <div class="check-item" onclick="${isEdit ? '' : "toggleCheck('" + dir + "'," + i + ")"}">
       <div class="check-box${item.done ? ' checked' : ''}"></div>
       <div class="check-text${item.done ? ' checked' : ''}">${item.text}</div>
-    </div>
-  `).join('');
+      <button class="check-del-btn" onclick="event.stopPropagation();delCheckItem('${dir}',${i})">×</button>
+    </div>`).join('');
+
+  // Insert items before addrow
+  addRow.insertAdjacentHTML('beforebegin', items);
+  // Remove old items (keep addrow)
+  [...el.querySelectorAll('.check-item')].slice(0, el.querySelectorAll('.check-item').length - checklistsData[dir].length).forEach(n => n.remove());
+
+  // Re-render cleanly
+  el.innerHTML = items + addRow.outerHTML;
 }
+
 function toggleCheck(dir, idx) {
   checklistsData[dir][idx].done = !checklistsData[dir][idx].done;
   renderChecklist(dir);
+  saveAll();
 }
+
+function toggleChecklistEdit(dir) {
+  const el = document.getElementById('checklist-' + dir);
+  const btn = document.getElementById('checklist-' + dir + '-editbtn');
+  const addRow = document.getElementById('checklist-' + dir + '-addrow');
+  el.classList.toggle('edit-mode');
+  const isEdit = el.classList.contains('edit-mode');
+  addRow.style.display = isEdit ? 'flex' : 'none';
+  btn.textContent = isEdit ? '✅ 完成編輯' : '✏️ 編輯清單';
+  btn.classList.toggle('active', isEdit);
+  renderChecklist(dir);
+}
+
+function addCheckItem(dir) {
+  const inp = document.getElementById('checklist-' + dir + '-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  checklistsData[dir].push({ text, done: false });
+  inp.value = '';
+  renderChecklist(dir);
+  saveAll();
+}
+
+function delCheckItem(dir, idx) {
+  checklistsData[dir].splice(idx, 1);
+  renderChecklist(dir);
+  saveAll();
+}
+
+// Enter key to add
+['out','ret'].forEach(dir => {
+  document.getElementById('checklist-' + dir + '-input')
+    .addEventListener('keydown', e => { if (e.key === 'Enter') addCheckItem(dir); });
+});
+
 renderChecklist('out');
 renderChecklist('ret');
+
+// ══ Save / Load ══
+function saveAll() {
+  const data = {};
+  // Display fields
+  ['out','ret'].forEach(dir => {
+    DISPLAY_FIELDS[dir].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) data[id] = el.textContent;
+    });
+    // Form inputs
+    document.querySelectorAll('#card-' + dir + ' input').forEach(inp => {
+      if (inp.id) data[inp.id] = inp.value;
+    });
+  });
+  // Checklists
+  data['_chk_out'] = JSON.stringify(checklistsData.out);
+  data['_chk_ret'] = JSON.stringify(checklistsData.ret);
+  // Hotel
+  const hotel = document.getElementById('hotel-address');
+  if (hotel) data['hotel-address'] = hotel.value;
+  // QR
+  const qrImg = document.getElementById('qr-preview');
+  if (qrImg && qrImg.src && qrImg.src.startsWith('data:')) data['_qr'] = qrImg.src;
+
+  try { localStorage.setItem('flight_v2', JSON.stringify(data)); } catch(e) {}
+}
+
+function loadAll() {
+  try {
+    const raw = localStorage.getItem('flight_v2');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+
+    // Display fields
+    ['out','ret'].forEach(dir => {
+      DISPLAY_FIELDS[dir].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && data[id] !== undefined) el.textContent = data[id];
+      });
+      // Form inputs
+      document.querySelectorAll('#card-' + dir + ' input').forEach(inp => {
+        if (inp.id && data[inp.id] !== undefined) inp.value = data[inp.id];
+      });
+    });
+
+    // Checklists
+    if (data['_chk_out']) checklistsData.out = JSON.parse(data['_chk_out']);
+    if (data['_chk_ret']) checklistsData.ret = JSON.parse(data['_chk_ret']);
+    renderChecklist('out');
+    renderChecklist('ret');
+
+    // Hotel
+    if (data['hotel-address']) {
+      const h = document.getElementById('hotel-address');
+      if (h) h.value = data['hotel-address'];
+    }
+    // QR
+    if (data['_qr']) {
+      const img = document.getElementById('qr-preview');
+      const zone = document.getElementById('qr-zone');
+      img.src = data['_qr'];
+      img.classList.add('show');
+      if (zone) zone.classList.add('has-image');
+    }
+  } catch(e) {}
+}
 
 // ══ QR Upload ══
 document.getElementById('qr-file-input').addEventListener('change', function(e) {
@@ -832,7 +1033,8 @@ document.getElementById('qr-file-input').addEventListener('change', function(e) 
     const zone = document.getElementById('qr-zone');
     img.src = ev.target.result;
     img.classList.add('show');
-    zone.classList.add('has-image');
+    if (zone) zone.classList.add('has-image');
+    saveAll();
     showToast('QR Code 已上傳 ✓');
   };
   reader.readAsDataURL(file);
@@ -845,6 +1047,9 @@ function showToast(msg) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2200);
 }
+
+// ══ Boot ══
+loadAll();
 </script>
 </body>
 </html>
