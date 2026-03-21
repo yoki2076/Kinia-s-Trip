@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>航班資訊</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900&family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0; padding: 0; min-height: 100%;
+  background: #F7F3EE;
+  font-family: 'Noto Sans TC', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ══ TOKENS ══ */
+:root {
+  --brown:      #8B5E3C;
+  --brown-dark: #6B4428;
+  --brown-light:#C4956A;
+  --fog:        #A8917A;
+  --cream:      #F7F3EE;
+  --card-bg:    #FDFAF6;
+  --border:     #DDD4C6;
+  --text:       #2C2016;
+  --text-sub:   #8B7355;
+  --red:        #C0392B;
+  --blue:       #1A4A8B;
+  --green:      #1E6B45;
+  --sky:        #1565C0;
+}
+
+/* ══ HEADER ══ */
+.page-header {
+  background: linear-gradient(160deg, #1A2E4A 0%, #1565C0 60%, #0D47A1 100%);
+  padding: 20px 18px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.page-header::before {
+  content: '✈';
+  position: absolute; right: -8px; top: 50%; transform: translateY(-50%);
+  font-size: 100px; opacity: 0.06; pointer-events: none;
+  animation: planeFly 12s ease-in-out infinite;
+}
+@keyframes planeFly {
+  0%, 100% { transform: translateY(-50%) translateX(0); }
+  50% { transform: translateY(-55%) translateX(-6px); }
+}
+.page-header-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 4px;
+}
+.page-header-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: rgba(255,255,255,0.18);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.page-header-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 900; color: #fff;
+}
+.page-header-sub {
+  font-size: 11px; color: rgba(255,255,255,0.65);
+  letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600;
+  padding-left: 46px;
+}
+
+/* ══ TABS ══ */
+.tabs-wrap {
+  display: flex; gap: 0;
+  background: #fff;
+  border-bottom: 1.5px solid var(--border);
+  position: sticky; top: 0; z-index: 50;
+}
+.tab-btn {
+  flex: 1; padding: 13px 4px; border: none; background: none;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 12px; font-weight: 700; color: var(--fog);
+  cursor: pointer; position: relative;
+  transition: color 0.18s;
+  letter-spacing: 0.3px;
+}
+.tab-btn::after {
+  content: ''; position: absolute; bottom: 0; left: 15%; right: 15%; height: 2.5px;
+  background: var(--blue); border-radius: 3px 3px 0 0;
+  transform: scaleX(0); transition: transform 0.22s cubic-bezier(.4,0,.2,1);
+}
+.tab-btn.active { color: var(--blue); }
+.tab-btn.active::after { transform: scaleX(1); }
+
+/* ══ SECTIONS ══ */
+.section { display: none; padding: 16px 14px 32px; }
+.section.active { display: block; }
+
+/* ══ FLIGHT CARD ══ */
+.flight-card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+}
+.flight-card-header {
+  padding: 14px 16px 12px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.direction-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+}
+.badge-outbound { background: #EBF3FF; color: #1A4A8B; }
+.badge-return   { background: #FFF3EB; color: #8B4A1A; }
+
+.flight-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px; font-weight: 700; color: var(--text);
+  margin-left: auto;
+}
+.airline-logo {
+  width: 28px; height: 28px; border-radius: 6px;
+  background: var(--border); display: flex; align-items: center;
+  justify-content: center; font-size: 14px; flex-shrink: 0;
+}
+
+/* Route visual */
+.route-visual {
+  padding: 18px 16px 14px;
+  display: flex; align-items: center; gap: 0;
+}
+.route-airport { flex: 1; }
+.route-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 26px; font-weight: 700; color: var(--text);
+  line-height: 1;
+}
+.route-city { font-size: 11px; color: var(--fog); margin-top: 3px; font-weight: 600; }
+.route-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px; font-weight: 700; color: var(--brown);
+  margin-top: 6px;
+}
+.route-date { font-size: 10px; color: var(--fog); margin-top: 1px; }
+
+.route-mid {
+  flex: 0 0 auto; display: flex; flex-direction: column;
+  align-items: center; gap: 4px; padding: 0 12px;
+}
+.route-line {
+  display: flex; align-items: center; gap: 0; width: 80px;
+}
+.route-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--blue); flex-shrink: 0;
+}
+.route-dash {
+  flex: 1; height: 1.5px; background: var(--border);
+  position: relative;
+}
+.route-plane {
+  font-size: 14px; color: var(--blue);
+  flex-shrink: 0;
+}
+.route-duration {
+  font-size: 10px; color: var(--fog); font-weight: 600; letter-spacing: 0.5px;
+}
+.route-stops {
+  font-size: 9px; color: var(--fog);
+  background: #F0EBE3; border-radius: 10px; padding: 1px 6px;
+}
+
+.route-airport.right { text-align: right; }
+
+/* Info grid */
+.info-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1px; background: var(--border);
+  border-top: 1px solid var(--border);
+}
+.info-cell {
+  background: var(--card-bg);
+  padding: 12px 14px;
+  position: relative;
+}
+.info-cell.full { grid-column: 1 / -1; }
+.info-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--fog); margin-bottom: 5px;
+}
+.info-value {
+  font-size: 14px; font-weight: 700; color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+}
+.info-value.normal { font-family: 'Noto Sans TC', sans-serif; }
+.info-value input, .info-value select {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; font-weight: 700; color: var(--text);
+  background: transparent; border: none; outline: none;
+  width: 100%; padding: 0;
+  -webkit-appearance: none;
+}
+.info-value.normal input {
+  font-family: 'Noto Sans TC', sans-serif;
+}
+.info-value select { cursor: pointer; }
+
+/* Edit mode */
+.edit-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+}
+.btn-edit {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 12px; font-weight: 700; color: var(--fog);
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-edit:active, .btn-edit.editing {
+  background: var(--blue); color: #fff; border-color: var(--blue);
+}
+.last-saved {
+  font-size: 10px; color: var(--fog);
+}
+
+/* Status pill */
+.status-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: 700;
+}
+.status-confirmed { background: #E8F5E9; color: #2E7D32; }
+.status-pending   { background: #FFF8E1; color: #F57F17; }
+
+/* ══ SECTION LABELS ══ */
+.section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--fog);
+  margin: 20px 0 10px; padding-left: 2px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ══ BAGGAGE ══ */
+.baggage-row {
+  display: flex; gap: 8px; margin-bottom: 10px;
+}
+.baggage-item {
+  flex: 1; background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 14px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+}
+.baggage-icon { font-size: 22px; }
+.baggage-type { font-size: 10px; color: var(--fog); font-weight: 700; letter-spacing: 1px; }
+.baggage-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px; font-weight: 700; color: var(--text); line-height: 1;
+}
+.baggage-unit { font-size: 10px; color: var(--fog); }
+
+/* ══ CHECKLIST ══ */
+.checklist-card {
+  background: var(--card-bg); border: 1.5px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+}
+.check-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-bottom: 1px solid #F0EBE3;
+  cursor: pointer; transition: background 0.12s;
+}
+.check-item:last-child { border-bottom: none; }
+.check-item:active { background: #F0EBE3; }
+.check-box {
+  width: 20px; height: 20px; border-radius: 6px;
+  border: 2px solid var(--border); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; background: #fff;
+}
+.check-box.checked { background: var(--green); border-color: var(--green); }
+.check-box.checked::after { content: '✓'; color: #fff; font-size: 12px; font-weight: 900; }
+.check-text { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; }
+.check-text.checked { text-decoration: line-through; color: var(--fog); }
+
+/* ══ ENTRY CARD (Japan) ══ */
+.vjw-header {
+  background: linear-gradient(135deg, #B71C1C 0%, #C62828 60%, #D32F2F 100%);
+  border-radius: 18px 18px 0 0;
+  padding: 18px 18px 16px;
+  display: flex; align-items: center; gap: 14px;
+}
+.vjw-logo {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 900; color: #fff;
+  border: 2px solid rgba(255,255,255,0.4);
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+.vjw-title { color: #fff; }
+.vjw-title-main { font-size: 16px; font-weight: 900; margin-bottom: 2px; }
+.vjw-title-sub { font-size: 11px; color: rgba(255,255,255,0.75); }
+
+.vjw-body {
+  background: #1A2035; border-radius: 0 0 18px 18px;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+.vjw-link-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px; padding: 12px 14px;
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer; transition: background 0.15s; text-decoration: none;
+}
+.vjw-link-card:active { background: rgba(255,255,255,0.1); }
+.vjw-link-icon {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+  flex-shrink: 0;
+}
+.vjw-link-info { flex: 1; min-width: 0; }
+.vjw-link-label { font-size: 10px; color: rgba(255,255,255,0.5); margin-bottom: 2px; font-weight: 600; letter-spacing: 0.5px; }
+.vjw-link-url {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; color: #5EC4FF;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vjw-link-arrow { color: rgba(255,255,255,0.3); font-size: 14px; flex-shrink: 0; }
+
+/* Steps */
+.vjw-steps { margin: 14px 0 16px; }
+.vjw-step {
+  display: flex; gap: 10px; align-items: flex-start;
+  margin-bottom: 10px;
+}
+.step-num {
+  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 900; color: rgba(255,255,255,0.8);
+}
+.step-text { font-size: 12px; color: rgba(255,255,255,0.75); line-height: 1.5; padding-top: 3px; }
+.step-text b { color: #fff; }
+
+/* QR Upload */
+.qr-upload-zone {
+  border: 1.5px dashed rgba(255,255,255,0.2);
+  border-radius: 14px;
+  padding: 28px 16px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  cursor: pointer; transition: all 0.2s;
+  background: rgba(255,255,255,0.03);
+  position: relative; overflow: hidden;
+}
+.qr-upload-zone:active { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.4); }
+.qr-upload-zone.has-image { border-style: solid; border-color: rgba(94,196,255,0.4); }
+.qr-preview {
+  width: 160px; height: 160px; object-fit: contain;
+  border-radius: 8px; display: none;
+  background: #fff; padding: 4px;
+}
+.qr-preview.show { display: block; }
+.qr-placeholder-icon { font-size: 36px; opacity: 0.4; }
+.qr-upload-text { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.85); }
+.qr-upload-sub { font-size: 11px; color: rgba(255,255,255,0.4); }
+#qr-file-input { display: none; }
+
+.qr-upload-zone .qr-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.qr-upload-zone.has-image .qr-placeholder { display: none; }
+
+.vjw-note {
+  display: flex; gap: 8px; align-items: flex-start;
+  background: rgba(255,167,38,0.1); border-radius: 10px;
+  padding: 10px 12px; margin-top: 12px;
+}
+.vjw-note-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.vjw-note-text { font-size: 11px; color: rgba(255,200,130,0.9); line-height: 1.5; }
+
+/* Entry info grid */
+.entry-info-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; margin-top: 12px;
+}
+.entry-info-item {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; padding: 10px 12px;
+}
+.entry-info-label { font-size: 9px; color: rgba(255,255,255,0.4); font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+.entry-info-value { font-size: 13px; font-weight: 700; color: #fff; }
+.entry-info-item.full { grid-column: 1 / -1; }
+
+/* ══ SAVE TOAST ══ */
+.toast {
+  position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--brown-dark); color: #fff; border-radius: 20px;
+  padding: 10px 20px; font-size: 13px; font-weight: 700;
+  opacity: 0; transition: all 0.3s; z-index: 999; white-space: nowrap;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="page-header-row">
+    <div class="page-header-icon">✈️</div>
+    <div class="page-header-title">航班資訊</div>
+  </div>
+  <div class="page-header-sub">沖繩・OKINAWA · 2025</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-wrap">
+  <button class="tab-btn active" onclick="switchTab('outbound')">✈ 去程</button>
+  <button class="tab-btn" onclick="switchTab('return')">↩ 回程</button>
+  <button class="tab-btn" onclick="switchTab('entry')">🛃 入境卡</button>
+</div>
+
+<!-- ══ OUTBOUND ══ -->
+<div class="section active" id="tab-outbound">
+
+  <div class="flight-card" id="card-out">
+    <div class="flight-card-header">
+      <div class="airline-logo">✈</div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700;color:var(--text)" id="display-out-airline">中華航空</div>
+        <div style="font-size:10px;color:var(--fog)" id="display-out-class">經濟艙</div>
+      </div>
+      <span class="direction-badge badge-outbound">去程</span>
+      <div class="flight-num" id="display-out-flightnum">CI 110</div>
+    </div>
+
+    <!-- Route visual -->
+    <div class="route-visual">
+      <div class="route-airport">
+        <div class="route-code" id="display-out-dep">TPE</div>
+        <div class="route-city">台北桃園</div>
+        <div class="route-time" id="display-out-deptime">08:30</div>
+        <div class="route-date" id="display-out-depdate">2025/07/12</div>
+      </div>
+      <div class="route-mid">
+        <div class="route-line">
+          <div class="route-dot"></div>
+          <div class="route-dash"></div>
+          <div class="route-plane">✈</div>
+          <div class="route-dash"></div>
+          <div class="route-dot"></div>
+        </div>
+        <div class="route-duration" id="display-out-duration">約 2h 30m</div>
+        <div class="route-stops">直飛</div>
+      </div>
+      <div class="route-airport right">
+        <div class="route-code" id="display-out-arr">OKA</div>
+        <div class="route-city">沖繩那霸</div>
+        <div class="route-time" id="display-out-arrtime">11:00</div>
+        <div class="route-date" id="display-out-arrdate">2025/07/12</div>
+      </div>
+    </div>
+
+    <!-- Info grid -->
+    <div class="info-grid">
+      <div class="info-cell">
+        <div class="info-label">登機門</div>
+        <div class="info-value"><input id="out-gate" value="A3" placeholder="—"></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">航廈</div>
+        <div class="info-value"><input id="out-terminal" value="第一航廈" placeholder="—"></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">座位</div>
+        <div class="info-value"><input id="out-seat" value="24A" placeholder="—"></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">餐食選項</div>
+        <div class="info-value normal"><input id="out-meal" value="標準餐" placeholder="—"></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">登機時間</div>
+        <div class="info-value"><input id="out-boarding" value="07:50" placeholder="—"></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">確認碼</div>
+        <div class="info-value"><input id="out-pnr" value="ABC123" placeholder="—"></div>
+      </div>
+      <div class="info-cell full">
+        <div class="info-label">備註</div>
+        <div class="info-value normal" style="font-size:12px"><input id="out-note" value="提前 2 小時到機場辦理 Check-in" placeholder="新增備註…"></div>
+      </div>
+    </div>
+
+    <div class="edit-toggle">
+      <button class="btn-edit" id="btn-edit-out" onclick="toggleEdit('out')">✏️ 編輯</button>
+      <span class="last-saved" id="saved-out"></span>
+    </div>
+  </div>
+
+  <!-- Baggage -->
+  <div class="section-label">🧳 行李額度</div>
+  <div class="baggage-row">
+    <div class="baggage-item">
+      <div class="baggage-icon">🎒</div>
+      <div class="baggage-type">手提</div>
+      <div class="baggage-value" id="out-cabin-kg">7</div>
+      <div class="baggage-unit">kg</div>
+    </div>
+    <div class="baggage-item">
+      <div class="baggage-icon">🧳</div>
+      <div class="baggage-type">託運</div>
+      <div class="baggage-value" id="out-check-kg">23</div>
+      <div class="baggage-unit">kg × <span id="out-check-pcs">1</span> 件</div>
+    </div>
+    <div class="baggage-item">
+      <div class="baggage-icon">💼</div>
+      <div class="baggage-type">隨身</div>
+      <div class="baggage-value">1</div>
+      <div class="baggage-unit">個</div>
+    </div>
+  </div>
+
+  <!-- Pre-flight checklist -->
+  <div class="section-label">✅ 出發前確認</div>
+  <div class="checklist-card" id="checklist-out"></div>
+
+</div>
+
+<!-- ══ RETURN ══ -->
+<div class="section" id="tab-return">
+
+  <div class="flight-card" id="card-ret">
+    <div class="flight-card-header">
+      <div class="airline-logo">✈</div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700;color:var(--text)" id="display-ret-airline">中華航空</div>
+        <div style="font-size:10px;color:var(--fog)" id="display-ret-class">經濟艙</div>
+      </div>
+      <span class="direction-badge badge-return">回程</span>
+      <div class="flight-num" id="display-ret-flightnum">CI 111</div>
+    </div>
+
+    <div class="route-visual">
+      <div class="route-airport">
+        <div class="route-code" id="display-ret-dep">OKA</div>
+        <div class="route-city">沖繩那霸</div>
+        <div class="route-time" id="display-ret-deptime">13:00</div>
+        <div class="route-date" id="display-ret-depdate">2025/07/17</div>
+      </div>
+      <div class="route-mid">
+        <div class="route-line">
+          <div class="route-dot"></div>
+          <div class="route-dash"></div>
+          <div class="route-plane">✈</div>
+          <div class="route-dash"></div>
+          <div class="route-dot"></div>
+        </div>
+        <div class="route-duration" id="display-ret-duration">約 2h 30m</div>
+        <div class="route-stops">直飛</div>
+      </div>
+      <div class="route-airport right">
+        <div class="route-code" id="display-ret-arr">TPE</div>
+        <div class="route-city">台北桃園</div>
+        <div class="route-time" id="display-ret-arrtime">14:30</div>
+        <div class="route-date" id="display-ret-arrdate">2025/07/17</div>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-cell">
+        <div class="info-label">登機門</div>
+        <div class="info-value"><input id="ret-gate" value="B12" placeholder="—"></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">航廈</div>
+        <div class="info-value"><input id="ret-terminal" value="國內線航廈" placeholder="—"></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">座位</div>
+        <div class="info-value"><input id="ret-seat" value="24A" placeholder="—"></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">餐食選項</div>
+        <div class="info-value normal"><input id="ret-meal" value="標準餐" placeholder="—"></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">登機時間</div>
+        <div class="info-value"><input id="ret-boarding" value="12:30" placeholder="—"></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">確認碼</div>
+        <div class="info-value"><input id="ret-pnr" value="ABC123" placeholder="—"></div>
+      </div>
+      <div class="info-cell full">
+        <div class="info-label">備註</div>
+        <div class="info-value normal" style="font-size:12px"><input id="ret-note" value="記得在機場退稅！免稅品帶上飛機" placeholder="新增備註…"></div>
+      </div>
+    </div>
+
+    <div class="edit-toggle">
+      <button class="btn-edit" id="btn-edit-ret" onclick="toggleEdit('ret')">✏️ 編輯</button>
+      <span class="last-saved" id="saved-ret"></span>
+    </div>
+  </div>
+
+  <div class="section-label">🧳 行李額度</div>
+  <div class="baggage-row">
+    <div class="baggage-item">
+      <div class="baggage-icon">🎒</div>
+      <div class="baggage-type">手提</div>
+      <div class="baggage-value">7</div>
+      <div class="baggage-unit">kg</div>
+    </div>
+    <div class="baggage-item">
+      <div class="baggage-icon">🧳</div>
+      <div class="baggage-type">託運</div>
+      <div class="baggage-value">23</div>
+      <div class="baggage-unit">kg × 1 件</div>
+    </div>
+    <div class="baggage-item">
+      <div class="baggage-icon">🛍️</div>
+      <div class="baggage-type">免稅限額</div>
+      <div class="baggage-value">¥</div>
+      <div class="baggage-unit">20萬円</div>
+    </div>
+  </div>
+
+  <div class="section-label">✅ 回程前確認</div>
+  <div class="checklist-card" id="checklist-ret"></div>
+
+</div>
+
+<!-- ══ ENTRY CARD ══ -->
+<div class="section" id="tab-entry">
+
+  <!-- 基本入境資訊 -->
+  <div class="section-label" style="margin-top:4px">📋 入境資訊</div>
+  <div class="entry-info-grid">
+    <div class="entry-info-item">
+      <div class="entry-info-label">目的地</div>
+      <div class="entry-info-value">🇯🇵 日本・沖繩</div>
+    </div>
+    <div class="entry-info-item">
+      <div class="entry-info-label">入境機場</div>
+      <div class="entry-info-value">那霸空港 OKA</div>
+    </div>
+    <div class="entry-info-item">
+      <div class="entry-info-label">停留目的</div>
+      <div class="entry-info-value">觀光 Tourism</div>
+    </div>
+    <div class="entry-info-item">
+      <div class="entry-info-label">停留天數</div>
+      <div class="entry-info-value">5 天</div>
+    </div>
+    <div class="entry-info-item full">
+      <div class="entry-info-label">住宿地址（日文）</div>
+      <div class="entry-info-value" style="font-size:12px;margin-top:2px">
+        <input id="hotel-address" value="沖縄県那覇市松山1-2-3" style="background:transparent;border:none;outline:none;color:#fff;font-family:'Noto Sans TC',sans-serif;font-size:12px;width:100%;" placeholder="請填入住宿地址…">
+      </div>
+    </div>
+  </div>
+
+  <!-- Visit Japan Web -->
+  <div class="section-label">🌐 Visit Japan Web</div>
+  <div style="border-radius:18px;overflow:hidden;margin-bottom:16px;box-shadow:0 4px 20px rgba(0,0,0,0.12);">
+    <div class="vjw-header">
+      <div class="vjw-logo">JP</div>
+      <div class="vjw-title">
+        <div class="vjw-title-main">Visit Japan Web</div>
+        <div class="vjw-title-sub">日本電子入境申報系統</div>
+      </div>
+    </div>
+
+    <div class="vjw-body">
+      <!-- Links -->
+      <a class="vjw-link-card" href="https://vjw-lp.digital.go.jp/zh-hant/" target="_blank">
+        <div class="vjw-link-icon">🔗</div>
+        <div class="vjw-link-info">
+          <div class="vjw-link-label">官方網站（繁體中文）</div>
+          <div class="vjw-link-url">vjw-lp.digital.go.jp/zh-hant/</div>
+        </div>
+        <div class="vjw-link-arrow">↗</div>
+      </a>
+
+      <a class="vjw-link-card" href="https://www.vjw.digital.go.jp" target="_blank">
+        <div class="vjw-link-icon">📋</div>
+        <div class="vjw-link-info">
+          <div class="vjw-link-label">登入申報（填寫入境資料）</div>
+          <div class="vjw-link-url">www.vjw.digital.go.jp</div>
+        </div>
+        <div class="vjw-link-arrow">↗</div>
+      </a>
+
+      <!-- Steps -->
+      <div class="vjw-steps">
+        <div class="vjw-step">
+          <div class="step-num">1</div>
+          <div class="step-text">點擊上方連結，<b>註冊或登入</b> Visit Japan Web 帳號</div>
+        </div>
+        <div class="vjw-step">
+          <div class="step-num">2</div>
+          <div class="step-text">填寫<b>入境審查 &amp; 海關申報</b>，提交後取得 QR code</div>
+        </div>
+        <div class="vjw-step">
+          <div class="step-num">3</div>
+          <div class="step-text">將 QR code <b>截圖儲存</b>，或上傳至下方備用</div>
+        </div>
+      </div>
+
+      <!-- QR Upload -->
+      <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:10px;">📱 我的 QR Code</div>
+      <div class="qr-upload-zone" id="qr-zone" onclick="document.getElementById('qr-file-input').click()">
+        <img class="qr-preview" id="qr-preview" src="" alt="QR Code">
+        <div class="qr-placeholder">
+          <div class="qr-placeholder-icon">📷</div>
+          <div class="qr-upload-text">點擊上傳 QR Code</div>
+          <div class="qr-upload-sub">支援 JPG、PNG、截圖檔案</div>
+        </div>
+      </div>
+      <input type="file" id="qr-file-input" accept="image/*">
+
+      <div class="vjw-note">
+        <div class="vjw-note-icon">📌</div>
+        <div class="vjw-note-text">入境時出示 QR code 給海關人員掃描，可加速通關流程。建議同時截圖備份，以防網路不佳。</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">已儲存 ✓</div>
+
+<script>
+// ══ Tab switch ══
+function switchTab(id) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['outbound','return','entry'][i] === id);
+  });
+  document.querySelectorAll('.section').forEach(s => {
+    s.classList.toggle('active', s.id === 'tab-'+id);
+  });
+}
+
+// ══ Edit toggle ══
+const editState = { out: false, ret: false };
+function toggleEdit(dir) {
+  editState[dir] = !editState[dir];
+  const card = document.getElementById('card-' + dir);
+  const btn  = document.getElementById('btn-edit-' + dir);
+  const inputs = card.querySelectorAll('input');
+  inputs.forEach(inp => {
+    inp.readOnly = !editState[dir];
+    inp.style.background = editState[dir] ? 'rgba(139,94,60,0.06)' : 'transparent';
+    inp.style.borderRadius = editState[dir] ? '6px' : '0';
+    inp.style.padding = editState[dir] ? '3px 6px' : '0';
+  });
+  if (editState[dir]) {
+    btn.textContent = '💾 儲存';
+    btn.classList.add('editing');
+  } else {
+    btn.textContent = '✏️ 編輯';
+    btn.classList.remove('editing');
+    const now = new Date();
+    document.getElementById('saved-'+dir).textContent = '已儲存 ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+    showToast('已儲存 ✓');
+  }
+}
+
+// Init: make inputs read-only by default
+document.querySelectorAll('.flight-card input').forEach(i => { i.readOnly = true; });
+
+// ══ Checklists ══
+const checklistsData = {
+  out: [
+    { text: '護照有效期 6 個月以上', done: false },
+    { text: 'Visit Japan Web 入境申報完成', done: false },
+    { text: '機票確認信截圖', done: false },
+    { text: '訂房確認信截圖', done: false },
+    { text: '旅遊保險文件', done: false },
+    { text: '日圓現金準備', done: false },
+    { text: '行動電源充飽電（不可託運）', done: false },
+    { text: '液體 <100ml 裝入夾鏈袋', done: false },
+  ],
+  ret: [
+    { text: '退稅單備妥（蓋章後帶上機）', done: false },
+    { text: '免稅品放在手提行李', done: false },
+    { text: '確認行李重量不超重', done: false },
+    { text: '飯店鑰匙/卡歸還', done: false },
+    { text: '充電線、變壓器收回', done: false },
+    { text: 'SIM卡/Wi-Fi分享器歸還', done: false },
+    { text: '行動電源帶上手提（勿託運）', done: false },
+  ]
+};
+
+function renderChecklist(dir) {
+  const el = document.getElementById('checklist-' + dir);
+  el.innerHTML = checklistsData[dir].map((item, i) => `
+    <div class="check-item" onclick="toggleCheck('${dir}', ${i})">
+      <div class="check-box${item.done ? ' checked' : ''}"></div>
+      <div class="check-text${item.done ? ' checked' : ''}">${item.text}</div>
+    </div>
+  `).join('');
+}
+function toggleCheck(dir, idx) {
+  checklistsData[dir][idx].done = !checklistsData[dir][idx].done;
+  renderChecklist(dir);
+}
+renderChecklist('out');
+renderChecklist('ret');
+
+// ══ QR Upload ══
+document.getElementById('qr-file-input').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const img = document.getElementById('qr-preview');
+    const zone = document.getElementById('qr-zone');
+    img.src = ev.target.result;
+    img.classList.add('show');
+    zone.classList.add('has-image');
+    showToast('QR Code 已上傳 ✓');
+  };
+  reader.readAsDataURL(file);
+});
+
+// ══ Toast ══
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+</script>
+</body>
+</html>
