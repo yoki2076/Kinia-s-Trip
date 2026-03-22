@@ -214,6 +214,145 @@
   .loading-text { font-size: 12px; color: #A8917A; font-weight: 600; letter-spacing: 1px; }
 
   #offline-banner.show { display: block; }
+
+  /* ══ TUTORIAL MODAL ══════════════════════════════════ */
+  #tutorial-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 500;
+    background: rgba(30,16,8,0.6);
+    backdrop-filter: blur(3px);
+    align-items: flex-end;
+    justify-content: center;
+    animation: tOverlayIn 0.3s ease;
+  }
+  #tutorial-overlay.open { display: flex; }
+  @keyframes tOverlayIn { from { opacity:0; } to { opacity:1; } }
+
+  #tutorial-sheet {
+    width: 100%; max-width: 430px;
+    height: 92dvh;
+    background: #F7F3EE;
+    border-radius: 24px 24px 0 0;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    animation: tSheetUp 0.35s cubic-bezier(.4,0,.2,1);
+  }
+  @keyframes tSheetUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
+  /* drag handle + header */
+  .t-handle {
+    width: 36px; height: 4px; border-radius: 2px;
+    background: #DDD4C6; margin: 12px auto 0; flex-shrink: 0;
+  }
+  .t-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px 4px; flex-shrink: 0;
+  }
+  .t-title-row { display: flex; align-items: center; gap: 8px; }
+  .t-title {
+    font-size: 13px; font-weight: 700; color: #A8917A; letter-spacing: 1px;
+  }
+  .t-counter { font-size: 13px; font-weight: 700; color: #8B5E3C; }
+  .t-close {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: #EEE8E0; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: #A8917A;
+    transition: background 0.15s;
+  }
+  .t-close:active { background: #DDD4C6; }
+
+  /* pips */
+  .t-pips { display: flex; gap: 5px; padding: 6px 20px 0; flex-shrink: 0; }
+  .t-pip {
+    flex: 1; height: 3px; border-radius: 3px; background: #DDD4C6;
+    transition: background 0.3s; cursor: pointer;
+  }
+  .t-pip.done   { background: #C4956A; }
+  .t-pip.active { background: #6B4428; }
+
+  /* viewport */
+  .t-viewport { flex: 1; overflow: hidden; min-height: 0; }
+  .t-track {
+    display: flex; height: 100%;
+    transition: transform 0.4s cubic-bezier(.4,0,.2,1);
+    will-change: transform;
+  }
+  .t-slide {
+    min-width: 100%; height: 100%;
+    padding: 10px 16px 0;
+    display: flex; flex-direction: column;
+  }
+
+  /* card */
+  .t-card {
+    background: #FDFAF6; border-radius: 22px;
+    border: 1.5px solid #DDD4C6;
+    box-shadow: 0 6px 32px rgba(44,32,22,0.11);
+    overflow: hidden; display: flex; flex-direction: column;
+    flex: 1; min-height: 0;
+  }
+  .t-hero {
+    flex-shrink: 0; height: 44%;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .t-hero svg { width: 100%; height: 100%; }
+  .t-body {
+    padding: 16px 18px 16px;
+    display: flex; flex-direction: column; gap: 8px;
+    flex: 1; min-height: 0; overflow: hidden;
+  }
+  .t-card-title {
+    font-size: 22px; font-weight: 900; color: #1E1008;
+    line-height: 1.2; flex-shrink: 0;
+  }
+  .t-feat-list { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .t-feat {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(139,94,60,0.06); border-radius: 14px;
+    padding: 10px 14px; flex: 1;
+  }
+  .t-feat-ico  { font-size: 26px; flex-shrink: 0; width: 38px; text-align: center; }
+  .t-feat-text { flex: 1; }
+  .t-feat-name { font-size: 15px; font-weight: 900; color: #1E1008; margin-bottom: 1px; }
+  .t-feat-hint { font-size: 12px; color: #A8917A; line-height: 1.4; }
+
+  /* scope grid */
+  .t-scope-row { display: flex; gap: 8px; flex: 1; min-height: 0; }
+  .t-scope-box {
+    flex: 1; border-radius: 16px; padding: 12px 12px 14px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .t-scope-box.shared   { background: rgba(58,122,80,0.10);  border: 2px solid rgba(58,122,80,0.25); }
+  .t-scope-box.personal { background: rgba(42,106,154,0.10); border: 2px solid rgba(42,106,154,0.25); }
+  .t-scope-head { font-size: 13px; font-weight: 900; }
+  .t-scope-head.s { color: #3A7A50; }
+  .t-scope-head.p { color: #2A6A9A; }
+  .t-scope-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 14px; font-weight: 700; color: #1E1008;
+  }
+  .t-scope-item .ico { font-size: 17px; }
+  .t-scope-note { font-size: 11px; font-weight: 700; margin-top: 3px; }
+  .t-scope-note.s { color: #3A7A50; }
+  .t-scope-note.p { color: #2A6A9A; }
+
+  /* nav buttons */
+  .t-nav-row { display: flex; gap: 8px; padding: 10px 16px 16px; flex-shrink: 0; }
+  .t-btn {
+    flex: 1; padding: 14px; border-radius: 16px; border: none;
+    font-family: 'Noto Sans TC', sans-serif; font-size: 15px; font-weight: 900;
+    cursor: pointer; transition: all 0.18s; -webkit-tap-highlight-color: transparent;
+  }
+  .t-btn-back { background: #DDD4C6; color: #A8917A; flex: 0.55; }
+  .t-btn-back:active { opacity: 0.7; }
+  .t-btn-fwd  { background: #6B4428; color: white; box-shadow: 0 5px 18px rgba(107,68,40,0.28); }
+  .t-btn-fwd:active { transform: scale(0.97); }
+  .t-btn-fwd.finish { background: #3A7A50; box-shadow: 0 5px 18px rgba(58,122,80,0.32); }
 </style>
 </head>
 <body>
@@ -269,11 +408,269 @@
         <span class="drawer-item-icon">✈️</span>航班資訊
       </button>
 
+      <div class="drawer-divider"></div>
+      <div class="drawer-section-label">說明</div>
+      <button class="drawer-item" onclick="openTutorial();closeDrawer()">
+        <span class="drawer-item-icon">📖</span>使用教學
+      </button>
+
     </div>
     <div class="drawer-footer">
       <button class="btn-logout-drawer" onclick="handleLogout()">登出</button>
     </div>
   </div>
+
+  <!-- ══ TUTORIAL MODAL ════════════════════════════════ -->
+  <div id="tutorial-overlay" onclick="if(event.target===this)closeTutorial()">
+    <div id="tutorial-sheet">
+      <div class="t-handle"></div>
+      <div class="t-header">
+        <div class="t-title-row">
+          <span class="t-title">使用教學</span>
+          <span class="t-counter" id="t-counter">1 / 6</span>
+        </div>
+        <button class="t-close" onclick="closeTutorial()">✕</button>
+      </div>
+      <div class="t-pips" id="t-pips"></div>
+
+      <div class="t-viewport" id="t-viewport">
+        <div class="t-track" id="t-track">
+
+          <!-- 1: 底部五個按鈕 -->
+          <div class="t-slide">
+            <div class="t-card">
+              <div class="t-hero" style="background:linear-gradient(155deg,#6B4428,#C4956A)">
+                <svg viewBox="0 0 390 220" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="320" cy="30" r="90" fill="rgba(255,255,255,0.04)"/>
+                  <rect x="95" y="14" width="200" height="196" rx="24" fill="rgba(255,255,255,0.15)"/>
+                  <rect x="101" y="22" width="188" height="162" rx="16" fill="rgba(255,255,255,0.92)"/>
+                  <rect x="118" y="38" width="100" height="9" rx="4" fill="#DDD4C6"/>
+                  <rect x="118" y="54" width="152" height="7" rx="3" fill="#EEE8E0"/>
+                  <rect x="118" y="66" width="120" height="7" rx="3" fill="#EEE8E0"/>
+                  <rect x="118" y="82" width="152" height="50" rx="10" fill="rgba(196,149,106,0.13)"/>
+                  <rect x="118" y="140" width="152" height="34" rx="10" fill="rgba(196,149,106,0.07)"/>
+                  <rect x="95" y="183" width="200" height="2" fill="rgba(221,212,198,0.9)"/>
+                  <rect x="95" y="184" width="200" height="26" fill="rgba(255,255,255,0.97)"/>
+                  <rect x="95" y="184" width="36" height="26" fill="rgba(240,235,227,0.8)"/>
+                  <rect x="105" y="191" width="16" height="2" rx="1" fill="#A8917A"/>
+                  <rect x="105" y="196" width="12" height="2" rx="1" fill="#A8917A"/>
+                  <rect x="105" y="201" width="14" height="2" rx="1" fill="#A8917A"/>
+                  <text x="151" y="202" font-size="15" text-anchor="middle">🗺</text>
+                  <text x="183" y="202" font-size="15" text-anchor="middle">📖</text>
+                  <text x="215" y="202" font-size="15" text-anchor="middle">💰</text>
+                  <text x="247" y="202" font-size="15" text-anchor="middle">✨</text>
+                  <text x="279" y="202" font-size="15" text-anchor="middle">🧳</text>
+                  <rect x="145" y="183" width="12" height="2.5" rx="1.5" fill="#6B4428"/>
+                  <text x="195" y="13" font-size="11" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="sans-serif">↓ 底部導覽列</text>
+                </svg>
+              </div>
+              <div class="t-body">
+                <div class="t-card-title">底部有 5 個按鈕</div>
+                <div class="t-feat-list">
+                  <div class="t-feat"><div class="t-feat-ico">🗺</div><div class="t-feat-text"><div class="t-feat-name">行程</div><div class="t-feat-hint">每天去哪裡</div></div></div>
+                  <div class="t-feat"><div class="t-feat-ico">📖</div><div class="t-feat-text"><div class="t-feat-name">時間軸</div><div class="t-feat-hint">旅遊日記與照片</div></div></div>
+                  <div class="t-feat"><div class="t-feat-ico">💰 ✨ 🧳</div><div class="t-feat-text"><div class="t-feat-name">記帳・收藏・行李</div><div class="t-feat-hint">花費、想去的地方、打包清單</div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2: ☰ 選單 & 航班 -->
+          <div class="t-slide">
+            <div class="t-card">
+              <div class="t-hero" style="background:linear-gradient(155deg,#2A4A6A,#4A8ABB)">
+                <svg viewBox="0 0 390 220" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="320" cy="40" r="80" fill="rgba(255,255,255,0.04)"/>
+                  <rect x="95" y="14" width="200" height="196" rx="24" fill="rgba(255,255,255,0.15)"/>
+                  <rect x="101" y="22" width="188" height="162" rx="16" fill="rgba(255,255,255,0.92)"/>
+                  <rect x="95" y="183" width="200" height="2" fill="rgba(221,212,198,0.9)"/>
+                  <rect x="95" y="184" width="200" height="26" fill="rgba(255,255,255,0.97)"/>
+                  <rect x="95" y="183" width="40" height="27" rx="0 0 0 24" fill="rgba(196,149,106,0.25)" stroke="#C4956A" stroke-width="2"/>
+                  <rect x="106" y="191" width="18" height="2" rx="1" fill="#6B4428"/>
+                  <rect x="106" y="196" width="14" height="2" rx="1" fill="#6B4428"/>
+                  <rect x="106" y="201" width="16" height="2" rx="1" fill="#6B4428"/>
+                  <text x="55" y="208" font-size="26" fill="rgba(255,255,255,0.9)">➜</text>
+                  <rect x="101" y="22" width="118" height="162" rx="0 16 16 0" fill="white"/>
+                  <rect x="101" y="22" width="118" height="50" rx="0 16 0 0" fill="#3A6A9A"/>
+                  <circle cx="128" cy="44" r="14" fill="rgba(255,255,255,0.2)"/>
+                  <text x="128" y="50" font-size="14" text-anchor="middle" fill="white">👤</text>
+                  <rect x="148" y="37" width="62" height="6" rx="3" fill="rgba(255,255,255,0.5)"/>
+                  <rect x="148" y="48" width="42" height="5" rx="2" fill="rgba(255,255,255,0.3)"/>
+                  <rect x="108" y="84" width="104" height="22" rx="9" fill="rgba(196,149,106,0.2)" stroke="#C4956A" stroke-width="1.5"/>
+                  <text x="116" y="99" font-size="12" fill="#4A3728" font-family="sans-serif" font-weight="bold">✈  航班資訊</text>
+                  <rect x="108" y="78" width="104" height="1" fill="#EEE8E0"/>
+                  <rect x="108" y="110" width="104" height="1" fill="#EEE8E0"/>
+                  <text x="116" y="125" font-size="11" fill="#A8917A" font-family="sans-serif">⚙  設定</text>
+                  <text x="116" y="143" font-size="11" fill="#A8917A" font-family="sans-serif">↩  登出</text>
+                </svg>
+              </div>
+              <div class="t-body">
+                <div class="t-card-title">☰ 左下角開選單</div>
+                <div class="t-feat-list">
+                  <div class="t-feat"><div class="t-feat-ico">☰</div><div class="t-feat-text"><div class="t-feat-name">按左下角三條線</div><div class="t-feat-hint">開啟側邊選單</div></div></div>
+                  <div class="t-feat"><div class="t-feat-ico">✈️</div><div class="t-feat-text"><div class="t-feat-name">選「航班資訊」</div><div class="t-feat-hint">記錄去回程班次與時間</div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3: 點標題放大 -->
+          <div class="t-slide">
+            <div class="t-card">
+              <div class="t-hero" style="background:linear-gradient(155deg,#3A5A7A,#6A9ABB)">
+                <svg viewBox="0 0 390 220" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="20" y="30" width="148" height="66" rx="14" fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+                  <text x="44" y="62" font-size="26">🏯</text>
+                  <rect x="76" y="46" width="78" height="9" rx="4" fill="rgba(255,255,255,0.6)"/>
+                  <rect x="76" y="60" width="54" height="7" rx="3" fill="rgba(255,255,255,0.3)"/>
+                  <text x="80" y="108" font-size="32" text-anchor="middle">👆</text>
+                  <text x="68" y="128" font-size="12" fill="rgba(255,255,255,0.75)" font-family="sans-serif">點名稱</text>
+                  <text x="188" y="88" font-size="32" fill="rgba(255,255,255,0.8)" text-anchor="middle">→</text>
+                  <rect x="218" y="15" width="160" height="195" rx="18" fill="white" opacity="0.95"/>
+                  <rect x="218" y="15" width="160" height="52" rx="18 18 0 0" fill="rgba(196,149,106,0.22)"/>
+                  <text x="238" y="44" font-size="28">🏯</text>
+                  <rect x="272" y="26" width="94" height="9" rx="4" fill="#8B5E3C" opacity="0.4"/>
+                  <rect x="272" y="40" width="66" height="7" rx="3" fill="#DDD4C6"/>
+                  <rect x="226" y="72" width="144" height="1.5" fill="#EEE8E0"/>
+                  <rect x="226" y="82" width="108" height="7" rx="3" fill="#EEE8E0"/>
+                  <rect x="226" y="95" width="128" height="7" rx="3" fill="#EEE8E0"/>
+                  <rect x="226" y="108" width="88" height="7" rx="3" fill="#EEE8E0"/>
+                  <rect x="226" y="124" width="144" height="56" rx="10" fill="rgba(196,149,106,0.09)" stroke="#DDD4C6" stroke-width="1"/>
+                  <text x="298" y="158" font-size="28" text-anchor="middle">🖼</text>
+                  <rect x="314" y="74" width="30" height="28" rx="8" fill="#F0EBE3"/>
+                  <text x="329" y="92" font-size="14" text-anchor="middle" fill="#8B5E3C">✏</text>
+                  <rect x="348" y="74" width="28" height="28" rx="8" fill="#FEF2F2"/>
+                  <text x="362" y="92" font-size="13" text-anchor="middle" fill="#DC2626">✕</text>
+                </svg>
+              </div>
+              <div class="t-body">
+                <div class="t-card-title">點景點名稱展開詳情</div>
+                <div class="t-feat-list">
+                  <div class="t-feat"><div class="t-feat-ico">✏️</div><div class="t-feat-text"><div class="t-feat-name">展開後可以編輯</div><div class="t-feat-hint">右上角鉛筆圖示</div></div></div>
+                  <div class="t-feat"><div class="t-feat-ico">❌</div><div class="t-feat-text"><div class="t-feat-name">或刪除景點</div><div class="t-feat-hint">右上角 ✕ 圖示</div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4: 共用 vs 個人 -->
+          <div class="t-slide">
+            <div class="t-card">
+              <div class="t-hero" style="background:linear-gradient(155deg,#3A3A5A,#6A6AAA)">
+                <svg viewBox="0 0 390 220" xmlns="http://www.w3.org/2000/svg">
+                  <text x="80" y="78" font-size="50" text-anchor="middle">🧑</text>
+                  <text x="158" y="78" font-size="50" text-anchor="middle">👩</text>
+                  <line x1="80" y1="85" x2="118" y2="132" stroke="rgba(255,255,255,0.35)" stroke-width="2" stroke-dasharray="5,3"/>
+                  <line x1="158" y1="85" x2="118" y2="132" stroke="rgba(255,255,255,0.35)" stroke-width="2" stroke-dasharray="5,3"/>
+                  <rect x="28" y="132" width="180" height="80" rx="16" fill="rgba(58,122,80,0.22)" stroke="rgba(90,180,120,0.5)" stroke-width="2"/>
+                  <text x="118" y="152" font-size="11" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-family="sans-serif" font-weight="bold">🤝 大家都看得到</text>
+                  <text x="118" y="165" font-size="9.5" text-anchor="middle" fill="rgba(255,255,255,0.65)" font-family="sans-serif">大家都能編輯</text>
+                  <text x="88" y="185" font-size="22" text-anchor="middle">🗺</text>
+                  <text x="148" y="185" font-size="22" text-anchor="middle">✨</text>
+                  <text x="88" y="204" font-size="11" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-family="sans-serif">行程</text>
+                  <text x="148" y="204" font-size="11" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-family="sans-serif">收藏</text>
+                  <text x="310" y="78" font-size="50" text-anchor="middle">👤</text>
+                  <line x1="310" y1="85" x2="310" y2="132" stroke="rgba(255,255,255,0.35)" stroke-width="2" stroke-dasharray="5,3"/>
+                  <rect x="248" y="132" width="124" height="80" rx="16" fill="rgba(42,106,154,0.22)" stroke="rgba(74,138,186,0.5)" stroke-width="2"/>
+                  <text x="310" y="152" font-size="11" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-family="sans-serif" font-weight="bold">🔒 只有你看得到</text>
+                  <text x="310" y="165" font-size="9.5" text-anchor="middle" fill="rgba(255,255,255,0.65)" font-family="sans-serif">只有你能編輯</text>
+                  <text x="270" y="185" font-size="18" text-anchor="middle">📖</text>
+                  <text x="294" y="185" font-size="18" text-anchor="middle">💰</text>
+                  <text x="318" y="185" font-size="18" text-anchor="middle">🧳</text>
+                  <text x="342" y="185" font-size="18" text-anchor="middle">✈️</text>
+                  <text x="270" y="204" font-size="9" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="sans-serif">日記</text>
+                  <text x="294" y="204" font-size="9" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="sans-serif">記帳</text>
+                  <text x="318" y="204" font-size="9" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="sans-serif">行李</text>
+                  <text x="342" y="204" font-size="9" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="sans-serif">航班</text>
+                </svg>
+              </div>
+              <div class="t-body">
+                <div class="t-card-title">資料分兩種</div>
+                <div class="t-scope-row">
+                  <div class="t-scope-box shared">
+                    <div class="t-scope-head s">🤝 共用</div>
+                    <div class="t-scope-item"><span class="ico">🗺</span>行程</div>
+                    <div class="t-scope-item"><span class="ico">✨</span>收藏</div>
+                    <div class="t-scope-note s">大家都能看・都能編輯</div>
+                  </div>
+                  <div class="t-scope-box personal">
+                    <div class="t-scope-head p">🔒 個人</div>
+                    <div class="t-scope-item"><span class="ico">📖</span>時間軸</div>
+                    <div class="t-scope-item"><span class="ico">💰</span>記帳</div>
+                    <div class="t-scope-item"><span class="ico">🧳</span>行李</div>
+                    <div class="t-scope-item"><span class="ico">✈️</span>航班</div>
+                    <div class="t-scope-note p">只有你能看・只有你能編輯</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5: 離線與同步 -->
+          <div class="t-slide">
+            <div class="t-card">
+              <div class="t-hero" style="background:linear-gradient(155deg,#5A3A1A,#AA7A3A)">
+                <svg viewBox="0 0 390 220" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="60" cy="50" r="60" fill="rgba(255,255,255,0.04)"/>
+                  <circle cx="340" cy="180" r="70" fill="rgba(255,255,255,0.03)"/>
+                  <rect x="30" y="60" width="148" height="110" rx="18" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+                  <text x="104" y="108" font-size="42" text-anchor="middle">📴</text>
+                  <text x="104" y="138" font-size="13" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-family="sans-serif" font-weight="bold">沒有網路</text>
+                  <text x="104" y="154" font-size="10" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-family="sans-serif">行程區需要連線</text>
+                  <text x="104" y="166" font-size="10" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-family="sans-serif">才能看到共用行程</text>
+                  <rect x="212" y="60" width="148" height="110" rx="18" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+                  <text x="286" y="108" font-size="42" text-anchor="middle">☁️</text>
+                  <text x="286" y="138" font-size="13" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-family="sans-serif" font-weight="bold">有網路</text>
+                  <text x="286" y="154" font-size="10" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-family="sans-serif">資料自動同步</text>
+                  <text x="286" y="166" font-size="10" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-family="sans-serif">不用手動儲存</text>
+                  <rect x="183" y="100" width="24" height="24" rx="12" fill="rgba(255,255,255,0.2)"/>
+                  <text x="195" y="116" font-size="11" text-anchor="middle" fill="white" font-family="sans-serif" font-weight="bold">VS</text>
+                </svg>
+              </div>
+              <div class="t-body">
+                <div class="t-card-title">出國記得保持連線</div>
+                <div class="t-feat-list">
+                  <div class="t-feat"><div class="t-feat-ico">📴</div><div class="t-feat-text"><div class="t-feat-name">離線看不到行程</div><div class="t-feat-hint">行程是共用資料，需要網路才能載入</div></div></div>
+                  <div class="t-feat"><div class="t-feat-ico">☁️</div><div class="t-feat-text"><div class="t-feat-name">有網路自動同步</div><div class="t-feat-hint">不用手動儲存，修改後立即更新</div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6: 出發 -->
+          <div class="t-slide">
+            <div class="t-card">
+              <div class="t-hero" style="background:linear-gradient(155deg,#2A5A3A,#5A9A6A)">
+                <svg viewBox="0 0 390 220" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="195" cy="95" r="70" fill="rgba(255,255,255,0.07)"/>
+                  <circle cx="195" cy="95" r="48" fill="rgba(255,255,255,0.1)"/>
+                  <text x="195" y="118" font-size="58" text-anchor="middle">🎉</text>
+                  <text x="55" y="58" font-size="18" fill="rgba(255,255,255,0.25)">✦</text>
+                  <text x="326" y="48" font-size="14" fill="rgba(255,255,255,0.18)">✦</text>
+                  <text x="344" y="148" font-size="20" fill="rgba(255,255,255,0.18)">✦</text>
+                  <text x="36" y="162" font-size="12" fill="rgba(255,255,255,0.18)">✦</text>
+                  <text x="195" y="175" font-size="13" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-family="sans-serif">旅遊手帳陪你出發囉！</text>
+                </svg>
+              </div>
+              <div class="t-body">
+                <div class="t-card-title">準備好出發了！🎉</div>
+                <div class="t-feat-list">
+                  <div class="t-feat"><div class="t-feat-ico">🔁</div><div class="t-feat-text"><div class="t-feat-name">隨時回來複習</div><div class="t-feat-hint">忘記怎麼用，可以再翻這份教學</div></div></div>
+                  <div class="t-feat"><div class="t-feat-ico">🌏</div><div class="t-feat-text"><div class="t-feat-name">祝旅途愉快！</div><div class="t-feat-hint">記得保持網路連線，行程才能同步</div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /t-track -->
+      </div><!-- /t-viewport -->
+
+      <div class="t-nav-row">
+        <button class="t-btn t-btn-back" id="t-btn-back" onclick="tGo(-1)">←</button>
+        <button class="t-btn t-btn-fwd"  id="t-btn-fwd"  onclick="tGo(1)">下一頁 →</button>
+      </div>
+    </div><!-- /tutorial-sheet -->
+  </div><!-- /tutorial-overlay -->
 
   <!-- ══ MAIN APP ═══════════════════════════════════════ -->
   <div id="main-area">
@@ -549,7 +946,73 @@ auth.onAuthStateChanged(function(user) {
   }
 });
 
-// ── Network status ────────────────────────────────────
+// ── Tutorial Modal ────────────────────────────────────
+var tCur = 0;
+var T_TOTAL = 6;
+
+function openTutorial() {
+  tCur = 0;
+  var overlay = document.getElementById('tutorial-overlay');
+  overlay.classList.add('open');
+  tRender();
+  // build pips once
+  var pipsEl = document.getElementById('t-pips');
+  if (pipsEl && !pipsEl.dataset.built) {
+    for (var i = 0; i < T_TOTAL; i++) {
+      var p = document.createElement('div');
+      p.className = 't-pip';
+      p.setAttribute('data-i', i);
+      p.onclick = (function(idx){ return function(){ tGoTo(idx); }; })(i);
+      pipsEl.appendChild(p);
+    }
+    pipsEl.dataset.built = '1';
+    // swipe
+    var vp = document.getElementById('t-viewport');
+    var sx = 0;
+    vp.addEventListener('touchstart', function(e){ sx = e.touches[0].clientX; }, { passive: true });
+    vp.addEventListener('touchend', function(e){
+      var dx = e.changedTouches[0].clientX - sx;
+      if (Math.abs(dx) > 40) tGo(dx < 0 ? 1 : -1);
+    }, { passive: true });
+  }
+  tRender();
+}
+
+function closeTutorial() {
+  document.getElementById('tutorial-overlay').classList.remove('open');
+}
+
+function tGo(dir) {
+  var n = tCur + dir;
+  if (n >= 0 && n < T_TOTAL) tGoTo(n);
+}
+function tGoTo(i) { tCur = i; tRender(); }
+
+function tRender() {
+  var track = document.getElementById('t-track');
+  if (track) track.style.transform = 'translateX(-' + (tCur * 100) + '%)';
+  var counter = document.getElementById('t-counter');
+  if (counter) counter.textContent = (tCur + 1) + ' / ' + T_TOTAL;
+  var pipsEl = document.getElementById('t-pips');
+  if (pipsEl) {
+    pipsEl.querySelectorAll('.t-pip').forEach(function(p, i) {
+      p.className = 't-pip' + (i === tCur ? ' active' : i < tCur ? ' done' : '');
+    });
+  }
+  var btnBack = document.getElementById('t-btn-back');
+  var btnFwd  = document.getElementById('t-btn-fwd');
+  if (btnBack) btnBack.style.display = tCur === 0 ? 'none' : 'block';
+  if (btnFwd) {
+    if (tCur === T_TOTAL - 1) {
+      btnFwd.textContent = '✓ 知道了！';
+      btnFwd.className = 't-btn t-btn-fwd finish';
+    } else {
+      btnFwd.textContent = '下一頁 →';
+      btnFwd.className = 't-btn t-btn-fwd';
+    }
+  }
+}
+
 window.addEventListener('offline', function() {
   const banner = document.getElementById('offline-banner');
   if (banner) banner.classList.add('show');
