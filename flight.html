@@ -511,7 +511,7 @@ html, body {
     <div class="info-grid">
       <div class="info-cell">
         <div class="info-label">登機門</div>
-        <div class="info-value"><input id="out-gate" value="A3" placeholder="—"></div>
+        <div class="info-value"><input id="out-gate" value="" placeholder="—"></div>
       </div>
       <div class="info-cell">
         <div class="info-label">航廈</div>
@@ -519,7 +519,7 @@ html, body {
       </div>
       <div class="info-cell">
         <div class="info-label">座位</div>
-        <div class="info-value"><input id="out-seat" value="24A" placeholder="—"></div>
+        <div class="info-value"><input id="out-seat" value="" placeholder="—"></div>
       </div>
       <div class="info-cell">
         <div class="info-label">餐食選項</div>
@@ -527,11 +527,11 @@ html, body {
       </div>
       <div class="info-cell">
         <div class="info-label">登機時間</div>
-        <div class="info-value"><input id="out-boarding" value="07:50" placeholder="—"></div>
+        <div class="info-value"><input id="out-boarding" value="" placeholder="—"></div>
       </div>
       <div class="info-cell">
         <div class="info-label">訂位代碼</div>
-        <div class="info-value"><input id="out-pnr" value="ABC123" placeholder="—"></div>
+        <div class="info-value"><input id="out-pnr" value="" placeholder="—"></div>
       </div>
       <div class="info-cell full">
         <div class="info-label">備註</div>
@@ -623,7 +623,7 @@ html, body {
     <div class="info-grid">
       <div class="info-cell">
         <div class="info-label">登機門</div>
-        <div class="info-value"><input id="ret-gate" value="B12" placeholder="—"></div>
+        <div class="info-value"><input id="ret-gate" value="" placeholder="—"></div>
       </div>
       <div class="info-cell">
         <div class="info-label">航廈</div>
@@ -631,7 +631,7 @@ html, body {
       </div>
       <div class="info-cell">
         <div class="info-label">座位</div>
-        <div class="info-value"><input id="ret-seat" value="24A" placeholder="—"></div>
+        <div class="info-value"><input id="ret-seat" value="" placeholder="—"></div>
       </div>
       <div class="info-cell">
         <div class="info-label">餐食選項</div>
@@ -639,11 +639,11 @@ html, body {
       </div>
       <div class="info-cell">
         <div class="info-label">登機時間</div>
-        <div class="info-value"><input id="ret-boarding" value="12:30" placeholder="—"></div>
+        <div class="info-value"><input id="ret-boarding" value="" placeholder="—"></div>
       </div>
       <div class="info-cell">
         <div class="info-label">訂位代碼</div>
-        <div class="info-value"><input id="ret-pnr" value="ABC123" placeholder="—"></div>
+        <div class="info-value"><input id="ret-pnr" value="" placeholder="—"></div>
       </div>
       <div class="info-cell full">
         <div class="info-label">備註</div>
@@ -712,10 +712,36 @@ html, body {
       <div class="entry-info-label">停留天數</div>
       <div class="entry-info-value">5 天</div>
     </div>
-    <div class="entry-info-item full">
-      <div class="entry-info-label">住宿地址（日文）</div>
-      <div class="entry-info-value" style="font-size:12px;margin-top:2px">
-        <input id="hotel-address" value="〒904-0401 沖縄県国頭郡恩納村名嘉真 ヤーシ原2591-1" style="background:transparent;border:none;outline:none;color:var(--text);font-family:'Noto Sans TC',sans-serif;font-size:12px;width:100%;" placeholder="請填入住宿地址…">
+    <div class="entry-info-item full" style="padding:0;overflow:hidden;">
+      <div style="display:grid;grid-template-columns:3fr 1fr;">
+        <div style="padding:10px 12px;border-right:1.5px solid var(--border);">
+          <div class="entry-info-label">住宿 1 地址</div>
+          <div class="entry-info-value" style="font-size:12px;margin-top:2px">
+            <input id="hotel-address-1" value="" style="background:transparent;border:none;outline:none;color:var(--text);font-family:'Noto Sans TC',sans-serif;font-size:12px;width:100%;" placeholder="地址（日文）…">
+          </div>
+        </div>
+        <div style="padding:10px 12px;">
+          <div class="entry-info-label">電話</div>
+          <div class="entry-info-value" style="font-size:12px;margin-top:2px">
+            <input id="hotel-phone-1" value="" style="background:transparent;border:none;outline:none;color:var(--text);font-family:'Noto Sans TC',sans-serif;font-size:12px;width:100%;" placeholder="098-000-0000">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="entry-info-item full" style="padding:0;overflow:hidden;">
+      <div style="display:grid;grid-template-columns:3fr 1fr;">
+        <div style="padding:10px 12px;border-right:1.5px solid var(--border);">
+          <div class="entry-info-label">住宿 2 地址</div>
+          <div class="entry-info-value" style="font-size:12px;margin-top:2px">
+            <input id="hotel-address-2" value="" style="background:transparent;border:none;outline:none;color:var(--text);font-family:'Noto Sans TC',sans-serif;font-size:12px;width:100%;" placeholder="地址（日文）…">
+          </div>
+        </div>
+        <div style="padding:10px 12px;">
+          <div class="entry-info-label">電話</div>
+          <div class="entry-info-value" style="font-size:12px;margin-top:2px">
+            <input id="hotel-phone-2" value="" style="background:transparent;border:none;outline:none;color:var(--text);font-family:'Noto Sans TC',sans-serif;font-size:12px;width:100%;" placeholder="098-000-0000">
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -854,7 +880,7 @@ document.querySelectorAll('.flight-card input').forEach(function(inp) {
 var checklistsData = {
   out: [
     { text: '護照有效期 6 個月以上', done: false },
-    { text: 'Visit Japan Web 入境申報完成', done: false },
+    { text: 'Visit Japan Web 線上入境填好', done: false },
     { text: '機票確認信截圖', done: false },
     { text: '訂房確認信截圖', done: false },
     { text: '旅遊保險文件', done: false },
@@ -863,13 +889,11 @@ var checklistsData = {
     { text: '液體 <100ml 裝入夾鏈袋', done: false }
   ],
   ret: [
-    { text: '退稅單備妥（蓋章後帶上機）', done: false },
-    { text: '免稅品放在手提行李', done: false },
+    { text: '護照、所有證件都在隨身包包裡', done: false },
     { text: '確認行李重量不超重', done: false },
     { text: '飯店鑰匙/卡歸還', done: false },
     { text: '充電線、變壓器收回', done: false },
     { text: 'SIM卡/Wi-Fi分享器歸還', done: false },
-    { text: '行動電源帶上手提（勿託運）', done: false }
   ]
 };
 
@@ -957,7 +981,7 @@ function saveAll() {
   });
   data['_chk_out'] = JSON.stringify(checklistsData.out);
   data['_chk_ret'] = JSON.stringify(checklistsData.ret);
-  ['hotel-name','hotel-address','hotel-phone','hotel-note'].forEach(function(id) {
+  ['hotel-address-1','hotel-phone-1','hotel-address-2','hotel-phone-2'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) data[id] = el.value;
   });
@@ -985,7 +1009,7 @@ function loadAll() {
     if (data['_chk_ret']) { checklistsData.ret = JSON.parse(data['_chk_ret']); }
     renderChecklist('out');
     renderChecklist('ret');
-    ['hotel-name','hotel-address','hotel-phone','hotel-note'].forEach(function(id) {
+    ['hotel-address-1','hotel-phone-1','hotel-address-2','hotel-phone-2'].forEach(function(id) {
       var el = document.getElementById(id);
       if (el && data[id] !== undefined) el.value = data[id];
     });
