@@ -1006,9 +1006,11 @@ function tRender() {
     if (tCur === T_TOTAL - 1) {
       btnFwd.textContent = '✓ 知道了！';
       btnFwd.className = 't-btn t-btn-fwd finish';
+      btnFwd.onclick = closeTutorial;
     } else {
       btnFwd.textContent = '下一頁 →';
       btnFwd.className = 't-btn t-btn-fwd';
+      btnFwd.onclick = function(){ tGo(1); };
     }
   }
 }
