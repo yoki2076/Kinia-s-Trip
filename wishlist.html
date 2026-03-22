@@ -556,7 +556,7 @@
         <option value="name">名稱A-Z</option>
       </select>
     </div>
-    <div class="stats-row" id="pStatsRow"></div>
+
     <div class="items-list" id="pItemsList"></div>
   </div>
 
@@ -1103,11 +1103,6 @@ const P = (() => {
     }).join('');
   }
   function renderStats() {
-    const pending=places.filter(p=>!p.visited), visited=places.filter(p=>p.visited), favs=places.filter(p=>p.fav);
-    document.getElementById('pStatsRow').innerHTML=`
-      <div class="stat-card"><div class="stat-num">${pending.length}</div><div class="stat-label">想去</div></div>
-      <div class="stat-card"><div class="stat-num">${visited.length}</div><div class="stat-label">去過</div></div>
-      <div class="stat-card"><div class="stat-num">${favs.length}</div><div class="stat-label">收藏</div></div>`;
   }
   function getFiltered() {
     let list=[...places];
