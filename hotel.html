@@ -215,9 +215,11 @@ body { font-family: 'Noto Sans TC', sans-serif; background: var(--cream); color:
   border: 1.5px solid var(--border); background: var(--card-bg);
   aspect-ratio: 3/4; cursor: pointer;
 }
+.screenshot-slot.has-img { border-color: var(--brown-light); }
 .screenshot-input {
   position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 2; width: 100%; height: 100%;
 }
+.screenshot-input.has-img { z-index: 0; pointer-events: none; }
 .screenshot-placeholder {
   position: absolute; inset: 0; display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 6px;
@@ -226,13 +228,37 @@ body { font-family: 'Noto Sans TC', sans-serif; background: var(--cream); color:
 .screenshot-plus { font-size: 24px; color: var(--border); line-height: 1; }
 .screenshot-hint { font-size: 10px; color: var(--fog); font-weight: 600; text-align: center; padding: 0 6px; }
 .screenshot-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.screenshot-del {
-  position: absolute; top: 5px; right: 5px; z-index: 3;
-  width: 22px; height: 22px; border-radius: 50%;
-  background: rgba(0,0,0,0.55); border: none; color: #fff;
-  font-size: 11px; cursor: pointer; display: flex;
-  align-items: center; justify-content: center; line-height: 1;
+/* Long-press delete overlay */
+.screenshot-del-overlay {
+  position: absolute; inset: 0; z-index: 4;
+  background: rgba(0,0,0,0.55);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s; border-radius: 11px;
 }
+.screenshot-del-overlay.show { opacity: 1; pointer-events: auto; }
+.screenshot-del-overlay .del-confirm {
+  background: #E53935; color: #fff; border: none; border-radius: 10px;
+  padding: 9px 22px; font-size: 13px; font-weight: 700;
+  font-family: 'Noto Sans TC', sans-serif; cursor: pointer;
+}
+.screenshot-del-overlay .del-cancel {
+  background: rgba(255,255,255,0.2); color: #fff; border: 1.5px solid rgba(255,255,255,0.5);
+  border-radius: 10px; padding: 7px 18px; font-size: 12px; font-weight: 700;
+  font-family: 'Noto Sans TC', sans-serif; cursor: pointer;
+}
+.screenshot-upload-overlay {
+  position: absolute; inset: 0; z-index: 4;
+  background: rgba(139,94,60,0.6);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s; border-radius: 11px;
+}
+.screenshot-upload-overlay.show { opacity: 1; }
+.screenshot-upload-spinner {
+  width: 28px; height: 28px; border: 3px solid rgba(255,255,255,0.4);
+  border-top-color: #fff; border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -430,42 +456,67 @@ body { font-family: 'Noto Sans TC', sans-serif; background: var(--cream); color:
   </div>
 
   <div class="section-label">🖼 住宿文件截圖</div>
+  <div style="font-size:11px;color:var(--fog);margin-bottom:8px;margin-top:-4px;">長按照片可刪除</div>
   <div class="screenshot-grid">
     <div class="screenshot-slot" id="ss-slot-0">
-      <input type="file" accept="image/*" class="screenshot-input" onchange="loadScreenshot(this,0)">
+      <input type="file" accept="image/*" class="screenshot-input" id="ss-input-0" onchange="loadScreenshot(this,0)">
       <div class="screenshot-placeholder" id="ss-ph-0">
         <div class="screenshot-plus">＋</div>
         <div class="screenshot-hint">點擊上傳截圖</div>
       </div>
-      <img class="screenshot-img" id="ss-img-0" style="display:none" alt="截圖 1">
-      <button class="screenshot-del" id="ss-del-0" style="display:none" onclick="removeScreenshot(0)">✕</button>
+      <img class="screenshot-img" id="ss-img-0" style="display:none" alt="截圖 1"
+           oncontextmenu="showDelOverlay(0);return false;"
+           ontouchstart="startLongPress(0)" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">
+      <div class="screenshot-upload-overlay" id="ss-uploading-0"><div class="screenshot-upload-spinner"></div></div>
+      <div class="screenshot-del-overlay" id="ss-del-overlay-0">
+        <button class="del-confirm" onclick="removeScreenshot(0)">🗑 刪除照片</button>
+        <button class="del-cancel"  onclick="hideDelOverlay(0)">取消</button>
+      </div>
     </div>
     <div class="screenshot-slot" id="ss-slot-1">
-      <input type="file" accept="image/*" class="screenshot-input" onchange="loadScreenshot(this,1)">
+      <input type="file" accept="image/*" class="screenshot-input" id="ss-input-1" onchange="loadScreenshot(this,1)">
       <div class="screenshot-placeholder" id="ss-ph-1">
         <div class="screenshot-plus">＋</div>
         <div class="screenshot-hint">點擊上傳截圖</div>
       </div>
-      <img class="screenshot-img" id="ss-img-1" style="display:none" alt="截圖 2">
-      <button class="screenshot-del" id="ss-del-1" style="display:none" onclick="removeScreenshot(1)">✕</button>
+      <img class="screenshot-img" id="ss-img-1" style="display:none" alt="截圖 2"
+           oncontextmenu="showDelOverlay(1);return false;"
+           ontouchstart="startLongPress(1)" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">
+      <div class="screenshot-upload-overlay" id="ss-uploading-1"><div class="screenshot-upload-spinner"></div></div>
+      <div class="screenshot-del-overlay" id="ss-del-overlay-1">
+        <button class="del-confirm" onclick="removeScreenshot(1)">🗑 刪除照片</button>
+        <button class="del-cancel"  onclick="hideDelOverlay(1)">取消</button>
+      </div>
     </div>
     <div class="screenshot-slot" id="ss-slot-2">
-      <input type="file" accept="image/*" class="screenshot-input" onchange="loadScreenshot(this,2)">
+      <input type="file" accept="image/*" class="screenshot-input" id="ss-input-2" onchange="loadScreenshot(this,2)">
       <div class="screenshot-placeholder" id="ss-ph-2">
         <div class="screenshot-plus">＋</div>
         <div class="screenshot-hint">點擊上傳截圖</div>
       </div>
-      <img class="screenshot-img" id="ss-img-2" style="display:none" alt="截圖 3">
-      <button class="screenshot-del" id="ss-del-2" style="display:none" onclick="removeScreenshot(2)">✕</button>
+      <img class="screenshot-img" id="ss-img-2" style="display:none" alt="截圖 3"
+           oncontextmenu="showDelOverlay(2);return false;"
+           ontouchstart="startLongPress(2)" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">
+      <div class="screenshot-upload-overlay" id="ss-uploading-2"><div class="screenshot-upload-spinner"></div></div>
+      <div class="screenshot-del-overlay" id="ss-del-overlay-2">
+        <button class="del-confirm" onclick="removeScreenshot(2)">🗑 刪除照片</button>
+        <button class="del-cancel"  onclick="hideDelOverlay(2)">取消</button>
+      </div>
     </div>
     <div class="screenshot-slot" id="ss-slot-3">
-      <input type="file" accept="image/*" class="screenshot-input" onchange="loadScreenshot(this,3)">
+      <input type="file" accept="image/*" class="screenshot-input" id="ss-input-3" onchange="loadScreenshot(this,3)">
       <div class="screenshot-placeholder" id="ss-ph-3">
         <div class="screenshot-plus">＋</div>
         <div class="screenshot-hint">點擊上傳截圖</div>
       </div>
-      <img class="screenshot-img" id="ss-img-3" style="display:none" alt="截圖 4">
-      <button class="screenshot-del" id="ss-del-3" style="display:none" onclick="removeScreenshot(3)">✕</button>
+      <img class="screenshot-img" id="ss-img-3" style="display:none" alt="截圖 4"
+           oncontextmenu="showDelOverlay(3);return false;"
+           ontouchstart="startLongPress(3)" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">
+      <div class="screenshot-upload-overlay" id="ss-uploading-3"><div class="screenshot-upload-spinner"></div></div>
+      <div class="screenshot-del-overlay" id="ss-del-overlay-3">
+        <button class="del-confirm" onclick="removeScreenshot(3)">🗑 刪除照片</button>
+        <button class="del-cancel"  onclick="hideDelOverlay(3)">取消</button>
+      </div>
     </div>
   </div>
 
@@ -550,56 +601,132 @@ function cycleCheckinStatus(h) {
   saveAll();
 }
 
-// ══ Screenshot upload ══
-function loadScreenshot(input, idx) {
-  var file = input.files[0];
-  if (!file) return;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var img = document.getElementById('ss-img-' + idx);
-    var ph  = document.getElementById('ss-ph-'  + idx);
-    var del = document.getElementById('ss-del-' + idx);
-    img.src = e.target.result;
-    img.style.display = 'block';
-    ph.style.display  = 'none';
-    del.style.display = 'flex';
-    saveScreenshots();
-  };
-  reader.readAsDataURL(file);
+// ══ Screenshot — Firebase Storage + localStorage URL cache ══
+var _lpTimer = null;
+
+function startLongPress(idx) {
+  _lpTimer = setTimeout(function() { showDelOverlay(idx); }, 600);
 }
-function removeScreenshot(idx) {
-  var img = document.getElementById('ss-img-' + idx);
-  var ph  = document.getElementById('ss-ph-'  + idx);
-  var del = document.getElementById('ss-del-' + idx);
+function cancelLongPress() {
+  if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; }
+}
+function showDelOverlay(idx) {
+  cancelLongPress();
+  document.getElementById('ss-del-overlay-' + idx).classList.add('show');
+}
+function hideDelOverlay(idx) {
+  document.getElementById('ss-del-overlay-' + idx).classList.remove('show');
+}
+
+// Show/hide uploading spinner
+function showUploading(idx) { document.getElementById('ss-uploading-' + idx).classList.add('show'); }
+function hideUploading(idx) { document.getElementById('ss-uploading-' + idx).classList.remove('show'); }
+
+// Render a loaded image into a slot
+function _showImg(idx, src) {
+  var img   = document.getElementById('ss-img-' + idx);
+  var ph    = document.getElementById('ss-ph-'  + idx);
+  var slot  = document.getElementById('ss-slot-' + idx);
+  var input = document.getElementById('ss-input-' + idx);
+  img.src = src;
+  img.style.display = 'block';
+  ph.style.display  = 'none';
+  slot.classList.add('has-img');
+  input.classList.add('has-img'); // disable file picker when image present
+}
+function _clearImg(idx) {
+  var img   = document.getElementById('ss-img-' + idx);
+  var ph    = document.getElementById('ss-ph-'  + idx);
+  var slot  = document.getElementById('ss-slot-' + idx);
+  var input = document.getElementById('ss-input-' + idx);
   img.src = '';
   img.style.display = 'none';
   ph.style.display  = 'flex';
-  del.style.display = 'none';
-  saveScreenshots();
+  slot.classList.remove('has-img');
+  input.classList.remove('has-img');
+  hideDelOverlay(idx);
 }
-function saveScreenshots() {
-  var shots = [];
+
+// Save URL array to localStorage
+function saveScreenshotUrls() {
+  var urls = [];
   for (var i = 0; i < 4; i++) {
     var img = document.getElementById('ss-img-' + i);
-    shots.push(img && img.src && img.style.display !== 'none' ? img.src : '');
+    urls.push((img && img.src && img.style.display !== 'none') ? img.src : '');
   }
-  try { localStorage.setItem('hotel_screenshots', JSON.stringify(shots)); } catch(e) {}
+  try { localStorage.setItem('hotel_screenshots_v2', JSON.stringify(urls)); } catch(e) {}
 }
+
+// Load URLs from localStorage on boot
 function loadScreenshots() {
   try {
-    var raw = localStorage.getItem('hotel_screenshots');
+    var raw = localStorage.getItem('hotel_screenshots_v2');
     if (!raw) return;
-    var shots = JSON.parse(raw);
-    shots.forEach(function(src, i) {
-      if (!src) return;
-      var img = document.getElementById('ss-img-' + i);
-      var ph  = document.getElementById('ss-ph-'  + i);
-      var del = document.getElementById('ss-del-' + i);
-      if (img) { img.src = src; img.style.display = 'block'; }
-      if (ph)  ph.style.display  = 'none';
-      if (del) del.style.display = 'flex';
+    JSON.parse(raw).forEach(function(src, i) {
+      if (src) _showImg(i, src);
     });
   } catch(e) {}
+}
+
+// Upload to Firebase Storage, fall back to base64 if not available
+async function loadScreenshot(input, idx) {
+  var file = input.files[0];
+  if (!file) return;
+  showUploading(idx);
+  try {
+    var fb = await import('./firebase-config.js');
+    var uid = localStorage.getItem('tripApp_uid');
+    if (!uid) {
+      var user = await fb.getCurrentUser();
+      if (user) uid = user.uid;
+    }
+    if (uid) {
+      // Upload to Firebase Storage
+      var path = 'users/' + uid + '/hotel_screenshots/ss_' + idx + '_' + Date.now() + '.jpg';
+      // Delete old image if exists
+      var oldUrl = (function(){
+        try { var r=JSON.parse(localStorage.getItem('hotel_screenshots_v2')||'[]'); return r[idx]||''; } catch(e){ return ''; }
+      })();
+      if (oldUrl && oldUrl.startsWith('http')) {
+        try { await fb.deleteImage(oldUrl); } catch(e) {}
+      }
+      var url = await fb.uploadImage(file, path);
+      _showImg(idx, url);
+      saveScreenshotUrls();
+      hideUploading(idx);
+      showToast('截圖已上傳 ✓');
+      return;
+    }
+  } catch(e) {
+    console.warn('Firebase upload failed, falling back to base64', e);
+  }
+  // Fallback: base64 in localStorage
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    _showImg(idx, e.target.result);
+    saveScreenshotUrls();
+    hideUploading(idx);
+  };
+  reader.readAsDataURL(file);
+}
+
+async function removeScreenshot(idx) {
+  hideDelOverlay(idx);
+  // Delete from Firebase Storage if URL
+  try {
+    var raw = localStorage.getItem('hotel_screenshots_v2');
+    if (raw) {
+      var urls = JSON.parse(raw);
+      var oldUrl = urls[idx] || '';
+      if (oldUrl && oldUrl.startsWith('http')) {
+        var fb = await import('./firebase-config.js');
+        try { await fb.deleteImage(oldUrl); } catch(e) {}
+      }
+    }
+  } catch(e) {}
+  _clearImg(idx);
+  saveScreenshotUrls();
+  showToast('截圖已刪除');
 }
 // ══ Address actions ══
 function openMap(h) {
