@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>住宿資訊</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --brown:      #8B5E3C;
+  --brown-dark: #6B4428;
+  --brown-light:#C4956A;
+  --fog:        #A8917A;
+  --cream:      #F7F3EE;
+  --card-bg:    #FDFAF6;
+  --border:     #DDD4C6;
+  --text:       #2C2016;
+  --text-sub:   #8B7355;
+  --red:        #C0392B;
+  --green:      #1E6B45;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'Noto Sans TC', sans-serif; background: var(--cream); color: var(--text); padding-bottom: 80px; min-height: 100dvh; }
+
+/* ══ HEADER ══ */
+.page-header {
+  background: linear-gradient(160deg, #2C1A0E 0%, #6B4428 55%, #8B5E3C 100%);
+  padding: 20px 18px 24px;
+  position: relative; overflow: hidden;
+}
+.page-header::before {
+  content: '🏨'; position: absolute; right: 16px; top: 50%;
+  transform: translateY(-50%); font-size: 72px; opacity: 0.08; pointer-events: none;
+}
+.ph-tag  { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 5px; }
+.ph-title{ font-size: 26px; font-weight: 900; color: #fff; letter-spacing: 1px; margin-bottom: 2px; }
+.ph-sub  { font-size: 12px; color: rgba(255,255,255,0.45); }
+
+/* ══ TABS ══ */
+.tabs-wrap {
+  display: flex; background: #fff;
+  border-bottom: 1.5px solid var(--border);
+  position: sticky; top: 0; z-index: 10;
+}
+.tab-btn {
+  flex: 1; padding: 13px 4px; border: none; background: none;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 12px; font-weight: 700; color: var(--fog);
+  cursor: pointer; border-bottom: 2.5px solid transparent;
+  transition: all 0.18s; letter-spacing: 0.5px;
+}
+.tab-btn.active { color: var(--brown); border-bottom-color: var(--brown); background: var(--card-bg); }
+
+/* ══ SECTION ══ */
+.section { display: none; padding: 16px 14px 32px; }
+.section.active { display: block; }
+.section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--fog);
+  margin: 18px 0 10px; display: flex; align-items: center; gap: 6px;
+}
+.section-label:first-child { margin-top: 0; }
+
+/* ══ HOTEL CARD ══ */
+.hotel-card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 12px rgba(44,26,14,0.06);
+}
+
+/* Card header with color band */
+.hotel-card-header {
+  padding: 14px 16px 12px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.hotel-card-header::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--brown) 0%, var(--brown-light) 100%);
+}
+.hotel-star-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700;
+  background: #FFF9E6; color: #856404; border: 1px solid #F0D060;
+}
+.hotel-name-display {
+  font-size: 15px; font-weight: 800; color: var(--text); flex: 1;
+  font-family: 'Noto Serif TC', serif;
+}
+.hotel-type-badge {
+  font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px;
+  background: rgba(139,94,60,0.1); color: var(--brown); letter-spacing: 0.5px;
+}
+
+/* Info grid (same as flight.html) */
+.info-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1px; background: var(--border);
+  border-top: 1px solid var(--border);
+}
+.info-grid.col3 { grid-template-columns: 1fr 1fr 1fr; }
+.info-cell { background: var(--card-bg); padding: 12px 14px; }
+.info-cell.full { grid-column: 1 / -1; }
+.info-label { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--fog); margin-bottom: 5px; }
+.info-value { font-size: 13px; font-weight: 700; color: var(--text); }
+.info-value input {
+  background: transparent; border: none; outline: none;
+  color: var(--text); font-family: 'Noto Sans TC', sans-serif;
+  font-size: 13px; font-weight: 700; width: 100%;
+}
+.info-value input.editing {
+  background: rgba(139,94,60,0.06); border-radius: 6px; padding: 3px 6px;
+}
+.info-value input::placeholder { color: var(--fog); font-weight: 400; opacity: 0.6; }
+.info-value.normal input { font-weight: 400; font-size: 12px; }
+
+/* Edit toggle */
+.edit-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px; border-top: 1px solid var(--border);
+}
+.btn-edit {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: none; font-family: 'Noto Sans TC', sans-serif;
+  font-size: 12px; font-weight: 700; color: var(--text-sub); cursor: pointer;
+  transition: all 0.18s;
+}
+.btn-edit.editing { background: var(--brown); color: #fff; border-color: var(--brown); }
+.last-saved { font-size: 10px; color: var(--fog); }
+
+/* ══ AMENITY GRID ══ */
+.amenity-grid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 8px;
+  margin-bottom: 12px;
+}
+.amenity-item {
+  background: var(--card-bg); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 10px 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  font-size: 10px; font-weight: 700; color: var(--fog);
+  text-align: center; cursor: pointer; transition: all 0.15s;
+}
+.amenity-item.on { border-color: var(--brown); background: rgba(139,94,60,0.08); color: var(--brown); }
+.amenity-icon { font-size: 20px; }
+
+/* ══ NOTE ══ */
+.note-card {
+  background: var(--card-bg); border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 14px 16px; margin-bottom: 12px;
+}
+.note-label { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--fog); margin-bottom: 8px; }
+.note-input {
+  width: 100%; background: none; border: none; outline: none;
+  font-family: 'Noto Sans TC', sans-serif; font-size: 13px; color: var(--text);
+  resize: none; line-height: 1.7; min-height: 60px;
+}
+.note-input::placeholder { color: var(--fog); opacity: 0.7; }
+
+/* ══ TOAST ══ */
+.toast {
+  position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--brown-dark); color: #fff; border-radius: 20px;
+  padding: 10px 20px; font-size: 13px; font-weight: 700;
+  opacity: 0; transition: all 0.3s; z-index: 999; white-space: nowrap; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ══ ADD HOTEL BTN ══ */
+.add-hotel-btn {
+  width: 100%; padding: 14px; border-radius: 14px; margin-bottom: 16px;
+  border: 2px dashed var(--border); background: none;
+  font-family: 'Noto Sans TC', sans-serif; font-size: 13px; font-weight: 700;
+  color: var(--fog); cursor: pointer; transition: all 0.18s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.add-hotel-btn:active { border-color: var(--brown); color: var(--brown); background: rgba(139,94,60,0.04); }
+
+/* ══ CHECK-IN STATUS BADGE ══ */
+.checkin-status-btn {
+  flex-shrink: 0; padding: 4px 10px; border-radius: 20px;
+  font-family: 'Noto Sans TC', sans-serif; font-size: 11px; font-weight: 700;
+  cursor: pointer; border: 1.5px solid var(--border);
+  background: #F5F0EA; color: var(--fog);
+  transition: all 0.18s; white-space: nowrap;
+}
+.checkin-status-btn.checking-in { background: #EAF3DE; color: #1E6B45; border-color: #7AB648; }
+.checkin-status-btn.checked-out { background: #F0EBE3; color: var(--brown-dark); border-color: var(--brown-light); }
+
+/* ══ INLINE ACTION BUTTONS (map/copy in address cell) ══ */
+.info-value-row {
+  display: flex; align-items: center; gap: 6px;
+}
+.cell-action-btn {
+  flex-shrink: 0; width: 30px; height: 30px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: none;
+  font-size: 14px; cursor: pointer; display: flex; align-items: center;
+  justify-content: center; transition: background 0.15s; text-decoration: none;
+}
+.cell-action-btn:active { background: var(--cream); }
+.cell-action-btn.primary { background: var(--brown); border-color: var(--brown); }
+
+/* ══ SCREENSHOT GRID ══ */
+.screenshot-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  margin-bottom: 16px;
+}
+.screenshot-slot {
+  position: relative; border-radius: 12px; overflow: hidden;
+  border: 1.5px solid var(--border); background: var(--card-bg);
+  aspect-ratio: 3/4; cursor: pointer;
+}
+.screenshot-input {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 2; width: 100%; height: 100%;
+}
+.screenshot-placeholder {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 6px;
+  pointer-events: none;
+}
+.screenshot-plus { font-size: 24px; color: var(--border); line-height: 1; }
+.screenshot-hint { font-size: 10px; color: var(--fog); font-weight: 600; text-align: center; padding: 0 6px; }
+.screenshot-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.screenshot-del {
+  position: absolute; top: 5px; right: 5px; z-index: 3;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(0,0,0,0.55); border: none; color: #fff;
+  font-size: 11px; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; line-height: 1;
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="ph-tag">Okinawa · 2026</div>
+  <div class="ph-title">住宿資訊</div>
+  <div class="ph-sub">Hotel &amp; Accommodation</div>
+</div>
+
+<div class="tabs-wrap">
+  <button class="tab-btn active" onclick="switchTab('hotels')">🏨 飯店資訊</button>
+  <button class="tab-btn" onclick="switchTab('tips')">📌 住宿備忘</button>
+</div>
+
+<!-- ══ TAB 1：飯店資訊 ══ -->
+<div class="section active" id="tab-hotels">
+
+  <!-- 飯店 1 -->
+  <div class="section-label">🏨 飯店 1</div>
+  <div class="hotel-card" id="card-h1">
+    <div class="hotel-card-header">
+      <div class="hotel-name-display" id="disp-h1-name">飯店名稱</div>
+      <div class="hotel-type-badge" id="disp-h1-type">飯店</div>
+      <button class="checkin-status-btn" id="status-h1" onclick="cycleCheckinStatus('h1')" data-step="0">待入住</button>
+    </div>
+    <div class="info-grid">
+      <div class="info-cell">
+        <div class="info-label">Check-in</div>
+        <div class="info-value"><input id="h1-checkin-date" placeholder="05/18" readonly></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">Check-out</div>
+        <div class="info-value"><input id="h1-checkout-date" placeholder="05/20" readonly></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">入住時間</div>
+        <div class="info-value"><input id="h1-checkin-time" placeholder="15:00" readonly></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">退房時間</div>
+        <div class="info-value"><input id="h1-checkout-time" placeholder="11:00" readonly></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">房型</div>
+        <div class="info-value"><input id="h1-room-type" placeholder="雙人海景房" readonly></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">房間號碼</div>
+        <div class="info-value"><input id="h1-room-num" placeholder="入住時確認" readonly></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">電話</div>
+        <div class="info-value"><input id="h1-phone" placeholder="098-000-0000" readonly></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">訂房代碼</div>
+        <div class="info-value"><input id="h1-pnr" placeholder="RES-XXXXX" readonly></div>
+      </div>
+      <div class="info-cell full">
+        <div class="info-label">地址（日文）</div>
+        <div class="info-value-row">
+          <div class="info-value normal" style="flex:1"><input id="h1-address" placeholder="〒 住所を入力…" readonly></div>
+          <a class="cell-action-btn primary" id="map-h1" href="#" onclick="openMap('h1');return false;">🗺</a>
+          <button class="cell-action-btn" onclick="copyAddr('h1')">📋</button>
+        </div>
+      </div>
+      <div class="info-cell full">
+        <div class="info-label">飯店名稱（日文）</div>
+        <div class="info-value normal"><input id="h1-name-jp" placeholder="ホテル名…" readonly></div>
+      </div>
+      <div class="info-cell full">
+        <div class="info-label">飯店類型 / 備註</div>
+        <div class="info-value normal"><input id="h1-note" placeholder="例：全包式度假村、含早餐…" readonly></div>
+      </div>
+    </div>
+    <div class="edit-toggle">
+      <button class="btn-edit" id="btn-h1" onclick="toggleEdit('h1')">✏️ 編輯</button>
+      <span class="last-saved" id="saved-h1"></span>
+    </div>
+  </div>
+
+  <!-- 設施 -->
+  <div class="section-label">✨ 設施 &amp; 服務</div>
+  <div class="amenity-grid" id="amenity-h1">
+    <div class="amenity-item on" onclick="toggleAmenity(this)"><div class="amenity-icon">🏊</div>泳池</div>
+    <div class="amenity-item on" onclick="toggleAmenity(this)"><div class="amenity-icon">🍳</div>早餐</div>
+    <div class="amenity-item" onclick="toggleAmenity(this)"><div class="amenity-icon">🧖</div>Spa</div>
+    <div class="amenity-item on" onclick="toggleAmenity(this)"><div class="amenity-icon">🅿️</div>停車</div>
+    <div class="amenity-item" onclick="toggleAmenity(this)"><div class="amenity-icon">🏋️</div>健身房</div>
+    <div class="amenity-item on" onclick="toggleAmenity(this)"><div class="amenity-icon">🛜</div>Wi-Fi</div>
+    <div class="amenity-item" onclick="toggleAmenity(this)"><div class="amenity-icon">🚌</div>接駁車</div>
+    <div class="amenity-item" onclick="toggleAmenity(this)"><div class="amenity-icon">🏖️</div>私人沙灘</div>
+  </div>
+
+  <!-- 飯店 2 -->
+  <div class="section-label" style="margin-top:6px">🏨 飯店 2</div>
+  <div class="hotel-card" id="card-h2">
+    <div class="hotel-card-header">
+      <div class="hotel-name-display" id="disp-h2-name">飯店名稱</div>
+      <div class="hotel-type-badge" id="disp-h2-type">飯店</div>
+      <button class="checkin-status-btn" id="status-h2" onclick="cycleCheckinStatus('h2')" data-step="0">待入住</button>
+    </div>
+    <div class="info-grid">
+      <div class="info-cell">
+        <div class="info-label">Check-in</div>
+        <div class="info-value"><input id="h2-checkin-date" placeholder="05/20" readonly></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">Check-out</div>
+        <div class="info-value"><input id="h2-checkout-date" placeholder="05/22" readonly></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">入住時間</div>
+        <div class="info-value"><input id="h2-checkin-time" placeholder="15:00" readonly></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">退房時間</div>
+        <div class="info-value"><input id="h2-checkout-time" placeholder="11:00" readonly></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">房型</div>
+        <div class="info-value"><input id="h2-room-type" placeholder="雙人城景房" readonly></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">房間號碼</div>
+        <div class="info-value"><input id="h2-room-num" placeholder="入住時確認" readonly></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">電話</div>
+        <div class="info-value"><input id="h2-phone" placeholder="098-000-0000" readonly></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">訂房代碼</div>
+        <div class="info-value"><input id="h2-pnr" placeholder="RES-XXXXX" readonly></div>
+      </div>
+      <div class="info-cell full">
+        <div class="info-label">地址（日文）</div>
+        <div class="info-value-row">
+          <div class="info-value normal" style="flex:1"><input id="h2-address" placeholder="〒 住所を入力…" readonly></div>
+          <a class="cell-action-btn primary" id="map-h2" href="#" onclick="openMap('h2');return false;">🗺</a>
+          <button class="cell-action-btn" onclick="copyAddr('h2')">📋</button>
+        </div>
+      </div>
+      <div class="info-cell full">
+        <div class="info-label">飯店名稱（日文）</div>
+        <div class="info-value normal"><input id="h2-name-jp" placeholder="ホテル名…" readonly></div>
+      </div>
+      <div class="info-cell full">
+        <div class="info-label">飯店類型 / 備註</div>
+        <div class="info-value normal"><input id="h2-note" placeholder="例：那霸市區、方便逛國際通…" readonly></div>
+      </div>
+    </div>
+    <div class="edit-toggle">
+      <button class="btn-edit" id="btn-h2" onclick="toggleEdit('h2')">✏️ 編輯</button>
+      <span class="last-saved" id="saved-h2"></span>
+    </div>
+  </div>
+
+  <div class="section-label" style="margin-top:6px">✨ 設施 &amp; 服務</div>
+  <div class="amenity-grid" id="amenity-h2">
+    <div class="amenity-item" onclick="toggleAmenity(this)"><div class="amenity-icon">🏊</div>泳池</div>
+    <div class="amenity-item on" onclick="toggleAmenity(this)"><div class="amenity-icon">🍳</div>早餐</div>
+    <div class="amenity-item" onclick="toggleAmenity(this)"><div class="amenity-icon">🧖</div>Spa</div>
+    <div class="amenity-item" onclick="toggleAmenity(this)"><div class="amenity-icon">🅿️</div>停車</div>
+    <div class="amenity-item" onclick="toggleAmenity(this)"><div class="amenity-icon">🏋️</div>健身房</div>
+    <div class="amenity-item on" onclick="toggleAmenity(this)"><div class="amenity-icon">🛜</div>Wi-Fi</div>
+    <div class="amenity-item" onclick="toggleAmenity(this)"><div class="amenity-icon">🚌</div>接駁車</div>
+    <div class="amenity-item" onclick="toggleAmenity(this)"><div class="amenity-icon">🏖️</div>私人沙灘</div>
+  </div>
+
+</div>
+
+<!-- ══ TAB 2：住宿備忘 ══ -->
+<div class="section" id="tab-tips">
+
+  <div class="section-label">📋 通用備忘</div>
+  <div class="note-card">
+    <div class="note-label">攜帶物品提醒</div>
+    <textarea class="note-input" id="note-items" placeholder="護照、訂房確認信、信用卡…" rows="3"></textarea>
+  </div>
+  <div class="note-card">
+    <div class="note-label">沖繩 Check-in 注意事項</div>
+    <textarea class="note-input" id="note-checkin-tips" rows="3">• 通常 15:00 後才能入住，可先寄放行李
+• 早退房通常 11:00 前
+• 日本飯店通常需要押金（信用卡授權）
+• 部分飯店有溫泉入浴時間限制</textarea>
+  </div>
+  <div class="note-card">
+    <div class="note-label">飯店 1 備忘</div>
+    <textarea class="note-input" id="note-h1-tips" placeholder="接駁車時間、停車場位置、特別要求…" rows="3"></textarea>
+  </div>
+  <div class="note-card">
+    <div class="note-label">飯店 2 備忘</div>
+    <textarea class="note-input" id="note-h2-tips" placeholder="退房行李寄放、周邊交通、特別要求…" rows="3"></textarea>
+  </div>
+
+  <div class="section-label">🖼 住宿文件截圖</div>
+  <div class="screenshot-grid">
+    <div class="screenshot-slot" id="ss-slot-0">
+      <input type="file" accept="image/*" class="screenshot-input" onchange="loadScreenshot(this,0)">
+      <div class="screenshot-placeholder" id="ss-ph-0">
+        <div class="screenshot-plus">＋</div>
+        <div class="screenshot-hint">點擊上傳截圖</div>
+      </div>
+      <img class="screenshot-img" id="ss-img-0" style="display:none" alt="截圖 1">
+      <button class="screenshot-del" id="ss-del-0" style="display:none" onclick="removeScreenshot(0)">✕</button>
+    </div>
+    <div class="screenshot-slot" id="ss-slot-1">
+      <input type="file" accept="image/*" class="screenshot-input" onchange="loadScreenshot(this,1)">
+      <div class="screenshot-placeholder" id="ss-ph-1">
+        <div class="screenshot-plus">＋</div>
+        <div class="screenshot-hint">點擊上傳截圖</div>
+      </div>
+      <img class="screenshot-img" id="ss-img-1" style="display:none" alt="截圖 2">
+      <button class="screenshot-del" id="ss-del-1" style="display:none" onclick="removeScreenshot(1)">✕</button>
+    </div>
+    <div class="screenshot-slot" id="ss-slot-2">
+      <input type="file" accept="image/*" class="screenshot-input" onchange="loadScreenshot(this,2)">
+      <div class="screenshot-placeholder" id="ss-ph-2">
+        <div class="screenshot-plus">＋</div>
+        <div class="screenshot-hint">點擊上傳截圖</div>
+      </div>
+      <img class="screenshot-img" id="ss-img-2" style="display:none" alt="截圖 3">
+      <button class="screenshot-del" id="ss-del-2" style="display:none" onclick="removeScreenshot(2)">✕</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══ Tab switch ══
+function switchTab(id) {
+  document.querySelectorAll('.tab-btn').forEach(function(b, i) {
+    b.classList.toggle('active', ['hotels','tips'][i] === id);
+  });
+  document.querySelectorAll('.section').forEach(function(s) {
+    s.classList.toggle('active', s.id === 'tab-' + id);
+  });
+}
+
+// ══ Edit toggle ══
+var editState = { h1: false, h2: false };
+var H_FIELDS = {
+  h1: ['h1-checkin-date','h1-checkout-date','h1-checkin-time','h1-checkout-time',
+       'h1-room-type','h1-room-num','h1-phone','h1-pnr','h1-address','h1-name-jp','h1-note'],
+  h2: ['h2-checkin-date','h2-checkout-date','h2-checkin-time','h2-checkout-time',
+       'h2-room-type','h2-room-num','h2-phone','h2-pnr','h2-address','h2-name-jp','h2-note']
+};
+
+function toggleEdit(h) {
+  editState[h] = !editState[h];
+  var editing = editState[h];
+  var btn = document.getElementById('btn-' + h);
+
+  H_FIELDS[h].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.readOnly = !editing;
+    el.classList.toggle('editing', editing);
+  });
+
+  if (editing) {
+    btn.textContent = '💾 儲存';
+    btn.classList.add('editing');
+    // Also make name and type editable
+    var nameEl = document.getElementById('disp-' + h + '-name');
+    var typeEl = document.getElementById('disp-' + h + '-type');
+    if (nameEl) nameEl.contentEditable = 'true';
+    if (typeEl) typeEl.contentEditable = 'true';
+  } else {
+    btn.textContent = '✏️ 編輯';
+    btn.classList.remove('editing');
+    var nameEl = document.getElementById('disp-' + h + '-name');
+    var typeEl = document.getElementById('disp-' + h + '-type');
+    if (nameEl) nameEl.contentEditable = 'false';
+    if (typeEl) typeEl.contentEditable = 'false';
+    var now = new Date();
+    document.getElementById('saved-' + h).textContent =
+      '已儲存 ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
+    saveAll();
+    showToast('已儲存 ✓');
+  }
+}
+
+// ══ Amenity toggle ══
+function toggleAmenity(el) {
+  el.classList.toggle('on');
+  saveAll();
+}
+
+// ══ Check-in status cycle (待入住 → 入住中 → 已退房) ══
+var CHECKIN_STATUS_CYCLE = [
+  { label: '待入住', cls: '' },
+  { label: '入住中', cls: 'checking-in' },
+  { label: '已退房', cls: 'checked-out' }
+];
+function cycleCheckinStatus(h) {
+  var btn = document.getElementById('status-' + h);
+  var cur = parseInt(btn.dataset.step || '0');
+  var next = (cur + 1) % CHECKIN_STATUS_CYCLE.length;
+  btn.dataset.step = next;
+  btn.textContent = CHECKIN_STATUS_CYCLE[next].label;
+  btn.className = 'checkin-status-btn ' + CHECKIN_STATUS_CYCLE[next].cls;
+  saveAll();
+}
+
+// ══ Screenshot upload ══
+function loadScreenshot(input, idx) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = document.getElementById('ss-img-' + idx);
+    var ph  = document.getElementById('ss-ph-'  + idx);
+    var del = document.getElementById('ss-del-' + idx);
+    img.src = e.target.result;
+    img.style.display = 'block';
+    ph.style.display  = 'none';
+    del.style.display = 'flex';
+    saveScreenshots();
+  };
+  reader.readAsDataURL(file);
+}
+function removeScreenshot(idx) {
+  var img = document.getElementById('ss-img-' + idx);
+  var ph  = document.getElementById('ss-ph-'  + idx);
+  var del = document.getElementById('ss-del-' + idx);
+  img.src = '';
+  img.style.display = 'none';
+  ph.style.display  = 'flex';
+  del.style.display = 'none';
+  saveScreenshots();
+}
+function saveScreenshots() {
+  var shots = [];
+  for (var i = 0; i < 3; i++) {
+    var img = document.getElementById('ss-img-' + i);
+    shots.push(img && img.src && img.style.display !== 'none' ? img.src : '');
+  }
+  try { localStorage.setItem('hotel_screenshots', JSON.stringify(shots)); } catch(e) {}
+}
+function loadScreenshots() {
+  try {
+    var raw = localStorage.getItem('hotel_screenshots');
+    if (!raw) return;
+    var shots = JSON.parse(raw);
+    shots.forEach(function(src, i) {
+      if (!src) return;
+      var img = document.getElementById('ss-img-' + i);
+      var ph  = document.getElementById('ss-ph-'  + i);
+      var del = document.getElementById('ss-del-' + i);
+      if (img) { img.src = src; img.style.display = 'block'; }
+      if (ph)  ph.style.display  = 'none';
+      if (del) del.style.display = 'flex';
+    });
+  } catch(e) {}
+}
+// ══ Address actions ══
+function openMap(h) {
+  var addr = document.getElementById(h + '-address').value;
+  if (!addr) { showToast('請先填入地址'); return; }
+  window.open('https://maps.google.com/?q=' + encodeURIComponent(addr), '_blank');
+}
+function copyAddr(h) {
+  var addr = document.getElementById(h + '-address').value;
+  var name = document.getElementById('disp-' + h + '-name').textContent;
+  if (!addr) { showToast('請先填入地址'); return; }
+  var text = name + '\n' + addr;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function() { showToast('地址已複製 ✓'); });
+  } else { showToast('複製失敗，請手動複製'); }
+}
+function callHotel(h) {
+  var phone = document.getElementById(h + '-phone').value;
+  if (!phone) { showToast('請先填入電話'); return; }
+  window.location.href = 'tel:' + phone.replace(/[-\s]/g, '');
+}
+
+// ══ Save / Load ══
+function saveAll() {
+  var data = {};
+  // Hotel fields
+  ['h1','h2'].forEach(function(h) {
+    H_FIELDS[h].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) data[id] = el.value;
+    });
+    var nameEl = document.getElementById('disp-' + h + '-name');
+    var typeEl = document.getElementById('disp-' + h + '-type');
+    if (nameEl) data['disp-' + h + '-name'] = nameEl.textContent;
+    if (typeEl) data['disp-' + h + '-type'] = typeEl.textContent;
+  });
+  // Amenities
+  ['h1','h2'].forEach(function(h) {
+    var grid = document.getElementById('amenity-' + h);
+    if (!grid) return;
+    var states = [];
+    grid.querySelectorAll('.amenity-item').forEach(function(el) {
+      states.push(el.classList.contains('on') ? '1' : '0');
+    });
+    data['amenity-' + h] = states.join('');
+  });
+  // Notes
+  ['note-items','note-checkin-tips','note-h1-tips','note-h2-tips'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) data[id] = el.value;
+  });
+  // Checkin status
+  ['h1','h2'].forEach(function(h) {
+    var btn = document.getElementById('status-' + h);
+    if (btn) data['status-step-' + h] = btn.dataset.step || '0';
+  });
+  try { localStorage.setItem('hotel_v1', JSON.stringify(data)); } catch(e) {}
+  // Firebase sync
+  if (window._fbSaveHotel) {
+    clearTimeout(window._fbSaveT);
+    window._fbSaveT = setTimeout(window._fbSaveHotel, 800);
+  }
+}
+
+function loadAll() {
+  try {
+    var raw = localStorage.getItem('hotel_v1');
+    if (!raw) return;
+    var data = JSON.parse(raw);
+    ['h1','h2'].forEach(function(h) {
+      H_FIELDS[h].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el && data[id] !== undefined) el.value = data[id];
+      });
+      var nameEl = document.getElementById('disp-' + h + '-name');
+      var typeEl = document.getElementById('disp-' + h + '-type');
+      if (nameEl && data['disp-' + h + '-name']) nameEl.textContent = data['disp-' + h + '-name'];
+      if (typeEl && data['disp-' + h + '-type']) typeEl.textContent = data['disp-' + h + '-type'];
+    });
+    ['h1','h2'].forEach(function(h) {
+      var grid = document.getElementById('amenity-' + h);
+      var states = data['amenity-' + h];
+      if (!grid || !states) return;
+      grid.querySelectorAll('.amenity-item').forEach(function(el, i) {
+        el.classList.toggle('on', states[i] === '1');
+      });
+    });
+    ['note-items','note-checkin-tips','note-h1-tips','note-h2-tips'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el && data[id] !== undefined) el.value = data[id];
+    });
+    // Checkin status
+    ['h1','h2'].forEach(function(h) {
+      var step = parseInt(data['status-step-' + h] || '0');
+      var btn = document.getElementById('status-' + h);
+      if (btn && CHECKIN_STATUS_CYCLE[step]) {
+        btn.dataset.step = step;
+        btn.textContent = CHECKIN_STATUS_CYCLE[step].label;
+        btn.className = 'checkin-status-btn ' + CHECKIN_STATUS_CYCLE[step].cls;
+      }
+    });
+  } catch(e) {}
+}
+
+// Note autosave
+['note-items','note-checkin-tips','note-h1-tips','note-h2-tips'].forEach(function(id) {
+  var el = document.getElementById(id);
+  if (el) el.addEventListener('input', saveAll);
+});
+
+// ══ Firebase sync ══
+(async function() {
+  try {
+    var fb = await import('./firebase-config.js');
+    var user = await fb.getCurrentUser();
+    if (!user) await new Promise(function(r) { setTimeout(r, 2000); });
+    user = await fb.getCurrentUser();
+    if (!user) return;
+    var uid = localStorage.getItem('tripApp_uid') || user.uid;
+    var DOC = 'users/' + uid + '/data/hotel';
+    window._fbSaveHotel = async function() {
+      try {
+        var raw = localStorage.getItem('hotel_v1');
+        if (raw) await fb.fsSet(DOC, { data: raw });
+      } catch(e) {}
+    };
+    var snap = await fb.fsGet(DOC);
+    if (snap.exists() && snap.data().data) {
+      localStorage.setItem('hotel_v1', snap.data().data);
+      loadAll();
+    }
+  } catch(e) { window._fbSaveHotel = null; }
+})();
+
+// ══ Toast ══
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg || '已儲存 ✓';
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2200);
+}
+
+// ══ Boot ══
+loadAll();
+loadScreenshots();
+</script>
+</body>
+</html>
