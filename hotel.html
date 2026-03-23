@@ -207,7 +207,7 @@ body { font-family: 'Noto Sans TC', sans-serif; background: var(--cream); color:
 
 /* ══ SCREENSHOT GRID ══ */
 .screenshot-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
   margin-bottom: 16px;
 }
 .screenshot-slot {
@@ -459,6 +459,15 @@ body { font-family: 'Noto Sans TC', sans-serif; background: var(--cream); color:
       <img class="screenshot-img" id="ss-img-2" style="display:none" alt="截圖 3">
       <button class="screenshot-del" id="ss-del-2" style="display:none" onclick="removeScreenshot(2)">✕</button>
     </div>
+    <div class="screenshot-slot" id="ss-slot-3">
+      <input type="file" accept="image/*" class="screenshot-input" onchange="loadScreenshot(this,3)">
+      <div class="screenshot-placeholder" id="ss-ph-3">
+        <div class="screenshot-plus">＋</div>
+        <div class="screenshot-hint">點擊上傳截圖</div>
+      </div>
+      <img class="screenshot-img" id="ss-img-3" style="display:none" alt="截圖 4">
+      <button class="screenshot-del" id="ss-del-3" style="display:none" onclick="removeScreenshot(3)">✕</button>
+    </div>
   </div>
 
 </div>
@@ -571,7 +580,7 @@ function removeScreenshot(idx) {
 }
 function saveScreenshots() {
   var shots = [];
-  for (var i = 0; i < 3; i++) {
+  for (var i = 0; i < 4; i++) {
     var img = document.getElementById('ss-img-' + i);
     shots.push(img && img.src && img.style.display !== 'none' ? img.src : '');
   }
