@@ -848,13 +848,35 @@ function loadAll() {
     window._fbSaveHotel = async function() {
       try {
         var raw = localStorage.getItem('hotel_v1');
-        if (raw) await fb.fsSet(DOC, { data: raw });
+        var ssRaw = localStorage.getItem('hotel_screenshots_v2');
+        var payload = { data: raw || '{}' };
+        // Only sync HTTPS URLs, never base64
+        if (ssRaw) {
+          var urls = JSON.parse(ssRaw).map(function(u) {
+            return (u && u.startsWith('https://')) ? u : '';
+          });
+          payload.screenshots = urls;
+        }
+        await fb.fsSet(DOC, payload);
       } catch(e) {}
     };
     var snap = await fb.fsGet(DOC);
-    if (snap.exists() && snap.data().data) {
-      localStorage.setItem('hotel_v1', snap.data().data);
-      loadAll();
+    if (snap.exists()) {
+      var d = snap.data();
+      if (d.data) {
+        localStorage.setItem('hotel_v1', d.data);
+        loadAll();
+      }
+      // Load screenshot URLs from Firestore
+      if (d.screenshots) {
+        var validUrls = d.screenshots.map(function(u) {
+          return (u && u.startsWith('https://')) ? u : '';
+        });
+        localStorage.setItem('hotel_screenshots_v2', JSON.stringify(validUrls));
+        validUrls.forEach(function(src, i) {
+          if (src) _showImg(i, src);
+        });
+      }
     }
   } catch(e) { window._fbSaveHotel = null; }
 })();
@@ -867,7 +889,26 @@ function showToast(msg) {
   setTimeout(function() { t.classList.remove('show'); }, 2200);
 }
 
-// ══ Boot ══
+// ══ Boot：清除舊 base64 資料 ══
+(function() {
+  try {
+    var old = localStorage.getItem('hotel_screenshots_v2');
+    if (old) {
+      var arr = JSON.parse(old);
+      var cleaned = arr.map(function(u) {
+        return (u && u.startsWith('https://')) ? u : '';
+      });
+      // If any were base64, clear them
+      if (JSON.stringify(arr) !== JSON.stringify(cleaned)) {
+        localStorage.setItem('hotel_screenshots_v2', JSON.stringify(cleaned));
+        console.log('[hotel] Cleared base64 screenshot data');
+      }
+    }
+    // Also clear old key names
+    localStorage.removeItem('hotel_screenshots');
+    localStorage.removeItem('hotel_screenshots_v1');
+  } catch(e) {}
+})();
 loadAll();
 loadScreenshots();
 </script>
