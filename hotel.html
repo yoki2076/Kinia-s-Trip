@@ -455,7 +455,7 @@ body { font-family: 'Noto Sans TC', sans-serif; background: var(--cream); color:
     <textarea class="note-input" id="note-h2-tips" placeholder="退房行李寄放、周邊交通、特別要求…" rows="3"></textarea>
   </div>
 
-  <div class="section-label">🖼 住宿文件截圖(資料同步功能還未修正，請先不要上傳)</div>
+  <div class="section-label">🖼 住宿文件截圖</div>
   <div style="font-size:11px;color:var(--fog);margin-bottom:8px;margin-top:-4px;">長按照片可刪除</div>
   <div class="screenshot-grid">
     <div class="screenshot-slot" id="ss-slot-0">
@@ -652,7 +652,9 @@ function saveScreenshotUrls() {
   var urls = [];
   for (var i = 0; i < 4; i++) {
     var img = document.getElementById('ss-img-' + i);
-    urls.push((img && img.src && img.style.display !== 'none') ? img.src : '');
+    var src = (img && img.src && img.style.display !== 'none') ? img.src : '';
+    // Only save Firebase Storage URLs, never base64
+    urls.push(src.startsWith('https://') ? src : '');
   }
   try { localStorage.setItem('hotel_screenshots_v2', JSON.stringify(urls)); } catch(e) {}
 }
@@ -668,7 +670,6 @@ function loadScreenshots() {
   } catch(e) {}
 }
 
-// Upload to Firebase Storage, fall back to base64 if not available
 async function loadScreenshot(input, idx) {
   var file = input.files[0];
   if (!file) return;
@@ -680,34 +681,31 @@ async function loadScreenshot(input, idx) {
       var user = await fb.getCurrentUser();
       if (user) uid = user.uid;
     }
-    if (uid) {
-      // Upload to Firebase Storage
-      var path = 'users/' + uid + '/hotel_screenshots/ss_' + idx + '_' + Date.now() + '.jpg';
-      // Delete old image if exists
-      var oldUrl = (function(){
-        try { var r=JSON.parse(localStorage.getItem('hotel_screenshots_v2')||'[]'); return r[idx]||''; } catch(e){ return ''; }
-      })();
-      if (oldUrl && oldUrl.startsWith('http')) {
-        try { await fb.deleteImage(oldUrl); } catch(e) {}
-      }
-      var url = await fb.uploadImage(file, path);
-      _showImg(idx, url);
-      saveScreenshotUrls();
+    if (!uid) {
       hideUploading(idx);
-      showToast('截圖已上傳 ✓');
+      showToast('請先登入才能上傳圖片');
+      input.value = '';
       return;
     }
-  } catch(e) {
-    console.warn('Firebase upload failed, falling back to base64', e);
-  }
-  // Fallback: base64 in localStorage
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    _showImg(idx, e.target.result);
+    // Delete old image if exists
+    var oldUrl = (function(){
+      try { var r=JSON.parse(localStorage.getItem('hotel_screenshots_v2')||'[]'); return r[idx]||''; } catch(e){ return ''; }
+    })();
+    if (oldUrl && oldUrl.startsWith('http')) {
+      try { await fb.deleteImage(oldUrl); } catch(e) {}
+    }
+    var path = 'users/' + uid + '/hotel_screenshots/ss_' + idx + '_' + Date.now() + '.jpg';
+    var url = await fb.uploadImage(file, path);
+    _showImg(idx, url);
     saveScreenshotUrls();
     hideUploading(idx);
-  };
-  reader.readAsDataURL(file);
+    showToast('截圖已上傳 ✓');
+  } catch(e) {
+    hideUploading(idx);
+    input.value = '';
+    showToast('上傳失敗，請檢查網路連線');
+    console.warn('Screenshot upload failed:', e);
+  }
 }
 
 async function removeScreenshot(idx) {
