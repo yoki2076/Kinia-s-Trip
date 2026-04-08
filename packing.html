@@ -22,7 +22,7 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body { font-family: 'Noto Sans TC', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; max-width: 430px; margin: 0 auto; overflow-x: hidden;
-  padding-bottom: 80px; }
+  padding-bottom: 20px; }
 
   /* Header */
   .header {
@@ -253,6 +253,17 @@
   .modal-btn.confirm { background: var(--accent); color: #fff; box-shadow: 0 4px 16px rgba(196,149,106,0.3); }
 
   .hidden { display: none !important; }
+
+  .header-btns {
+    display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  }
+  .reset-btn {
+    background: none; border: 1.5px solid var(--border); color: var(--text3);
+    padding: 8px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: 'Noto Sans TC', sans-serif; transition: all 0.2s;
+  }
+  .reset-btn:active { background: var(--surface2); color: var(--accent); border-color: var(--accent); }
+
 </style>
 
 </head>
@@ -264,7 +275,10 @@
         <div class="header-eyebrow">Travel Packing</div>
         <div class="header-title">行李清單</div>
       </div>
-      <button class="edit-btn" id="editBtn" onclick="toggleEdit()">編輯</button>
+      <div class="header-btns">
+        <button class="reset-btn" id="resetBtn" onclick="resetTrip()">重置</button>
+        <button class="edit-btn" id="editBtn" onclick="toggleEdit()">編輯</button>
+      </div>
     </div>
     <div class="trip-toggle">
       <button class="trip-btn active" id="btnOut" onclick="setTrip('out')">✈️ 去程</button>
@@ -278,10 +292,6 @@
   <div class="cat-tabs" id="catTabs"></div>
   <div class="content" id="content"></div>
 
-  <div class="bottom-bar">
-    <button class="bottom-btn reset" onclick="resetTrip()" id="resetBtn">重置清單</button>
-    <button class="bottom-btn check-all" onclick="checkAll()">全部勾選 ✓</button>
-  </div>
 </div>
 
 <!-- Add Category Modal -->
