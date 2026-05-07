@@ -123,6 +123,14 @@
   }
   .search-bar input:focus { border-color: var(--accent); }
   .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text2); font-size: 15px; }
+  /* 搜尋框嵌入 header-btns */
+  .header-search {
+    margin-bottom: 0; flex: 1;
+  }
+  .header-search input {
+    width: 100%; padding: 9px 12px 9px 34px;
+    font-size: 13px;
+  }
 
   /* Currency bar (wishlist only) */
   .currency-bar { display: flex; align-items: center; gap: 8px; padding: 0 0 10px; flex-wrap: wrap; }
@@ -489,20 +497,15 @@
       <div class="header-top">
         <div class="app-title"></div>
         <div class="header-btns">
+          <div class="search-bar header-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="搜尋商品..." id="wSearchInput" oninput="W.render()">
+          </div>
           <button class="cat-mgr-btn" onclick="W.openCatManager()" title="管理分類">⊞</button>
           <button class="add-btn" onclick="W.openAddModal()">＋</button>
         </div>
       </div>
-      <div class="view-tabs" id="wViewTabs">
-        <div class="vtab active" onclick="W.setView('all')">全部</div>
-        <div class="vtab" onclick="W.setView('pending')">待買</div>
-        <div class="vtab" onclick="W.setView('bought')">已買</div>
-        <div class="vtab" onclick="W.setView('fav')">收藏</div>
-      </div>
-      <div class="search-bar">
-        <span class="search-icon">🔍</span>
-        <input type="text" placeholder="搜尋商品..." id="wSearchInput" oninput="W.render()">
-      </div>
+      
       <div class="currency-bar">
         <span class="currency-label">顯示幣值：</span>
         <div class="currency-chips" id="wCurrencyChips"></div>
@@ -520,7 +523,6 @@
         <option value="name">名稱A-Z</option>
       </select>
     </div>
-    <div class="stats-row" id="wStatsRow"></div>
     <div class="items-list" id="wItemsList"></div>
   </div>
 
@@ -785,7 +787,7 @@ const W = (() => {
   }
 
   function render() {
-    renderCurrencyBar(); renderCats(); renderStats(); renderItems();
+    renderCurrencyBar(); renderCats(); renderItems();
   }
   function renderCurrencyBar() {
     document.getElementById('wCurrencyChips').innerHTML=Object.keys(RATES).map(k=>
@@ -928,7 +930,7 @@ const W = (() => {
   }
   function setView(v) {
     currentView=v;
-    document.querySelectorAll('#wViewTabs .vtab').forEach((el,i)=>el.classList.toggle('active',['all','pending','bought','fav'][i]===v));
+    document.querySelectorAll('#wViewTabs .vtab').forEach((el,i)=>el.classList.toggle('active',['all','fav'][i]===v));
     render();
   }
 
@@ -1422,6 +1424,9 @@ P.render(); // render but don't show (page 1 is hidden)
       if (wd.cats  && wd.cats.length)  localStorage.setItem('wishlist_cats',  JSON.stringify(wd.cats));
       if (wd.currency) localStorage.setItem('wishlist_cur', wd.currency);
       if (window.W && window.W.reload) window.W.reload();
+    } else {
+      // Firestore 沒有資料，把本地資料上傳（首次同步）
+      if (window._fbSave) window._fbSave();
     }
     var pSnap = await fb.fsGet(P_DOC);
     if (pSnap.exists()) {
@@ -1429,6 +1434,9 @@ P.render(); // render but don't show (page 1 is hidden)
       if (pd.items && pd.items.length) localStorage.setItem('placelist_items', JSON.stringify(pd.items));
       if (pd.cats  && pd.cats.length)  localStorage.setItem('placelist_cats',  JSON.stringify(pd.cats));
       if (window.P && window.P.reload) window.P.reload();
+    } else {
+      // Firestore 沒有資料，把本地資料上傳（首次同步）
+      if (window._fbSavePlaces) window._fbSavePlaces();
     }
 
     // Real-time listeners
@@ -1448,16 +1456,16 @@ P.render(); // render but don't show (page 1 is hidden)
     fb.fsLive(W_DOC, function(snap) {
       if (_wSaving || !snap.exists()) return;
       var d = snap.data();
-      if (d.items) localStorage.setItem('wishlist_items', JSON.stringify(d.items));
-      if (d.cats)  localStorage.setItem('wishlist_cats',  JSON.stringify(d.cats));
+      if (d.items && d.items.length) localStorage.setItem('wishlist_items', JSON.stringify(d.items));
+      if (d.cats && d.cats.length)   localStorage.setItem('wishlist_cats',  JSON.stringify(d.cats));
       if (d.currency) localStorage.setItem('wishlist_cur', d.currency);
       if (window.W && window.W.reload) window.W.reload();
     });
     fb.fsLive(P_DOC, function(snap) {
       if (_pSaving || !snap.exists()) return;
       var d = snap.data();
-      if (d.items) localStorage.setItem('placelist_items', JSON.stringify(d.items));
-      if (d.cats)  localStorage.setItem('placelist_cats',  JSON.stringify(d.cats));
+      if (d.items && d.items.length) localStorage.setItem('placelist_items', JSON.stringify(d.items));
+      if (d.cats && d.cats.length)   localStorage.setItem('placelist_cats',  JSON.stringify(d.cats));
       if (window.P && window.P.reload) window.P.reload();
     });
     var badge = document.createElement('div');
